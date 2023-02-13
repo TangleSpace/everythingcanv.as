@@ -40,7 +40,7 @@ let light;
 let composer;
 let controls;
 let bgHolder;
-let btns={space:false};
+let btns={space:true};
 let sceneMesh;
 let shouldRotateAdditiveX = true;
 let shouldRotateAdditiveY = true;
@@ -313,10 +313,96 @@ function init(){
     document.getElementById("density-amount").addEventListener("change", updateDensity);
     document.getElementById("density-amount").addEventListener("input", updateDensity);
 
+
+
+    document.getElementById("background-gradient-size").addEventListener("input", updateBackgroundParms);
+    document.getElementById("background-gradient-size").addEventListener("change", updateBackgroundParms);
+
+    document.getElementById("background-gradient-offset").addEventListener("input", updateBackgroundParms);
+    document.getElementById("background-gradient-offset").addEventListener("change", updateBackgroundParms);
+
+    document.getElementById("background-color-top").addEventListener("input", updateBackgroundParms);
+    document.getElementById("background-color-top").addEventListener("change", updateBackgroundParms);
+
+    document.getElementById("background-color-bottom").addEventListener("input", updateBackgroundParms);
+    document.getElementById("background-color-bottom").addEventListener("change", updateBackgroundParms);
+
+    document.getElementById("rainbow-tint-amount").addEventListener("input", updateModelParams);
+    document.getElementById("rainbow-tint-amount").addEventListener("change", updateModelParams);
+
+    document.getElementById("rainbow-size").addEventListener("input", updateModelParams);
+    document.getElementById("rainbow-size").addEventListener("change", updateModelParams);
+
+
+    document.getElementById("model-gradient-size").addEventListener("input", updateModelParams);
+    document.getElementById("model-gradient-size").addEventListener("change", updateModelParams);
+
+    document.getElementById("model-gradient-offset").addEventListener("input", updateModelParams);
+    document.getElementById("model-gradient-offset").addEventListener("change", updateModelParams);
+
+    document.getElementById("model-color-top").addEventListener("input", updateModelParams);
+    document.getElementById("model-color-top").addEventListener("change", updateModelParams);
+
+    document.getElementById("model-color-bottom").addEventListener("input", updateModelParams);
+    document.getElementById("model-color-bottom").addEventListener("change", updateModelParams);
+
+    document.getElementById("noise-deform").addEventListener("input", updateModelParams);
+    document.getElementById("noise-deform").addEventListener("change", updateModelParams);
+
+    document.getElementById("noise-size").addEventListener("input", updateModelParams);
+    document.getElementById("noise-size").addEventListener("change", updateModelParams);
+
+    document.getElementById("twist-deform").addEventListener("input", updateModelParams);
+    document.getElementById("twist-deform").addEventListener("change", updateModelParams);
+
+    document.getElementById("twist-size").addEventListener("input", updateModelParams);
+    document.getElementById("twist-size").addEventListener("change", updateModelParams);
+
+    document.getElementById("deform-speed").addEventListener("input", updateModelParams);
+    document.getElementById("deform-speed").addEventListener("change", updateModelParams);
+
+    document.getElementById("color-speed").addEventListener("input", updateModelParams);
+    document.getElementById("color-speed").addEventListener("change", updateModelParams);
+
     helper = new BrushHelper({scene:scene, raycaster:raycaster});
     background = new Background({scene:scene});
     matHandler = new CustomMaterial();
 	animate();
+}
+
+function updateBackgroundParms(){
+
+    const top = $("#background-color-top").val();
+    const bottom = $("#background-color-bottom").val();
+    const size = $("#background-gradient-size").val()*.01;
+    const offset = $("#background-gradient-offset").val();
+    
+    background.update({top:new THREE.Color(top), bottom:new THREE.Color(bottom), size:size, offset:offset})
+}
+
+function updateModelParams(){
+    //this.all[i].mat.userData.shader.uniforms.time.value = this.inc;
+    // 
+
+    helper.holder.traverse( function ( child ) {
+        if ( child.isMesh ) {
+            const param = getMatParam();
+            
+            child.material.userData.shader.uniforms.twistAmt.value = param.twistAmt;
+            child.material.userData.shader.uniforms.noiseSize.value = param.noiseSize;
+            child.material.userData.shader.uniforms.twistSize.value = param.twistSize;
+            child.material.userData.shader.uniforms.noiseAmt.value = param.noiseAmt;
+            child.material.userData.shader.uniforms.rainbowAmt.value = param.rainbowAmt;
+            child.material.userData.shader.uniforms.gradientSize.value = param.gradientSize;
+            child.material.userData.shader.uniforms.rainbowGradientSize.value = param.rainbowGradientSize;
+            child.material.userData.shader.uniforms.gradientOffset.value = param.gradientOffset;
+            child.material.userData.shader.uniforms.topColor.value = param.topColor;
+            child.material.userData.shader.uniforms.bottomColor.value = param.bottomColor;
+            child.material.userData.shader.uniforms.deformSpeed.value = param.deformSpeed;
+            child.material.userData.shader.uniforms.colorSpeed.value = param.colorSpeed;
+        }
+    });
+    
 }
 
 function animate(){
@@ -370,6 +456,23 @@ function animate(){
 	
 }
 
+function getMatParam(){
+    return { 
+        twistAmt:$("#twist-deform").val()*.01,
+        noiseSize:$("#noise-size").val()*.01,
+        twistSize:$("#twist-size").val()*.01,
+        noiseAmt:$("#noise-deform").val()*.01,
+        rainbowAmt:$("#rainbow-tint-amount").val()*.01,
+        gradientSize:$("#model-gradient-size").val()*.03,
+        rainbowGradientSize:$("#rainbow-size").val()*.03,
+        gradientOffset:$("#model-gradient-offset").val()*.1,
+        topColor:new THREE.Color( $("#model-color-top").val() ),
+        bottomColor:new THREE.Color( $("#model-color-bottom").val() ),
+        deformSpeed:$("#deform-speed").val()*.01,
+        colorSpeed:$("#color-speed").val()*.01,
+    }
+}
+
 function chooseModel(i,k){
     const loader = new GLTFLoader().setPath( loadobjs[i].url );
     loader.load( k+'.glb', function ( gltf ) {
@@ -378,7 +481,9 @@ function chooseModel(i,k){
                 //roughnessMipmapper.generateMipmaps( child.material );
                 //child.material.vertexColors = false;
                 const mat = child.material.clone(); 
-                child.material = matHandler.getCustomMaterial(mat);
+                const param = getMatParam();
+                //console.log(param)
+                child.material = matHandler.getCustomMaterial(child.material, param );
             }
         });
 
@@ -474,7 +579,6 @@ function onKeyDown(e) {
         break;
         case 32:
             
-
         break;
         case 39://right
             if(state == "drawing"){
@@ -507,12 +611,14 @@ function onKeyDown(e) {
 
 
 function onKeyUp(e) {
+    console.log(e.keyCode)
     if(e.keyCode == 18){
         if(controls){
             controls.enableRotate=false;
         }
     }else if(e.keyCode==32){
-        btns.space = false;
+        btns.space = !btns.space;
+        $(".holders").css("display", btns.space ? "block" :"none" );
     }
 }
 

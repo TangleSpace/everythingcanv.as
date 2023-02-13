@@ -39,9 +39,12 @@ class Background {
     }
 
 	update(OBJ){
-		if(this.sky.userData.shader!=null){
-			this.sky.userData.shader.uniforms.topColor.value = OBJ.top;
-			this.sky.userData.shader.uniforms.bottomColor.value = OBJ.bottom;
+		if(this.sky.material.uniforms!=null){
+			this.sky.material.uniforms.topColor.value = OBJ.top;
+			this.sky.material.uniforms.bottomColor.value = OBJ.bottom;
+			this.sky.material.uniforms.exponent.value = OBJ.size;
+			this.sky.material.uniforms.offset.value = OBJ.offset;
+			this.sky.material.uniforms.uniformsNeedUpdate = true;
 		}
 	}
 
@@ -67,7 +70,7 @@ class Background {
 			'varying vec3 vWorldPosition;',
 
 			'void main() {',
-				'float h = normalize( vWorldPosition + offset ).y;',
+				'float h = normalize( vec3(vWorldPosition.x, vWorldPosition.y + offset, vWorldPosition.z) ).y;',
 				'gl_FragColor = vec4( mix( bottomColor, topColor, max( pow( max( h, 0.0 ), exponent ), 0.0 ) ), 1.0 );',
 			'}',
 			
