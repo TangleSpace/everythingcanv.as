@@ -17,8 +17,8 @@ class Background {
         const vertexShader = self.getBgVertex();
 		const fragmentShader = self.getBgFragment();
 		const uniforms = {
-			topColor: { value: new Color(0x000000) },
-			bottomColor: { value: new Color(0x000000) },
+			topColor: { value: new Color(0x333333) },
+			bottomColor: { value: new Color(0x333333) },
 			offset: { value: 0 },
 			exponent: { value: 0.9 }
 		};
@@ -34,6 +34,8 @@ class Background {
 		} );
 
 		this.sky = new Mesh( skyGeo, skyMat );
+		//this.sky.material.uniforms.topColor.value = new Color(0x777777);
+		//this.sky.material.uniforms.bottomColor.value = new Color(0x777777);
 		OBJ.scene.add(this.sky);
       
     }

@@ -6,41 +6,78 @@
 	</head>
 
 	<body>
+		<div id="instructions-overlay">
+			<div id="instructions-holder">
+				<h1>Instructions</h1>
+				<ul class="instruction-list">
+					<li>[LMB] to draw</li>
+					<li>[ALT + LMB] to rotate </li>
+					<li>[Scroll] to zoom in/out</li>
+					<li>[ALT/CTRL or ALT/CMD] to pan </li>
+					<li>[SPACE] to toggle UI </li>
+					
+					<li>gltf exports <span class="bold">do not</span> retain shader effects</li>
+					<li>
+						gltf exports <span class="bold">do</span> retain animation data, but they don't import properly into blender (other apps untested)
+					</li>
+					<li>
+						download and run <a href="">this python script</a> to attach the animations to the objects. 
+					</li>
+					<li>drag and drop a glb or gltf on the scene to use a custom draw object</li>
+					<li>drag and drop a goe.ink json to reload a saved project</li>
+					<li>some models by david orielly</li>
+					<li>site by <a class="normal-link" href="https://twitter.com/strugggggs"> vince mckelvie</a> </li>
+
+				</ul>
+				<div id="got-it-btn-holder">
+					<button class="btn" id="got-it-btn">got it.</button>
+				</div>
+			</div>
+		</div>
 	
 		<div class="holders" id="tools-holder">
 			<div class="sub-holders">
-				<button id="reset-cam"> reset cam </button> 
-				<button id="toggle-draw-on-view"> draw on view </button> 
-				<button id="toggle-draw-object"> toggle draw object </button> 				
-				<button id="export-gltf"> save gltf </button>
+				<div id="main-btns-holder" style="text-align: center; margin-top: 20px;">
 
-				<div id="undo-redo-holder" >
-					<button id="undo"> undo </button>
-					<button id="redo"> redo </button>
-					
+					<button class="btn inline-btns" id="reset-cam"> reset cam </button> <br/>
+					<button class="btn inline-btns" id="toggle-draw-on-view"> draw on view </button> <br/>
+					<button class="btn inline-btns" id="toggle-draw-object"> toggle draw object </button> <br/>				
+					<button class="btn inline-btns" id="export-gltf"> save gltf </button> <br/>
+					<button class="btn inline-btns" id="save-geo-ink-file"> save geo.ink file </button> <br/>
+
+				</div>
+				<div id="undo-redo-holder"  >
+					<button class="btn inline-btns" id="undo"> undo </button>
+					<button class="btn inline-btns" id="redo"> redo </button>
 				</div>
 				
-				<div id="c-size" class="check-holder">
+				<div id="c-size" class="draw-objects-holder" style="margin-top: 20px">
+					<span style="display: block; text-align: center; " class="slider-info">draw objects</span>
+					<button id="draw-object-0" class="btn inline-btns" > 0 </button> 				
+					<button id="draw-object-1" class="btn inline-btns" > 1 </button>
+				</div>
+
+				<div class="check-holder">
 					<span class="slider-info">rotation by normals</span>
-					<input type="checkbox" id="rotation-follows-normal" checked>
+					<input class="control control-checkbox" type="checkbox" id="rotation-follows-normal" checked>
 				</div>
 
-				<div id="c-size" class="check-holder">
+				<div class="check-holder">
 					<span class="slider-info">mirror x</span>
-					<input type="checkbox" id="mirror-x" checked>
+					<input class="control control-checkbox" type="checkbox" id="mirror-x" checked>
 				</div>
 
-				<div id="c-size" class="check-holder">
+				<div class="check-holder">
 					<span class="slider-info">mirror y</span>
-					<input type="checkbox" id="mirror-y">
+					<input class="control control-checkbox" type="checkbox" id="mirror-y">
 				</div>
 
-				<div id="c-size" class="check-holder">
+				<div class="check-holder">
 					<span class="slider-info">mirror z</span>
-					<input type="checkbox" id="mirror-z">
+					<input class="control control-checkbox" type="checkbox" id="mirror-z">
 				</div>
 				
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
 					<span class="slider-info">animation speed</span>
 					<form class="control-slider-holder">
@@ -49,7 +86,7 @@
 					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
 				</div>
 				
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
 					<span class="slider-info">size</span>
 					<form class="control-slider-holder">
@@ -57,12 +94,12 @@
 					</form>
 					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
 				</div>
-				<div id="c-size" class="check-holder">
+				<div class="check-holder">
 					<span class="slider-info">animate size in and out</span>
-					<input type="checkbox" id="should-size-ease-in-out" checked>
+					<input class="control control-checkbox" type="checkbox" id="should-size-ease-in-out" checked>
 				</div>
 				
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
 					<span class="slider-info">rotate x</span>
 					<form class="control-slider-holder">
@@ -70,7 +107,7 @@
 					</form>
 					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
 				</div>
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<span class="slider-info">rotate y</span>
 					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
 					<form class="control-slider-holder">
@@ -78,7 +115,7 @@
 					</form>
 					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
 				</div>
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<span class="slider-info">rotate z</span>
 					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
 					<form class="control-slider-holder">
@@ -86,7 +123,7 @@
 					</form>
 					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
 				</div>
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
 					<span class="slider-info">additive rotation speed</span>
 					<form class="control-slider-holder">
@@ -94,20 +131,20 @@
 					</form>
 					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
 				</div>
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<span class="slider-info">additive rotation x</span>
-					<input type="checkbox" id="additive-rotation-x" checked>
+					<input class="control control-checkbox" type="checkbox" id="additive-rotation-x" checked>
 				</div>
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<span class="slider-info">additive rotation y</span>
-					<input type="checkbox" id="additive-rotation-y" checked>
+					<input class="control control-checkbox" type="checkbox" id="additive-rotation-y" checked>
 				</div>
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<span class="slider-info">additive rotation z</span>
-					<input type="checkbox" id="additive-rotation-z" checked>
+					<input class="control control-checkbox" type="checkbox" id="additive-rotation-z" checked>
 				</div>
 				
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
 					<span class="slider-info">smooth amount</span>
 					<form class="control-slider-holder">
@@ -115,7 +152,7 @@
 					</form>
 					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
 				</div>
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
 					<span class="slider-info">normal offset</span>
 					<form class="control-slider-holder">
@@ -124,9 +161,9 @@
 
 					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
 				</div>
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
-					<span class="slider-info">density</span>
+					<span class="slider-info">mesh density</span>
 					<form class="control-slider-holder">
 						<input id="density-amount" class="control-slider" type="range" min="0" max="100" value="20" >
 					</form>
@@ -134,14 +171,14 @@
 					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
 				</div>
 
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
 					<span class="slider-info">background gradient size</span>
 					<form class="control-slider-holder">
 						<input id="background-gradient-size" class="control-slider" type="range" min="0" max="900" value="90" >
 					</form>
 				</div>
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
 					<span class="slider-info">background gradient offset</span>
 					<form class="control-slider-holder">
@@ -149,69 +186,69 @@
 					</form>
 				</div>
 
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
 					<span class="slider-info">background color top</span>
-					<form class="control-slider-holder">
-						<input class="color-select" id="background-color-top" type="color" value="#000000" >
-					</form>
+					
+					<input class="color-select" id="background-color-top" type="color" value="#333333" >
+					
 
 				</div>
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
 					<span class="slider-info">background color bottom</span>
-					<form class="control-slider-holder">
-						<input class="color-select" id="background-color-bottom" type="color" value="#000000" >
-					</form>
+					
+					<input class="color-select" id="background-color-bottom" type="color" value="#333333" >
+					
 				</div>
 				
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<span class="slider-info">model rainbow tint amount</span>
 					<input id="rainbow-tint-amount" class="control-slider" type="range" min="0" max="100" value="0" >
 				</div>
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<span class="slider-info">model rainbow size</span>
 					<input id="rainbow-size" class="control-slider" type="range" min="0" max="300" value="10" >
 				</div>
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<span class="slider-info">model gradient size</span>
 					<input id="model-gradient-size" class="control-slider" type="range" min="0" max="100" value="0" >
 				</div>
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<span class="slider-info">model gradient offset</span>
 					<input id="model-gradient-offset" class="control-slider" type="range" min="-100" max="100" value="0" >
 				</div>
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<span class="slider-info">model tint gradient top</span>
 					<input class="color-select" type="color" id="model-color-top" type="color" value="#ffffff">
 				</div>
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<span class="slider-info">model tint gradient bottom</span>
 					<input class="color-select" id="model-color-bottom" type="color" value="#ffffff" >
 				</div>
 				
 
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<span class="slider-info">noise deform amount</span>
 					<input id="noise-deform" class="control-slider" type="range" min="0" max="100" value="0" >
 				</div>
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<span class="slider-info">noise size</span>
 					<input id="noise-size" class="control-slider" type="range" min="0" max="100" value="0" >
 				</div>
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<span class="slider-info">twist deform amount</span>
 					<input id="twist-deform" class="control-slider" type="range" min="0" max="200" value="20" >
 				</div>
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<span class="slider-info">twist size</span>
 					<input id="twist-size" class="control-slider" type="range" min="0" max="200" value="20" >
 				</div>
-				<div id="c-size" class="slider-holder">
+				<div class="slider-holder">
 					<span class="slider-info">deform speed</span>
 					<input id="deform-speed" class="control-slider" type="range" min="0" max="200" value="33" >
 				</div>
-				<div id="c-size" class="slider-holder" style="padding-bottom: 200px;">
+				<div class="slider-holder" style="padding-bottom: 200px;">
 					<span class="slider-info">color speed</span>
 					<input id="color-speed" class="control-slider" type="range" min="0" max="200" value="33" >
 				</div>

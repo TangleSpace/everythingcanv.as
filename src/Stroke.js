@@ -158,9 +158,7 @@ class PaintMesh {
                 
                 for (const [key, value] of Object.entries(obj.material)) {
                     if( key.includes("Map") || key.includes("map") ){
-                        console.log("key includes true : "+key);
                         if(value != null && value.isTexture){
-                            console.log("disposed : "+value);
                             value.dispose();
                         }
                     }

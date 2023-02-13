@@ -87,7 +87,9 @@ let mirrorMeshX;
 let mirrorMeshY;
 let mirrorMeshZ;
 
+let currentDrawObjectIndex = 0;
 
+let strokeHolder = new THREE.Object3D();
 let reflectObjectX = new THREE.Object3D();
 let reflectObjectY = new THREE.Object3D();
 let reflectObjectZ = new THREE.Object3D();
@@ -182,11 +184,18 @@ function init(){
     reflectObjectXZ.scale.z =-1;
     reflectObjectXZ.scale.x =-1;
 
-    scene.add(reflectObjectX);
-    scene.add(reflectObjectY);
-    scene.add(reflectObjectZ);
-    scene.add(reflectObjectXY);
-    scene.add(reflectObjectXZ);
+    scene.add(strokeHolder)
+    strokeHolder.add(
+        reflectObjectX,
+        reflectObjectY,
+        reflectObjectZ,
+        reflectObjectXY,
+        reflectObjectXZ
+    );
+    // scene.add(reflectObjectY);
+    // scene.add(reflectObjectZ);
+    // scene.add(reflectObjectXY);
+    // scene.add(reflectObjectXZ);
     
     object = new THREE.Object3D();
     scene.add(object);
@@ -261,6 +270,22 @@ function init(){
 
     //controls.maxPolarAngle = Math.PI / 2;
 
+    for(let i = 0; i<2; i++){
+        
+        document.getElementById("draw-object-"+i).addEventListener("click", function(){
+            
+            if(i!=currentDrawObjectIndex){
+                currentDrawObjectIndex = i;
+                replaceDrawObject("./extras/assets/draw/"+i+".glb");
+            }
+            
+        });
+
+    }
+
+    window.addEventListener('focus', onFocus );
+    window.addEventListener('blur', onBlur );
+
 	window.addEventListener( 'resize', onWindowResize, false );
 	document.addEventListener( 'mousemove', onMouseMove, false );
     document.addEventListener( 'keydown', onKeyDown, false );
@@ -273,6 +298,11 @@ function init(){
     document.addEventListener( 'touchcancel', onTouchUp, false );
 
     document.getElementById("reset-cam").addEventListener("click", resetCam);
+    
+    document.getElementById("got-it-btn").addEventListener("click", killIntroScene);
+    document.getElementById("instructions-overlay").addEventListener("click", killIntroScene);
+    
+    document.getElementById("save-geo-ink-file").addEventListener("click", saveGeoInkFile)
     document.getElementById("toggle-draw-on-view").addEventListener("click", updateDrawState);
     document.getElementById("toggle-draw-object").addEventListener("click", toggleDrawObject);
     document.getElementById("export-gltf").addEventListener("click", exportGLTF);
@@ -363,6 +393,12 @@ function init(){
 
     document.getElementById("color-speed").addEventListener("input", updateModelParams);
     document.getElementById("color-speed").addEventListener("change", updateModelParams);
+
+
+    document.addEventListener( 'dragover', onDocumentDragOver, false );
+    document.addEventListener( 'dragleave', onDocumentLeave, false );
+    document.addEventListener( 'drop', onDocumentDrop, false );
+
 
     helper = new BrushHelper({scene:scene, raycaster:raycaster});
     background = new Background({scene:scene});
@@ -521,8 +557,7 @@ function getHitPointFromMesh(msh, mse){
 function onKeyDown(e) {
     if(e.keyCode == 18){
         if(controls){
-            controls.enableRotate=true;
-            //controls.altBtnDown = true;
+            controls.enableRotate = true;
         }
     }else if(e.keyCode==32){
        
@@ -611,7 +646,7 @@ function onKeyDown(e) {
 
 
 function onKeyUp(e) {
-    console.log(e.keyCode)
+    
     if(e.keyCode == 18){
         if(controls){
             controls.enableRotate=false;
@@ -720,7 +755,6 @@ function onMouseDown(e){
 }
 
 
-
 function onTouchDown(e){
     
     mouse.down = true;
@@ -762,8 +796,6 @@ function onMouseMove(e){
 
 	mouse.normal.x =    ( e.clientX / window.innerWidth ) * 2 - 1;
 	mouse.normal.y =  - ( e.clientY / window.innerHeight ) * 2 + 1;
-
-    
 
     // See if the ray from the camera into the world hits one of our meshes
     if(drawObject){
@@ -832,22 +864,6 @@ function handleDrawGeo(){
 }
 
 
-function idk(xx, yy, zz, a)
-{
-    // Here we calculate the sin( theta / 2) once for optimization
-    const factor = sin( a / 2.0 );
-
-    // Calculate the x, y and z of the quaternion
-    const x = xx * factor;
-    const y = yy * factor;
-    const z = zz * factor;
-
-    // Calcualte the w value by cos( theta / 2 )
-    const w = cos( a / 2.0 );
-
-    return new THREE.Quaternion(x, y, z, w).normalize();
-}
-
 function buildGeo(){
 
     //meshObjects.push(new MeshObject());
@@ -858,7 +874,7 @@ function buildGeo(){
             helper:helper, 
             meshClone:meshClone, 
             index:actionHelper.currStrokeIndex, 
-            scene:scene, 
+            scene:strokeHolder, 
             globalDensityAmount:globalDensityAmount, 
             meshScale:meshScale,
             globalShouldAnimateSize:globalShouldAnimateSize,
@@ -903,6 +919,18 @@ function buildGeo(){
 
 
     }
+
+}
+
+
+function onFocus(){
+
+}
+function onBlur(){
+
+}
+
+function saveGeoInkFile(){
 
 }
 
@@ -962,6 +990,10 @@ function updateDrawState(){
     }
 }
 
+function killIntroScene(){
+    document.getElementById("instructions-overlay").style.display = "none";
+}
+
 function updateMeshSize(val){
     handleUiUpdating();
     meshScale = $("#size-slider").val()*.1;
@@ -1008,7 +1040,6 @@ function handleUiUpdating(){
 
 function updateDensity(){
     globalDensityAmount = $("#density-amount").val()*.0031;
-    console.log(globalDensityAmount)
 }
 
 function toggleRotationFollowingNormal(){
@@ -1051,33 +1082,29 @@ function toggleMirrorZ(){
 
 
 function exportGLTF(  ) {
+    
     const anis = [];
     const meshes = [];
-    //meshes.push(scene);
+    
     for(let i = 0; i<meshObjects.length; i++){
         for(let k = 0; k<meshObjects[i].meshes.length; k++){
-            //meshes.push(meshObjects[i].meshes[k].mesh);
-            //console.log(meshObjects[i].meshes[k].mesh);
-            //console.log(meshObjects[i].meshes[k].clip)
-            anis.push(meshObjects[i].meshes[k].mesh.animations[0])
-            //anis.push(meshObjects[i].meshes[k].clip)
+            anis.push( meshObjects[i].meshes[k].mesh.animations[0] )
         }
     }
-
-
+    console.log(anis)
     
     const gltfExporter = new GLTFExporter();
+
     const options = {
-        trs: false,//document.getElementById( 'option_trs' ).checked,
+        trs: true,
         onlyVisible: true,
-        truncateDrawRange: true,//document.getElementById( 'option_drawrange' ).checked,
-        binary: false,//document.getElementById( 'option_binary' ).checked,
-        maxTextureSize: 1024, // To prevent NaN value
-        animations:anis,
+        binary: true,
+        maxTextureSize: 2048,
+        animations:anis
     };
-   
+
     gltfExporter.parse(
-        scene,
+        strokeHolder,
         function ( result ) {
 
             if ( result instanceof ArrayBuffer ) {
@@ -1087,15 +1114,40 @@ function exportGLTF(  ) {
             } else {
 
                 const output = JSON.stringify( result, null, 2 );
-                //console.log( output );
+                console.log( output );
                 saveString( output, 'scene.gltf' );
 
             }
-            //drawObject.visible = true;
+
+        },
+        function ( error ) {
+
+            console.log( 'An error happened during parsing', error );
 
         },
         options
     );
+   
+    // gltfExporter.parse(
+    //     strokeHolder,
+    //     function ( result ) {
+
+    //         if ( result instanceof ArrayBuffer ) {
+
+    //             saveArrayBuffer( result, 'scene.glb' );
+
+    //         } else {
+
+    //             const output = JSON.stringify( result, null, 2 );
+    //             //console.log( output );
+    //             saveString( output, 'scene.gltf' );
+
+    //         }
+    //         //drawObject.visible = true;
+
+    //     },
+    //     options
+    // );
 
 }
 
@@ -1105,6 +1157,87 @@ function save( blob, filename ) {
     link.click();
 }
 
+
+function saveArrayBuffer( buffer, filename ) {
+    save( new Blob( [ buffer ], { type: 'application/octet-stream' } ), filename );
+}
 function saveString( text, filename ) {
     save( new Blob( [ text ], { type: 'text/plain' } ), filename );
+}
+
+
+
+function onDocumentDragOver( event ) {
+
+    event.preventDefault();
+
+}
+
+function onDocumentLeave( event ) {
+
+    event.preventDefault();
+
+}
+
+
+function replaceDrawObject(src){
+    const loader = new GLTFLoader();
+    loader.load( src, function ( gltf ) {
+        
+        killObject(drawObject);
+        scene.add(gltf.scene)
+        drawObject = gltf.scene;
+        
+        
+    });
+}
+
+
+function onDocumentDrop( event ) {
+
+    event.preventDefault();
+
+    const file = event.dataTransfer.files[ 0 ];
+    
+    const ext = file.name.substr(file.name.length - 3);
+    if( ext == "glb" || ext == "ltf" ){
+        const reader = new FileReader();
+
+        reader.onload = function ( event ) {
+            //console.log(event.target.result);
+            //loadImage( event.target.result );
+            replaceDrawObject(event.target.result);
+        };
+
+        reader.readAsDataURL( file );
+    }
+
+}
+
+function killObject(obj){
+    
+    obj.traverse( function ( obj ) {
+        handleKill(obj);
+    });
+    handleKill(obj);
+    scene.remove(obj); 
+}
+
+function handleKill(obj){
+    if(obj.isMesh || obj.isSkinnedMesh){
+           
+        if(obj.material !=null ){
+            
+            for (const [key, value] of Object.entries(obj.material)) {
+                if( key.includes("Map") || key.includes("map") ){
+                    if(value != null && value.isTexture){
+                        console.log("disposed : "+value);
+                        value.dispose();
+                    }
+                }
+            }
+        }
+        obj.geometry.dispose();
+        //obj.dispose();
+    }
 }

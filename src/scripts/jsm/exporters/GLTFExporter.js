@@ -108,6 +108,8 @@ class GLTFExporter {
 			plugins.push( this.pluginCallbacks[ i ]( writer ) );
 
 		}
+		
+		console.log(options);
 
 		writer.setPlugins( plugins );
 		writer.write( input, onDone, options ).catch( onError );
@@ -442,6 +444,8 @@ class GLTFWriter {
 			animations: [],
 			includeCustomExtensions: false
 		}, options );
+		console.log(options)
+		console.log(this.options.animations.length)
 
 		if ( this.options.animations.length > 0 ) {
 
