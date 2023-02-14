@@ -28,6 +28,7 @@ class BrushHelper {
         this.visual.rotation.copy(this.mesh.rotation);
                 
         if(this.holder){
+
             this.visual.visible = false;
             this.holder.scale.set(OBJ.meshScale, OBJ.meshScale, OBJ.meshScale);
             this.holder.position.lerp(this.mesh.position, OBJ.globalSmoothAmount);// , globalSmoothAmount);
@@ -56,9 +57,6 @@ class BrushHelper {
         // Toggle rotation bool for meshes that we clicked
         if ( intersects.length > 0 ) {
             
-            //var p = intersects[ 0 ].point;
-            //mouseHelper.position.copy( p );
-            //intersection.point.copy( p );
             var n = intersects[ 0 ].face.normal.clone();
             n.transformDirection( OBJ.drawObject.matrixWorld );
             n.multiplyScalar( 10 );
@@ -75,8 +73,9 @@ class BrushHelper {
             this.killObject(this.holder);
            // this.scene.remove(this.holder);
         }
+
         this.holder = OBJ.mesh.clone();
-        this.scene.add(this.holder)
+        this.scene.add(this.holder);
     }
     copyMaterial(OBJ){
         const self = this;
@@ -104,19 +103,17 @@ class BrushHelper {
     }
     
     killObject(obj){
-        
+        const self = this;
         obj.traverse( function ( obj ) {
-            handleKill(obj);
+            self.handleKill(obj);
         });
-        handleKill(obj);
-        scene.remove(obj); 
+        self.handleKill(obj);
     }
 
     handleKill(obj){
         if(obj.isMesh || obj.isSkinnedMesh){
                
             if(obj.material !=null ){
-                
                 for (const [key, value] of Object.entries(obj.material)) {
                     if( key.includes("Map") || key.includes("map") ){
                         if(value != null && value.isTexture){
@@ -127,8 +124,8 @@ class BrushHelper {
                 obj.material.dispose();
             }
             obj.geometry.dispose();
-            //obj.dispose();
         }
+        this.scene.remove(obj);
     }
 }
 

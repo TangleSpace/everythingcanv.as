@@ -21,10 +21,13 @@ class Stroke {
         this.arr = OBJ.pos;
         this.rots = OBJ.rots;
         this.strokeIndex = OBJ.all.index;
+        this.modelIndex = OBJ.all.modelIndex;
+        this.urlIndex = OBJ.all.urlIndex;
 
         this.total = Math.ceil( this.arr.length * OBJ.all.globalDensityAmount);
         this.speed = 200;
         this.meshes = [];
+
 
         this.curve = new CatmullRomCurve3(this.arr);
         this.curve.curveType = 'centripetal';
@@ -46,6 +49,8 @@ class Stroke {
         
         //scene.add(this.mesh)
         //let start = 0;
+        this.scene = OBJ.all.scene;
+
         for(var i = 0; i<this.total; i++){
             const start = (i / this.total);
             const endInc = (i == this.total-1) ? i : (i + 1); 
@@ -58,14 +63,13 @@ class Stroke {
                 parent:this, 
                 geo:this.tubeGeometry, 
                 start:start, 
-                scene:OBJ.all.scene, 
+                scene:this.scene, 
                 scale:OBJ.all.meshScale, 
                 total:this.total, 
                 index:i, 
                 rotation:rotFnl,
                 meshClone:OBJ.all.meshClone,
                 strokeIndex:this.strokeIndex,
-                helper:OBJ.all.helper,
                 globalShouldAnimateSize:OBJ.all.globalShouldAnimateSize,
             
             });
@@ -85,6 +89,24 @@ class Stroke {
         for(var i = 0; i<this.meshes.length; i++){
             this.meshes[i].kill();
         }
+    }
+    getExportData(){
+        const arr = [];
+
+        for(var i = 0; i<this.meshes.length; i++){
+            arr.push({
+                keys:{
+                    posKeys:this.meshes[i].posKeys,
+                    rotKeys:this.meshes[i].rotKeys,
+                    scaleKeys:this.meshes[i].scaleKeys,
+                },
+                modelIndex:this.modelIndex,
+                urlIndex:this.urlIndex,
+                scene:this.scene.name
+
+            })
+        }  
+        return arr;
     }
 
 }
@@ -112,7 +134,7 @@ class PaintMesh {
         this.globalShouldAnimateSize = OBJ.globalShouldAnimateSize;
         this.scene = OBJ.scene;
         
-        this.mesh.scale.copy(OBJ.helper.holder.scale);
+        //this.mesh.scale.set(OBJ.scale);
         //this.mesh.rotation.copy(helper.holder.rotation);
         
         this.scene.add(this.mesh);
@@ -131,8 +153,11 @@ class PaintMesh {
         this.clip;
         this.positionkf;
         this.scalef;
-        this.rotationkf
+        this.rotationkf;
         this.lookObj = new Object3D();
+        this.posKeys = [];
+        this.rotKeys = [];
+        this.scaleKeys = [];
         
         //scene.add(this.lookObj);
 
@@ -142,13 +167,14 @@ class PaintMesh {
             //constraint.offset_factor = fnl
             //constraint.keyframe_insert(data_path="offset_factor")
     }
+
     kill(){
         const self = this;
         this.mesh.traverse( function ( obj ) {
             self.handleKill(obj);
         });
         this.handleKill(this.mesh); 
-        this.scene.remove(this.mesh);
+        //this.scene.remove(this.mesh);
     }
 
     handleKill(obj){
@@ -168,6 +194,7 @@ class PaintMesh {
             obj.geometry.dispose();
             //obj.dispose();
         }
+        this.scene.remove(obj);
     }
 
     initAnimation (){
@@ -212,6 +239,10 @@ class PaintMesh {
             valuesS.push(s);
 
         }   
+
+        this.posKeys = valuesP;
+        this.rotKeys = valuesR;
+        this.scaleKeys = valuesS;
       
         this.positionkf = new VectorKeyframeTrack( '' +this.mesh.name+ '.position', keys, valuesP );
         this.rotationkf = new QuaternionKeyframeTrack('' +this.mesh.name+ '.quaternion', keys, valuesR );
