@@ -1,0 +1,142 @@
+<html>
+	
+	<head>
+		<title>geo.ink</title>
+		<link rel="stylesheet" href="styles.css">
+	</head>
+
+	<body>
+	
+		<div class="holders" id="tools-holder">
+			<div class="sub-holders">
+				<button onclick="resetCam()"> reset cam </button> 
+				
+				<button onclick="updateDrawState()" id="draw-toggle"> draw on view </button> 
+				<button onclick="toggleDrawObject()" > toggle draw object </button> 
+				<button onclick="exportGLTF()"> save gltf </button>
+				
+				<!--<button onclick="toggleFollowCurve()"> follow curve </button>-->
+				<!--<button onclick="toggleShouldRotate()"> rotate </button>-->
+				<div id="c-size" class="slider-holder">
+					<span class="slider-info">rotation by normals</span>
+					<input type="checkbox" id="rotation-follows-normal" name="rotationFollowsNormals" onclick="toggleRotationFollowingNormal()" checked>
+				</div>
+
+				<div id="c-size" class="slider-holder">
+					<span class="slider-info">mirror x</span>
+					<input type="checkbox" id="mirror-x" name="rotationFollowsNormals" onclick="toggleMirrorX()" checked>
+				</div>
+
+				<div id="c-size" class="slider-holder">
+					<span class="slider-info">mirror y</span>
+					<input type="checkbox" id="mirror-y" name="rotationFollowsNormals" onclick="toggleMirrorY()">
+				</div>
+
+				<div id="c-size" class="slider-holder">
+					<span class="slider-info">mirror z</span>
+					<input type="checkbox" id="mirror-z" name="rotationFollowsNormals" onclick="toggleMirrorZ()">
+				</div>
+				
+				<div id="c-size" class="slider-holder">
+					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
+					<span class="slider-info">animation speed</span>
+					<form class="control-slider-holder">
+						<input id="animation-speed-slider" class="control-slider" oninput="updateAniSpeed()" onchange="updateAniSpeed()" type="range" name="infoSize" min="0" max="100" value="10" >
+					</form>
+					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
+				</div>
+				
+				<div id="c-size" class="slider-holder">
+					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
+					<span class="slider-info">size</span>
+					<form class="control-slider-holder">
+						<input id="size-slider" class="control-slider" oninput="updateMeshSize()" onchange="updateMeshSize()" type="range" name="infoSize" min=".1" max="30" value="10" >
+					</form>
+					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
+				</div>
+				<div id="c-size" class="slider-holder">
+					<span class="slider-info">animate size in and out</span>
+					<input type="checkbox" id="shouldSizeEaseInOut" name="sizeAni" onclick="toggleSizeEasing()" checked>
+				</div>
+				
+				<div id="c-size" class="slider-holder">
+					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
+					<span class="slider-info">rotate x</span>
+					<form class="control-slider-holder">
+						<input id="rotate-sliderX" class="control-slider" oninput="rotateBrushX()" onchange="rotateBrushX()" type="range" name="infoSize" min="0" max="628" value="0" >
+					</form>
+					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
+				</div>
+				<div id="c-size" class="slider-holder">
+					<span class="slider-info">rotate y</span>
+					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
+					<form class="control-slider-holder">
+						<input id="rotate-sliderY" class="control-slider" oninput="rotateBrushY()" onchange="rotateBrushY()" type="range" name="infoSize" min="0" max="360" value="0" >
+					</form>
+					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
+				</div>
+				<div id="c-size" class="slider-holder">
+					<span class="slider-info">rotate z</span>
+					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
+					<form class="control-slider-holder">
+						<input id="rotate-sliderZ" class="control-slider" oninput="rotateBrushZ()" onchange="rotateBrushZ()" type="range" name="infoSize" min="0" max="360" value="0" >
+					</form>
+					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
+				</div>
+				<div id="c-size" class="slider-holder">
+					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
+					<span class="slider-info">additive rotation speed</span>
+					<form class="control-slider-holder">
+						<input id="additiveRotationSlider" class="control-slider" oninput="updateRotationSpeed()" onchange="updateRotationSpeed()" type="range" name="infoRotationSpeed" min="0" max="100" value="0" >
+					</form>
+					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
+				</div>
+				<div id="c-size" class="slider-holder">
+					<span class="slider-info">additive rotation x</span>
+					<input type="checkbox" id="shouldRotateAdditive" name="addRotation" onclick="toggleAdditiveRotationX()" checked>
+				</div>
+				<div id="c-size" class="slider-holder">
+					<span class="slider-info">additive rotation y</span>
+					<input type="checkbox" id="shouldRotateAdditive" name="addRotation" onclick="toggleAdditiveRotationY()" checked>
+				</div>
+				<div id="c-size" class="slider-holder">
+					<span class="slider-info">additive rotation z</span>
+					<input type="checkbox" id="shouldRotateAdditive" name="addRotation" onclick="toggleAdditiveRotationZ()" checked>
+				</div>
+				
+				<div id="c-size" class="slider-holder">
+					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
+					<span class="slider-info">smooth amount</span>
+					<form class="control-slider-holder">
+						<input id="smoothAmount" class="control-slider" oninput="updateSmoothAmount()" onchange="updateSmoothAmount()" type="range" name="infoSize" min="10" max="100" value="100" >
+					</form>
+					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
+				</div>
+				<div id="c-size" class="slider-holder">
+					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
+					<span class="slider-info">normal offset</span>
+					<form class="control-slider-holder">
+						<input id="normalOffsetAmount" class="control-slider" oninput="updateNormalOffsetAmount()" onchange="updateNormalOffsetAmount()" type="range" name="infoSize" min="-100" max="100" value="20" >
+					</form>
+
+					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
+				</div>
+				<div id="c-size" class="slider-holder" style="padding-bottom: 200px;">
+					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
+					<span class="slider-info">density</span>
+					<form class="control-slider-holder">
+						<input id="densityAmount" class="control-slider" oninput="updateDensity()" onchange="updateDensity()" type="range" name="infoSize" min="0" max="100" value="20" >
+					</form>
+
+					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
+				</div>
+			</div>
+		</div>
+		<div class="holders" id="select">
+			<div class="sub-holders" id="models"></div>
+		</div>
+		<script src="./extras/jquery.js"></script>
+		<script src="./main.js" type="module"></script>	
+	
+	</body>
+</html>
