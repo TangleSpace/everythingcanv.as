@@ -10,6 +10,25 @@ body{
     color: white;
 }
 
+.drop-down-holder{
+    /*margin-top: 20px;*/
+}
+.drop-down-content{
+    display: none;
+    padding-bottom: 10px;
+    border-bottom: rgba(255,255,255,.3) solid thin;
+}
+.drop-down-title:hover{
+    background-color: rgba(255,255,255,.3);
+}
+.drop-down-title{
+    text-align: center;
+    font-size: 25px;
+    padding-top: 15px;
+    padding-bottom: 15px;
+    border-bottom: rgba(255,255,255,.3) solid thin;
+}
+
 #got-it-btn-holder{
   width: 100%;
   text-align: center;
@@ -315,7 +334,7 @@ input[type=range]:focus::-ms-fill-upper {
 
 .control {
     font-family: arial;
-    display: block;
+    display: inline-block;
     position: relative;
     padding-left: 30px;
     margin-bottom: 9px;

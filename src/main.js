@@ -287,6 +287,30 @@ function init(){
 
     }
 
+    const dds=[
+        "draw-object",
+        "essentials",
+        "mirror",
+        "rotation",
+        "background",
+        "shader-effects"
+    ]
+
+    for(let i = 0; i<dds.length; i++){
+        const t = document.getElementById(dds[i]+"-title");
+
+        t.addEventListener( "click", function(){
+            const el = "#"+dds[i]+"-content";
+            if ( $( el ).first().is( ":hidden" ) ) {
+                $( el ).slideDown( );
+            } else {
+                $( el ).slideUp();
+            }
+            
+            
+        })
+    }
+
     window.addEventListener('focus', onFocus );
     window.addEventListener('blur', onBlur );
 
