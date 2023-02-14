@@ -48,7 +48,7 @@ let shouldRotateAdditiveZ = true;
 let globalAdditiveRotationSpeed = 0;
 const geometry = new THREE.BoxGeometry( 5, 5, 5 );
 const material = new THREE.MeshStandardMaterial();
-let meshClone;
+
 let globalShouldAnimateSize = true;
 const loadobjs = [
     {url:"./extras/assets/draw/",           amount:2},
@@ -97,6 +97,7 @@ let reflectObjectXY = new THREE.Object3D();
 let reflectObjectXZ = new THREE.Object3D();
 let background;
 let matHandler;
+let didDrawLast = false;
 
 const actionHelper = new ActionHelper();
 
@@ -247,7 +248,7 @@ function init(){
 	renderer = new THREE.WebGLRenderer();
 	renderer.shadowMap.enabled = true;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-	renderer.toneMappingExposure = .5;
+	renderer.toneMappingExposure = .5;  
 	renderer.setPixelRatio( window.devicePixelRatio );
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	document.body.appendChild( renderer.domElement );
@@ -263,9 +264,12 @@ function init(){
 
     controls.screenSpacePanning = false;
 
-    controls.minDistance = 1;
-    controls.maxDistance = 150;
-    controls.enableRotate=false;
+    controls.minDistance = .5;
+    controls.maxDistance = 250;
+    controls.enableRotate = false;
+    controls.enablePan = false;
+    controls.screenSpacePanning = false;
+    
     clock = new THREE.Clock();
 
     //controls.maxPolarAngle = Math.PI / 2;
@@ -499,13 +503,13 @@ function getMatParam(){
         twistSize:$("#twist-size").val()*.01,
         noiseAmt:$("#noise-deform").val()*.01,
         rainbowAmt:$("#rainbow-tint-amount").val()*.01,
-        gradientSize:$("#model-gradient-size").val()*.03,
+        gradientSize:.5+$("#model-gradient-size").val()*.03,
         rainbowGradientSize:$("#rainbow-size").val()*.03,
-        gradientOffset:$("#model-gradient-offset").val()*.1,
+        gradientOffset:+$("#model-gradient-offset").val()*.1,
         topColor:new THREE.Color( $("#model-color-top").val() ),
         bottomColor:new THREE.Color( $("#model-color-bottom").val() ),
-        deformSpeed:$("#deform-speed").val()*.01,
-        colorSpeed:$("#color-speed").val()*.01,
+        deformSpeed:$("#deform-speed").val()*.03,
+        colorSpeed:$("#color-speed").val()*.03,
     }
 }
 
@@ -516,15 +520,21 @@ function chooseModel(i,k){
             if ( child.isMesh ) {
                 //roughnessMipmapper.generateMipmaps( child.material );
                 //child.material.vertexColors = false;
-                const mat = child.material.clone(); 
+                // console.log(child.material)
+                // let mat = new THREE.MeshStandardMaterial();
+                // child.material.copy(mat); 
+
+                // mat.map = child.material.map.clone();
                 const param = getMatParam();
                 //console.log(param)
-                child.material = matHandler.getCustomMaterial(child.material, param );
+                //console.log(child.name)
+                child.material = matHandler.getCustomMaterial(child.material, param);
+                console.log(child.material)
             }
         });
 
-        meshClone = gltf.scene;
-        helper.updateVisual({scene:scene, mesh:meshClone});
+        //meshClone = gltf.scene;
+        helper.updateVisual({mesh:gltf.scene});
 
     });
 }
@@ -555,92 +565,15 @@ function getHitPointFromMesh(msh, mse){
 
 
 function onKeyDown(e) {
+    console.log(e.keyCode)
     if(e.keyCode == 18){
         if(controls){
             controls.enableRotate = true;
         }
-    }else if(e.keyCode==32){
-       
-    }
-
-
-    switch(e.keyCode){
-     
-      
-        case 82://r
-            if(state == "drawing"){
-                // state = "rotating";
-                // //$("#infoImg").show();
-                // mouse.d3X = mouse.x;
-                // rotatePositionHolder = new THREE.Vector2(icon.position.x, icon.position.y);
-                // snapRotating = false;
-                //icon.visible = false;
-            }
-        break;
-        case 69://e
-            // if(state == "drawing"){
-            //     state = "rotating";
-            //     mouse.d3X = mouse.x;
-            //     rotatePositionHolder = new THREE.Vector2(icon.position.x, icon.position.y);
-            //     snapRotating = true;
-            // }
-            
-        break;
-        case 84://t
-            tempRotValue = 0;
-            rotValue = tempRotValue;
-        break;
-        case 89:
-            // if(state == "drawing"){
-            //     if(cntrlBtnDown && !backInTime)
-            //         redo();
-            // }
-        break;
-        case 9:
-            // if(state == "drawing"){
-            //     event.preventDefault();
-            //     toggleTraceImg();
-            // }
-        break;
-        case 192:
-            // if(state == "drawing"){
-            //     toggleTraceOpacity();
-            // }
-        break;
-        case 13:
-            // if(state == "changingName"){
-            //     updateFileName();
-            // }
-        break;
-        case 32:
-            
-        break;
-        case 39://right
-            if(state == "drawing"){
-                /*
-                if(scale<10)
-                    changeEmojiSize(0.5);
-                else if(scale>=10 && scale<=20)
-                    changeEmojiSize(1);
-                else
-                    changeEmojiSize(5);
-                */
-            }
-        break;
-        case 37://left
-            
-            if(state == "drawing"){
-                /*
-                if(scale<10)
-                    changeEmojiSize(-.5);
-                else if(scale>=10 && scale<=20)
-                    changeEmojiSize(-1);
-                else
-                    changeEmojiSize(-5);
-                */
-            }
-
-        break;
+    }else if(e.keyCode== 17){
+        if(controls){
+            controls.enablePan = true;
+        }
     }
 }
 
@@ -649,9 +582,14 @@ function onKeyUp(e) {
     
     if(e.keyCode == 18){
         if(controls){
-            controls.enableRotate=false;
+            controls.enableRotate = false;
+        }
+    }else if(e.keyCode == 17){
+        if(controls){
+            controls.enablePan = false;
         }
     }else if(e.keyCode==32){
+
         btns.space = !btns.space;
         $(".holders").css("display", btns.space ? "block" :"none" );
     }
@@ -709,7 +647,10 @@ function onMouseUp(e){
         ot = false;
         
         if(!movingCamera){
-            buildGeo();    
+            buildGeo();
+            didDrawLast = true;    
+        }else{
+            didDrawLast = false;
         }
 
         movingCamera = false;
@@ -737,7 +678,9 @@ function onMouseDown(e){
     var cntrl = false;
 
     if(controls){
-        if(!controls.enableRotate){
+        console.log(controls.enableDamping)
+        console.log(controls.enablePan);
+        if(!controls.enableRotate && !controls.enablePan ){
             cntrl = true;
         }else{
             movingCamera = true;
@@ -746,7 +689,13 @@ function onMouseDown(e){
     }
 
     if(e.button == 0 && cntrl){
+        if(didDrawLast){
+            console.log("DID DRAW LAST")
+            //const copy = helper
+            helper.copyMaterial({  param:getMatParam() });
+        }
         mouse.down = true;
+
         //if(controls)
             //controls.enabled = false;
 
@@ -869,7 +818,8 @@ function buildGeo(){
     //meshObjects.push(new MeshObject());
     const strokeFinal = [];
     
-    if(meshClone != null && mouse.smoothAvgs.length>0 ){
+    if(mouse.smoothAvgs.length>0 ){
+        const meshClone = helper.holder;
         const all = {
             helper:helper, 
             meshClone:meshClone, 
@@ -878,6 +828,7 @@ function buildGeo(){
             globalDensityAmount:globalDensityAmount, 
             meshScale:meshScale,
             globalShouldAnimateSize:globalShouldAnimateSize,
+            material
           
         }
         //function Stroke(SMOOTHARR, OBJ, DENSITY){
@@ -899,7 +850,6 @@ function buildGeo(){
                 all.scene = reflectObjectXY;
                 meshObjects.push(new Stroke( {pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
                 strokeFinal.push({pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, mesh:meshClone, scene:all.scene});
-
             }
         }
 
@@ -924,10 +874,13 @@ function buildGeo(){
 
 
 function onFocus(){
-
+    
 }
 function onBlur(){
-
+    if(controls){
+        controls.enableRotate=false;
+        controls.enablePan = false;
+    }
 }
 
 function saveGeoInkFile(){
@@ -949,6 +902,7 @@ function redoClick(){
     if(actionHelper.currStrokeIndex < actionHelper.actionsArr.length){
 
         const ind = actionHelper.currStrokeIndex;
+        const meshClone = helper.holder;
         const all = {
             helper:helper, 
             meshClone:meshClone, 
@@ -1198,18 +1152,19 @@ function onDocumentDrop( event ) {
     event.preventDefault();
 
     const file = event.dataTransfer.files[ 0 ];
-    
-    const ext = file.name.substr(file.name.length - 3);
-    if( ext == "glb" || ext == "ltf" ){
-        const reader = new FileReader();
+    if(file!=null){
+        const ext = file.name.substr(file.name.length - 3);
+        if( ext == "glb" || ext == "ltf" ){
+            const reader = new FileReader();
 
-        reader.onload = function ( event ) {
-            //console.log(event.target.result);
-            //loadImage( event.target.result );
-            replaceDrawObject(event.target.result);
-        };
+            reader.onload = function ( event ) {
+                //console.log(event.target.result);
+                //loadImage( event.target.result );
+                replaceDrawObject(event.target.result);
+            };
 
-        reader.readAsDataURL( file );
+            reader.readAsDataURL( file );
+        }
     }
 
 }
@@ -1231,11 +1186,11 @@ function handleKill(obj){
             for (const [key, value] of Object.entries(obj.material)) {
                 if( key.includes("Map") || key.includes("map") ){
                     if(value != null && value.isTexture){
-                        console.log("disposed : "+value);
                         value.dispose();
                     }
                 }
             }
+            obj.material.dispose();
         }
         obj.geometry.dispose();
         //obj.dispose();

@@ -34,10 +34,10 @@ class CustomMaterial {
 
     getCustomMaterial(mat, param) {
 
-        const material = mat.clone();
+        //const material = mat.clone();
         const col = mat.color.clone();
 
-        material.onBeforeCompile = function (shader) {
+        mat.onBeforeCompile = function (shader) {
 
             shader.uniforms.time = { value: 0};
             shader.uniforms.col = { value: col};
@@ -150,11 +150,11 @@ class CustomMaterial {
                 
                     vec4 diffuseColor = vec4( fnl.xyz, opacity );
                 `);
-            material.userData.shader = shader;
+            mat.userData.shader = shader;
         }  
 
-        this.all.push({mat:material, param:param});
-        return material;
+        this.all.push({mat:mat, param:param});
+        return mat;
 
     }
 

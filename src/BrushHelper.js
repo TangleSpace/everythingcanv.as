@@ -5,7 +5,7 @@ import {
     Euler,
     Mesh
 } from './build/three.module.js';
-
+import { CustomMaterial } from './CustomMaterial.js';
 class BrushHelper {
     
     constructor(OBJ){
@@ -17,7 +17,9 @@ class BrushHelper {
         this.visual = new Mesh(geometryHelper, new MeshStandardMaterial());
         this.holder;
         this.rotAdditive = new Euler();
-        OBJ.scene.add( this.mesh, this.visual );
+        this.scene = OBJ.scene;
+        this.scene.add( this.mesh, this.visual );
+        this.mathHandler = new CustomMaterial();
     }
 
     update(OBJ){
@@ -69,11 +71,64 @@ class BrushHelper {
         }
     }
     updateVisual(OBJ){
-        if(this.holder)
-            OBJ.scene.remove(this.holder);
-        
+        if(this.holder){
+            this.killObject(this.holder);
+           // this.scene.remove(this.holder);
+        }
         this.holder = OBJ.mesh.clone();
-        OBJ.scene.add(this.holder)
+        this.scene.add(this.holder)
+    }
+    copyMaterial(OBJ){
+        const self = this;
+        this.holder.traverse( function ( child ) {
+            if ( child.isMesh ) {
+                if(child.material!=null){
+                    
+                    let copy = new MeshStandardMaterial();
+                    
+                    for (const [key, value] of Object.entries(child.material)) {
+                        copy[key] = value;
+                    }
+
+                    const newParam = {};
+                    for (const [key, value] of Object.entries(OBJ.param)) {
+                        newParam[key] = value;
+                    }
+                    
+                    copy = self.mathHandler.getCustomMaterial(copy, newParam);
+                    child.material = copy;
+                    
+                }
+            }
+        });
+    }
+    
+    killObject(obj){
+        
+        obj.traverse( function ( obj ) {
+            handleKill(obj);
+        });
+        handleKill(obj);
+        scene.remove(obj); 
+    }
+
+    handleKill(obj){
+        if(obj.isMesh || obj.isSkinnedMesh){
+               
+            if(obj.material !=null ){
+                
+                for (const [key, value] of Object.entries(obj.material)) {
+                    if( key.includes("Map") || key.includes("map") ){
+                        if(value != null && value.isTexture){
+                            value.dispose();
+                        }
+                    }
+                }
+                obj.material.dispose();
+            }
+            obj.geometry.dispose();
+            //obj.dispose();
+        }
     }
 }
 

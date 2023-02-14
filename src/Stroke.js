@@ -163,6 +163,7 @@ class PaintMesh {
                         }
                     }
                 }
+                obj.material.dispose();
             }
             obj.geometry.dispose();
             //obj.dispose();

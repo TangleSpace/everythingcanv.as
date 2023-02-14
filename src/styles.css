@@ -153,6 +153,7 @@ input[type=range]::-webkit-slider-thumb:hover {
 }
 .inline-btns{
   display: inline-block !important;
+  cursor: pointer;
 }
 .control-slider{
   position:relative;
@@ -250,7 +251,7 @@ input[type=range]::-webkit-slider-thumb {
   margin-top: -8px;
 }
 input[type=range]:focus::-webkit-slider-runnable-track {
-  background: #000000;
+  background: white;
 }
 input[type=range]::-moz-range-track {
   width: 100%;
@@ -258,7 +259,7 @@ input[type=range]::-moz-range-track {
   cursor: pointer;
   animate: 0.2s;
   box-shadow: 1px 1px 1px #000000;
-  background: #000000;
+  background: white;
   border-radius: 0px;
   border: 1px solid #000000;
 }
