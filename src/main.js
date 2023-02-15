@@ -3,6 +3,10 @@ import * as THREE from './build/three.module.js';
 import { GLTFLoader } from './scripts/jsm/loaders/GLTFLoader.js';
 import { GLTFExporter } from './scripts/jsm/exporters/GLTFExporter.js';
 import { OrbitControls } from './scripts/jsm/controls/OrbitControls.js';
+import { RoomEnvironment } from './scripts/jsm/environments/RoomEnvironment.js';
+import { BrushHelper } from './BrushHelper.js';
+import { Stroke } from './Stroke.js';
+import { ActionHelper } from './ActionHelper.js';
 
 let camera, mesh, scene, renderer;
 let mouse = {
@@ -29,7 +33,7 @@ let geoArr = [];
 let yOff = 0.1;
 let object;
 let globalAnimationSpeed = 1;
-let meshObjects = [];
+const meshObjects = [];
 let light;
 let composer;
 let controls;
@@ -45,13 +49,13 @@ const material = new THREE.MeshStandardMaterial();
 let meshClone;
 let globalShouldAnimateSize = true;
 const loadobjs = [
-{url:"./extras/assets/draw/",           amount:2},
-{url:"./extras/assets/models/flowers/", amount:74},
-{url:"./extras/assets/models/rocks/",   amount:27},
-{url:"./extras/assets/models/tools/",   amount:80},
-{url:"./extras/assets/models/toys/",    amount:79}
+    {url:"./extras/assets/draw/",           amount:2},
+    {url:"./extras/assets/models/flowers/", amount:74},
+    {url:"./extras/assets/models/rocks/",   amount:27},
+    {url:"./extras/assets/models/tools/",   amount:80},
+    {url:"./extras/assets/models/toys/",    amount:79}
 ]
-let drawObject;
+let drawObject;  
 const toysAmount = 78;
 const toolsAmount = 89;
 const flowersAmount = 73;
@@ -81,26 +85,39 @@ let mirrorMeshX;
 let mirrorMeshY;
 let mirrorMeshZ;
 
+let leftObj; 
+let rightObj;
+let testObject;
+let reflectObject = new THREE.Object3D();
+
+const actionHelper = new ActionHelper();
+
+const isMobile = {
+    Android: function() {
+        return navigator.userAgent.match(/Android/i);
+    },
+    BlackBerry: function() {
+        return navigator.userAgent.match(/BlackBerry/i);
+    },
+    iOS: function() {
+        return navigator.userAgent.match(/iPhone|iPad|iPod/i);
+    },
+    Opera: function() {
+        return navigator.userAgent.match(/Opera Mini/i);
+    },
+    Windows: function() {
+        return navigator.userAgent.match(/IEMobile/i);
+    },
+    any: function() {
+        return (isMobile.Android() || isMobile.BlackBerry() || isMobile.iOS() || isMobile.Opera() || isMobile.Windows());
+    }
+};
+
 const link = document.createElement( 'a' );
 link.style.display = 'none';
 document.body.appendChild( link );
 
 init();
-
-function chooseModel(i,k){
-    const loader = new GLTFLoader().setPath( loadobjs[i].url );
-    loader.load( k+'.glb', function ( gltf ) {
-        gltf.scene.traverse( function ( child ) {
-            if ( child.isMesh ) {
-                //roughnessMipmapper.generateMipmaps( child.material );
-                //child.material.vertexColors = false;
-                
-            }
-        });
-        meshClone = gltf.scene;
-        helper.updateVisual(meshClone)
-    });
-}
 
 function init(){
     for(let i = 1; i<loadobjs.length; i++){
@@ -114,21 +131,23 @@ function init(){
         }
     }
    
-
     chooseModel(1,0);
+
     const loader = new GLTFLoader().setPath( loadobjs[0].url );
     loader.load( 0+'.glb', function ( gltf ) {
         gltf.scene.traverse( function ( child ) {
             if ( child.isMesh ) {
                 child.material.vertexColors = false;
                 drawObject = child;
-                scene.add(drawObject)
+                scene.add(drawObject);
+
             }
         });
         //drawObject = gltf.scene;
         
         
     });
+
     canvas = document.createElement("canvas");
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -136,41 +155,24 @@ function init(){
     ctx = canvas.getContext('2d');
     canvas.className = "customCanvas";
     
+    reflectObject = new THREE.Object3D();
+    reflectObject.scale.x =-1;
     
+
 	raycaster = new THREE.Raycaster();
 
 	camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 10000 );
-	//camera.position.set(0, 20, 0);
-    //
-    
-    //camera.quaternion.setFromAxisAngle(new THREE.Vector3(0,1,0), Math.PI/2);
-    //camera.rotation.x=-Math.PI*0.5;
     camera.position.z = 20;
 
-    
-    //if(!isMobile.any()){
-    //controls = new THREE.TrackballControls( camera, canvas );
-    //controls.rotateSpeed = 4.0;
-    //controls.enableDamping = true;
-    //controls.dampingFactor = .2; 
-    ////controls.zoomSpeed = 1.2;
-    //controls.panSpeed = 0.8;
-    //controls.noZoom = false;
-    //controls.noPan = false;
-    //controls.staticMoving = true;
-    //controls.dynamicDampingFactor = 0.3;
-    //}
-   
-    
 	scene = new THREE.Scene();
-
-    helper = new GeoHelper();
-	
+    scene.add(reflectObject);
+    
     object = new THREE.Object3D();
     scene.add(object);
     
     bgHolder = new THREE.Object3D();
     scene.add(bgHolder)
+    testObject = new THREE.Object3D();
 
     //camera.add(bgHolder);
     bgHolder.position.copy(camera.position);
@@ -202,12 +204,7 @@ function init(){
     scene.add(bgMesh);
     bgHolder.attach(bgMesh);
     bgHolder.position.set(camera.position.z,0,0);
-    
-    //bgMesh.rotation.x = -Math.PI;
-    //bgMesh.position.z = camera.position.z+1;
-	//bgMesh.material.visible = true;
-    
-    
+   
 	// lights
     const light = new THREE.AmbientLight( 0x242424 ); // soft white light
     scene.add( light );
@@ -217,42 +214,21 @@ function init(){
     dlight.position.set( d*.5, 0, d );
 
     scene.add(dlight)
-    //light.castShadow = true;
-    //light.shadow.mapSize.width = light.shadow.mapSize.height = 2048;
-    //light.shadow.camera.left =  -d*2;
-    //light.shadow.camera.right =  d*2;
-    //light.shadow.camera.top =    d*2;
-    //light.shadow.camera.bottom =-d*2;
-    //light.shadow.camera.far = d*5;
-    //light.shadow.camera.near = 0.1;
-    //light.shadow.darkness = 0.5;
-	
+    
 	renderer = new THREE.WebGLRenderer();
 	renderer.shadowMap.enabled = true;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+	renderer.toneMappingExposure = .5;
 	renderer.setPixelRatio( window.devicePixelRatio );
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	document.body.appendChild( renderer.domElement );
     renderer.domElement.className = "customThree";
-
-    // var effectCopy = new THREE.ShaderPass( THREE.CopyShader );
-    // effectCopy.renderToScreen = true;
-    //composer = new THREE.EffectComposer( renderer );
-    //composer.addPass( new THREE.RenderPass( scene, camera ) );
-    //var pixelSize = 800;
-    //var effectPixelate = new THREE.ShaderPass( THREE.PixelateShader );
-    //effectPixelate.uniforms[ 'size' ].value.x = window.innerWidth;
-    //effectPixelate.uniforms[ 'size' ].value.y = window.innerHeight;
-    //effectPixelate.uniforms[ 'pixelSize' ].value = pixelSize;
-    //composer.addPass( effectPixelate );
-    //var effectDither = new THREE.ShaderPass( THREE.DitherShader );
-    //effectDither.renderToScreen = true;
-    //composer.addPass( effectDither );
-
+    
+    const pmremGenerator = new THREE.PMREMGenerator( renderer );
+    scene.environment = pmremGenerator.fromScene( new RoomEnvironment(), 0.04 ).texture;
+   
     controls = new OrbitControls( camera, canvas);
-    //controls.listenToKeyEvents( window ); // optional
-
-    //controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
-
+    
     controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
     controls.dampingFactor = 0.05;
 
@@ -275,6 +251,50 @@ function init(){
 	canvas.addEventListener( 'mouseup', onMouseUp, false );
     document.addEventListener( 'touchend', onTouchUp, false );
     document.addEventListener( 'touchcancel', onTouchUp, false );
+
+    document.getElementById("reset-cam").addEventListener("click", resetCam);
+    document.getElementById("toggle-draw-on-view").addEventListener("click", updateDrawState);
+    document.getElementById("toggle-draw-object").addEventListener("click", toggleDrawObject);
+    document.getElementById("export-gltf").addEventListener("click", exportGLTF);
+    document.getElementById("rotation-follows-normal").addEventListener("click", toggleRotationFollowingNormal);
+    document.getElementById("mirror-x").addEventListener("click", toggleMirrorX);
+    document.getElementById("mirror-y").addEventListener("click", toggleMirrorY);
+    document.getElementById("mirror-z").addEventListener("click", toggleMirrorZ);
+    document.getElementById("undo").addEventListener("click", undoClick);
+    document.getElementById("redo").addEventListener("click", redoClick);
+
+    document.getElementById("animation-speed-slider").addEventListener("change", updateAniSpeed);
+    document.getElementById("size-slider").addEventListener("change", updateMeshSize);
+    document.getElementById("size-slider").addEventListener("input", updateMeshSize);
+
+    document.getElementById("should-size-ease-in-out").addEventListener("click", toggleSizeEasing);
+    document.getElementById("rotate-slider-x").addEventListener("change", rotateBrushX);
+    document.getElementById("rotate-slider-x").addEventListener("input", rotateBrushX);
+
+    document.getElementById("rotate-slider-y").addEventListener("change", rotateBrushY);
+    document.getElementById("rotate-slider-y").addEventListener("input", rotateBrushY);
+
+    document.getElementById("rotate-slider-z").addEventListener("change", rotateBrushZ);
+    document.getElementById("rotate-slider-z").addEventListener("input", rotateBrushZ);
+
+    document.getElementById("additive-rotation-slider").addEventListener("change", updateRotationSpeed);
+    document.getElementById("additive-rotation-slider").addEventListener("input", updateRotationSpeed);
+
+    document.getElementById("additive-rotation-x").addEventListener("click", toggleAdditiveRotationX);
+    document.getElementById("additive-rotation-y").addEventListener("click", toggleAdditiveRotationY);
+    document.getElementById("additive-rotation-z").addEventListener("click", toggleAdditiveRotationZ);
+
+    document.getElementById("smooth-amount").addEventListener("change", updateSmoothAmount);
+    document.getElementById("smooth-amount").addEventListener("input", updateSmoothAmount);
+
+    document.getElementById("normal-offset-amount").addEventListener("change", updateNormalOffsetAmount);
+    document.getElementById("normal-offset-amount").addEventListener("input", updateNormalOffsetAmount);
+
+    document.getElementById("density-amount").addEventListener("change", updateDensity);
+    document.getElementById("density-amount").addEventListener("input", updateDensity);
+
+    helper = new BrushHelper({scene:scene, raycaster:raycaster});
+    
 	animate();
 }
 
@@ -302,19 +322,48 @@ function animate(){
     }
 
     if(helper){
-        helper.update();
+        helper.update({
+            globalSmoothAmount:globalSmoothAmount,
+            meshScale:meshScale, 
+            globalSmoothAmount:globalSmoothAmount,
+            shouldRotateAdditiveX:shouldRotateAdditiveX,
+            shouldRotateAdditiveY:shouldRotateAdditiveY,
+            shouldRotateAdditiveZ:shouldRotateAdditiveZ,
+            globalAdditiveRotationSpeed:globalAdditiveRotationSpeed,
+            globalOffsetRotation:globalOffsetRotation,
+            rotationFollowsNormal:rotationFollowsNormal
+
+        });
     }
     
     bgHolder.position.copy(camera.position);
     bgHolder.rotation.copy(camera.rotation);
+
     const delta = clock.getDelta()*globalAnimationSpeed;
     for(var i = 0; i<meshObjects.length; i++){
-        meshObjects[i].update(delta);
+        meshObjects[i].update({delta:delta});
     }
 
     //composer.render();
     renderer.render(scene,camera);
 	
+}
+
+function chooseModel(i,k){
+    const loader = new GLTFLoader().setPath( loadobjs[i].url );
+    loader.load( k+'.glb', function ( gltf ) {
+        gltf.scene.traverse( function ( child ) {
+            // if ( child.isMesh ) {
+            //     //roughnessMipmapper.generateMipmaps( child.material );
+            //     //child.material.vertexColors = false;
+                
+            // }
+        });
+
+        meshClone = gltf.scene;
+        helper.updateVisual({scene:scene, mesh:meshClone});
+
+    });
 }
 
 function resetCam(){
@@ -553,7 +602,7 @@ function onTouchDown(e){
 function onTouchMove(e){
     
     e.preventDefault();
-    var touch = event.touches[0];
+    var touch = e.touches[0];
         
     var x = touch.pageX;
     var y = touch.pageY;
@@ -591,7 +640,14 @@ function onMouseMove(e){
     // See if the ray from the camera into the world hits one of our meshes
     if(drawObject){
         if(helper){
-            helper.doMouseInteraction();
+            helper.doMouseInteraction({
+                mouse:mouse, 
+                camera:camera, 
+                bgMesh:bgMesh, 
+                drawObject:drawObject,
+                drawState:drawState,
+                globalNormalOffsetAmount:globalNormalOffsetAmount
+            });
         }
     }
 
@@ -621,210 +677,6 @@ function onMouseMove(e){
     // }
 }
 
-
-function Stroke( SMOOTHARR, ROTS){
-   
-    this.arr = SMOOTHARR;
-    this.rots = ROTS;
-   
-    this.total = Math.ceil( this.arr.length * globalDensityAmount);
-    this.speed = 200;
-    this.meshes = [];
-
-    this.curve = new THREE.CatmullRomCurve3(this.arr);
-    this.curve.curveType = 'centripetal';
-    this.curve.closed = false;
-    this.curve.tension = .5;
-
-    // const points = this.curve.getPoints( 50 );
-    // const geometry = new THREE.BufferGeometry().setFromPoints( points );
-    // const material = new THREE.LineBasicMaterial( { color : 0xff0000 } );
-
-    // const curveObject = new THREE.Line( geometry, material );
-    // scene.add(curveObject)
-    //const points = this.curve.getPoints( 10 );
-    //const extrudePath = this.curve;
-    //tubeGeometry = new THREE.TubeGeometry( extrudePath, params.extrusionSegments, 2, params.radiusSegments, params.closed );
-    this.tubeGeometry = new THREE.TubeGeometry( this.curve, 10, .01, 10, false );
-    //this.tubeGeometry = new THREE.TubeGeometry( extrudePath, 2, .1, 2, false );
-    this.mesh = new THREE.Mesh( this.tubeGeometry, material.clone() );
-    
-    scene.add(this.mesh)
-    //let start = 0;
-    for(var i = 0; i<this.total; i++){
-        const start = (i / this.total);
-        const endInc = (i == this.total-1) ? i : (i + 1); 
-        const end = (endInc / this.total);
-
-        //console.log("start = "+start)
-        //console.log("end = "+end)
-        
-        //start += 1/this.total;
-        const avgStart = Math.floor(start);
-        const rotFnl = {from:this.rots[Math.floor(start*this.rots.length)], to:this.rots[Math.floor(end*this.rots.length)]};
-        // if(i<2){
-             //console.log(rotFnl);
-        // }
-        const pmesh = new PaintMesh(this, this.tubeGeometry, start, meshScale, this.total, i, rotFnl);
-        pmesh.initAnimation();
-        this.meshes.push(pmesh);
-    }
-
-    this.update = function(D){
-        for(var i = 0; i<this.meshes.length; i++){
-            this.meshes[i].update(D);
-            //console.log(this.meshes[i].mesh.name)
-        }  
-    }
-
-}
-
-
-
-function PaintMesh(PARENT, GEO, START, SCALE, TOTAL, I, ROTATION){
-
-    //this.mesh = new THREE.Mesh(geometry.clone(), material.clone());
-    //console.log(ROTATION)
-    this.parent = PARENT;
-
-    this.rots = ROTATION;
-    this.mesh = meshClone.clone();
-    this.mesh.name = "s_"+meshObjects.length+"_m_"+I;
-    //conso.e
-    this.total = TOTAL;
-    const s = SCALE;
-    this.i = I;
-    //this.mesh.scale.set(s,s,s);
-    // if(!rotationFollowsNormal){
-    //     this.mesh.rotation.set(globalOffsetRotation.x, globalOffsetRotation.y, globalOffsetRotation.z);
-    // }else{
-    //     this.mesh.rotation.set(helper.holder.rotation.x+globalOffsetRotation.x, helper.holder.rotation.y+globalOffsetRotation.z, helper.holder.rotation.z+globalOffsetRotation.z)
-    // }
-    this.mesh.scale.copy(helper.holder.scale);
-    //this.mesh.rotation.copy(helper.holder.rotation);
-    scene.add(this.mesh);
-    this.geo = GEO;
-    this.start = START;
-    this.position = new THREE.Vector3();
-    this.binormal = new THREE.Vector3();
-    this.normal = new THREE.Vector3();
-    this.lookAt = new THREE.Vector3();
-    this.direction = new THREE.Vector3();
-    this.inc = 0
-    this.speed = .0031;
-    this.keyframelength = 30*3;
-    this.mixer = new THREE.AnimationMixer(this.mesh); 
-    this.clip;
-    this.positionkf;
-    this.scalef;
-    this.rotationkf
-    this.lookObj = new THREE.Object3D();
-    //scene.add(this.lookObj);
-
-     //for t in range(speed):
-            //bpy.context.scene.frame_set(t)
-            //fnl = (start + ( t * (( 1/total )/speed) ) )%1.0
-            //constraint.offset_factor = fnl
-            //constraint.keyframe_insert(data_path="offset_factor")
-    this.initAnimation = function(){
-        
-        const keys = [];
-        const valuesP = [];
-        const valuesR = [];
-        const valuesS = [];
-        
-        for(let t = 0; t<this.keyframelength; t++){
-        
-            keys.push(t/30);
-          
-            const frameFraction = t * (( 1 / this.total ) / this.keyframelength) ;
-          
-            const key =  (this.start + ( frameFraction ));
-            const trans = this.getTransforms( key );//.pos;
-
-            let rots = new THREE.Quaternion();
-           
-            rots.slerpQuaternions ( this.rots.from, this.rots.to, t / this.keyframelength );
-            
-            valuesP.push(trans.pos.x);
-            valuesP.push(trans.pos.y);
-            valuesP.push(trans.pos.z);
-            valuesR.push(rots.x);
-            valuesR.push(rots.y);
-            valuesR.push(rots.z);
-            valuesR.push(rots.w);
-            let s = meshScale;
-            if(globalShouldAnimateSize){
-                if(this.i == 0){
-                    s = (t / this.keyframelength) * meshScale;
-                } 
-                if(this.i == this.total-1){
-                    s = (1.0 - (t / this.keyframelength)) * meshScale;
-                }
-            }
-
-            valuesS.push(s);
-            valuesS.push(s);
-            valuesS.push(s);
-
-        }   
-      
-        this.positionkf = new THREE.VectorKeyframeTrack( '' +this.mesh.name+ '.position', keys, valuesP );
-        this.rotationkf = new THREE.QuaternionKeyframeTrack('' +this.mesh.name+ '.quaternion', keys, valuesR );
-        this.scalef = new THREE.VectorKeyframeTrack('' +this.mesh.name+ '.scale', keys, valuesS );
-        // this.mixer = new THREE.AnimationMixer(this.mesh); 
-        this.clip = new THREE.AnimationClip( 'Action_'+this.i+'', -1  , [ this.positionkf, this.rotationkf, this.scalef  ] );
-        const clipAction = this.mixer.clipAction( this.clip );
-        clipAction.play();
-        this.mesh.animations.push(this.clip);
-    
-    }
-
-    this.update = function(D){
-
-        if(this.mixer)
-            this.mixer.update( D );
-    }
-    
-
-    this.getTransforms = function(key){
-        
-        //this.inc += this.speed;
-        const time = key;//this.i+key
-        
-        const t = time%1;
-        const pos = new THREE.Vector3();
-        
-        this.geo.parameters.path.getPointAt( t, pos );
-
-        pos.multiplyScalar( 1 );
-
-        const segments = this.geo.tangents.length;
-        const pickt = t * segments;
-        const pick = Math.floor( pickt );
-        const pickNext = ( pick + 1 ) % segments;
-        const binormal = new THREE.Vector3();
-        //this.binormal.subVectors( this.geo.binormals[ pickNext ], this.geo.binormals[ pick ] );
-        //this.binormal.multiplyScalar( pickt - pick ).add( this.geo.binormals[ pick ] );
-        binormal.subVectors( this.geo.binormals[ pickNext ], this.geo.binormals[ pick ] );
-        binormal.multiplyScalar( pickt - pick ).add( this.geo.binormals[ pick ] );
-        const direction = new THREE.Vector3();
-
-        this.geo.parameters.path.getTangentAt( t, direction );
-        const offset = 15;
-        const normal = new THREE.Vector3();
-        normal.copy( binormal ).cross( direction );
-
-        pos.add( this.normal.clone().multiplyScalar( 0 ) );
-        this.lookObj.position.copy( pos );
-        this.lookAt.copy( pos ).add( direction );
-        this.lookObj.matrix.lookAt( this.lookObj.position, this.lookAt, normal );
-        this.lookObj.quaternion.setFromRotationMatrix( this.lookObj.matrix );
-        return {pos:pos, rot:this.lookObj.rotation};
-        
-    }
-}
-
 function handleDrawGeo(){
     
     if(!ot){
@@ -851,25 +703,60 @@ function handleDrawGeo(){
 
 }
 
+
+function idk(xx, yy, zz, a)
+{
+    // Here we calculate the sin( theta / 2) once for optimization
+    const factor = sin( a / 2.0 );
+
+    // Calculate the x, y and z of the quaternion
+    const x = xx * factor;
+    const y = yy * factor;
+    const z = zz * factor;
+
+    // Calcualte the w value by cos( theta / 2 )
+    const w = cos( a / 2.0 );
+
+    return new THREE.Quaternion(x, y, z, w).normalize();
+}
+
 function buildGeo(){
 
     //meshObjects.push(new MeshObject());
+    const strokeFinal = [];
+    
     if(meshClone != null && mouse.smoothAvgs.length>0 ){
+        const all = {
+            helper:helper, 
+            meshClone:meshClone, 
+            index:actionHelper.currStrokeIndex, 
+            scene:scene, 
+            globalDensityAmount:globalDensityAmount, 
+            meshScale:meshScale,
+            globalShouldAnimateSize:globalShouldAnimateSize,
+            mirror: new THREE.Vector3(1,1,1),
+            reflectObject:reflectObject
+        }
         //function Stroke(SMOOTHARR, OBJ, DENSITY){
-        meshObjects.push(new Stroke( mouse.smoothAvgs, mouse.rots ))
+        meshObjects.push(new Stroke( { pos:mouse.smoothAvgs, rots:mouse.rots, all:all } ));
+        strokeFinal.push({pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, mesh:meshClone});
+
         if(mirrorX){
             const posArrX = [];
             const rotArrX = [];
             for(let i = 0; i<mouse.smoothAvgs.length; i++){
-                posArrX.push(new THREE.Vector3(mouse.smoothAvgs[i].x*-1, mouse.smoothAvgs[i].y, mouse.smoothAvgs[i].z));
+                posArrX.push(new THREE.Vector3(mouse.smoothAvgs[i].x, mouse.smoothAvgs[i].y, mouse.smoothAvgs[i].z));
             }
             for(let i = 0; i<mouse.rots.length; i++){
-                const eul = new THREE.Euler().setFromQuaternion(mouse.rots[i]);
-                eul.y*=-1;
-                const quat = new THREE.Quaternion().setFromEuler(eul);
-                rotArrX.push(quat);
+                
+                const s = new THREE.Quaternion().copy( mouse.rots[i] );
+                
+                rotArrX.push( s )
+                
+                all.mirror.x = -1;
             }
-            meshObjects.push(new Stroke( posArrX, rotArrX ));
+            meshObjects.push(new Stroke( {pos:posArrX, rots:rotArrX, all:all} ));
+            strokeFinal.push({pos:posArrX, rots:rotArrX, index:actionHelper.currStrokeIndex, mesh:meshClone})
         }
         if(mirrorY){
             const posArrY = [];
@@ -878,12 +765,14 @@ function buildGeo(){
                 posArrY.push(new THREE.Vector3(mouse.smoothAvgs[i].x, mouse.smoothAvgs[i].y*-1, mouse.smoothAvgs[i].z));
             }
             for(let i = 0; i<mouse.rots.length; i++){
-                const eul = new THREE.Euler().setFromQuaternion(mouse.rots[i]);
-                eul.x*=-1;
-                const quat = new THREE.Quaternion().setFromEuler(eul);
-                rotArrY.push(quat);
+                // const eul = new THREE.Euler().setFromQuaternion(mouse.rots[i]);
+                // eul.x*=-1;
+                // const quat = new THREE.Quaternion().setFromEuler(eul);
+                const quat = new THREE.Quaternion().copy(mouse.rots[i]).invert();
+                rotArrY.push(quat );
             }
-            meshObjects.push(new Stroke( posArrY, rotArrY ));
+            meshObjects.push(new Stroke( {pos:posArrY, rots:rotArrY, all:all} ));
+            strokeFinal.push({pos:posArrY, rots:rotArrY, index:actionHelper.currStrokeIndex, mesh:meshClone});
 
             if(mirrorX){
                 const posArrX_Y = [];
@@ -897,10 +786,11 @@ function buildGeo(){
                     const quat = new THREE.Quaternion().setFromEuler(eul);
                     rotArrX_Y.push(quat);
                 }
-                meshObjects.push(new Stroke( posArrX_Y, rotArrX_Y ));
+                meshObjects.push(new Stroke( {pos:posArrX_Y, rots:rotArrX_Y, all:all} ));
+                strokeFinal.push({pos:posArrX_Y, rots:rotArrX_Y, index:actionHelper.currStrokeIndex, mesh:meshClone});
             }
-
         }
+
         if(mirrorZ){
             const posArrZ = [];
             const rotArrZ = [];
@@ -913,7 +803,8 @@ function buildGeo(){
                 const quat = new THREE.Quaternion().setFromEuler(eul);
                 rotArrZ.push(quat);
             }
-            meshObjects.push(new Stroke( posArrZ, rotArrZ ));
+            meshObjects.push(new Stroke( {pos:posArrZ, rots:rotArrZ, all:all} ));
+            strokeFinal.push({pos:posArrZ, rots:rotArrZ, index:actionHelper.currStrokeIndex, mesh:meshClone});
 
             if(mirrorX){
                 const posArrX_Z = [];
@@ -927,37 +818,51 @@ function buildGeo(){
                     const quat = new THREE.Quaternion().setFromEuler(eul);
                     rotArrX_Z.push(quat);
                 }
-                meshObjects.push(new Stroke( posArrX_Z, rotArrX_Z ));
+                meshObjects.push(new Stroke( {pos:posArrX_Z, rots:rotArrX_Z, all:all} ));
+                strokeFinal.push({pos:posArrX_Z, rots:rotArrX_Z, index:actionHelper.currStrokeIndex, mesh:meshClone});
             }
-
         }
+
+        actionHelper.addStrokesArray({array:strokeFinal});
+
+
     }
 
 }
 
-var isMobile = {
-    Android: function() {
-        return navigator.userAgent.match(/Android/i);
-    },
-    BlackBerry: function() {
-        return navigator.userAgent.match(/BlackBerry/i);
-    },
-    iOS: function() {
-        return navigator.userAgent.match(/iPhone|iPad|iPod/i);
-    },
-    Opera: function() {
-        return navigator.userAgent.match(/Opera Mini/i);
-    },
-    Windows: function() {
-        return navigator.userAgent.match(/IEMobile/i);
-    },
-    any: function() {
-        return (isMobile.Android() || isMobile.BlackBerry() || isMobile.iOS() || isMobile.Opera() || isMobile.Windows());
+function undoClick(){
+    if(actionHelper.currStrokeIndex > 0){
+        for(let i = 0; i<meshObjects.length; i++){
+            if(meshObjects[i].strokeIndex == actionHelper.currStrokeIndex - 1){
+                meshObjects[i].killStroke();
+            }   
+        }
+        actionHelper.undo();
     }
-};
+}
 
-function exportObj(){
+function redoClick(){
+    if(actionHelper.currStrokeIndex < actionHelper.actionsArr.length){
 
+        const ind = actionHelper.currStrokeIndex;
+        const all = {
+            helper:helper, 
+            meshClone:meshClone, 
+            index:actionHelper.currStrokeIndex, 
+            scene:scene, 
+            globalDensityAmount:globalDensityAmount, 
+            meshScale:meshScale,
+            globalShouldAnimateSize:globalShouldAnimateSize
+        }
+        for(let i = 0; i<actionHelper.actionsArr[ind].length; i++){
+            const pos = actionHelper.actionsArr[ind][i].pos;
+            const rots = actionHelper.actionsArr[ind][i].rots; 
+            all.meshClone = actionHelper.actionsArr[ind][i].mesh;
+            meshObjects.push( new Stroke( {pos:pos, rots:rots, all:all} ) );
+        }   
+    
+        actionHelper.redo();
+    }
 }
 
 function updateDrawState(){
@@ -967,14 +872,14 @@ function updateDrawState(){
             //showingDrawObject = false;
             bgMesh.visible = true;
             drawState = "view";
-            document.getElementById("draw-toggle").innerHTML = "draw on object";
+            document.getElementById("toggle-draw-on-view").innerHTML = "draw on object";
         }else{
             drawObject.material.visible = true;
             showingDrawObject = true;
             drawObject.visible = true;
             drawState = "object";
             bgMesh.visible = false;
-            document.getElementById("draw-toggle").innerHTML = "draw on view";
+            document.getElementById("toggle-draw-on-view").innerHTML = "draw on view";
 
         }
     }
@@ -982,51 +887,28 @@ function updateDrawState(){
 
 function updateMeshSize(val){
     handleUiUpdating();
-    if(val == null){
-
-        //$("#infoImg").css("display", "block");
-        meshScale = $("#size-slider").val()*.1;
-        
-    }else{
-        
-        var tmp = meshScale;
-        tmp+=meshScale;
-        var maxSliderVal = 100;
-        if(tmp >  maxSliderVal)tmp = maxSliderVal;
-        if(tmp<.001)tmp = .001;
-        
-        meshScale = tmp;
-
-        $("#size-slider").attr("value", meshScale*10);
-        
-    }
-
+    meshScale = $("#size-slider").val()*.1;
 }
 
 function rotateBrushX(){
-    globalOffsetRotation.x = $("#rotate-sliderX").val()*0.01745329251;
+    globalOffsetRotation.x = $("#rotate-slider-x").val()*0.01745329251;
     handleUiUpdating();
 }
-
 function rotateBrushY(){
-    globalOffsetRotation.y = $("#rotate-sliderY").val()*0.01745329251;
+    globalOffsetRotation.y = $("#rotate-slider-y").val()*0.01745329251;
     handleUiUpdating();
 }
 function rotateBrushZ(){
-    globalOffsetRotation.z = $("#rotate-sliderZ").val()*0.01745329251;
+    globalOffsetRotation.z = $("#rotate-slider-z").val()*0.01745329251;
     handleUiUpdating();
 }
 function updateSmoothAmount(){
-    globalSmoothAmount = 1-($("#smoothAmount").val()*.01);
+    globalSmoothAmount = 1-($("#smooth-amount").val()*.01);
 }
 function updateNormalOffsetAmount(){
    
-    globalNormalOffsetAmount = $("#normalOffsetAmount").val()*.01;
+    globalNormalOffsetAmount = $("#normal-offset-amount").val()*.01;
     handleUiUpdating();
-}
-
-function toggleFollowCurve(){
-
 }
 
 function toggleSizeEasing(){
@@ -1037,13 +919,18 @@ function handleUiUpdating(){
     mouse.normal.x = 0;
     mouse.normal.y = 0;
 
-    helper.doMouseInteraction();
+    helper.doMouseInteraction({
+        mouse:mouse, 
+        camera:camera, 
+        bgMesh:bgMesh, 
+        drawObject:drawObject,
+        drawState:drawState,
+        globalNormalOffsetAmount:globalNormalOffsetAmount
+    });
 }
-function toggleShouldRotate(){
 
-}
 function updateDensity(){
-    globalDensityAmount = $("#densityAmount").val()*.0031;
+    globalDensityAmount = $("#density-amount").val()*.0031;
     console.log(globalDensityAmount)
 }
 
@@ -1052,8 +939,7 @@ function toggleRotationFollowingNormal(){
 }
 
 function updateRotationSpeed(){
-    globalAdditiveRotationSpeed = $("#additiveRotationSlider").val()*.0015;
-    console.log(globalAdditiveRotationSpeed)
+    globalAdditiveRotationSpeed = $("#additive-rotation-slider").val()*.0015;
 }
 function toggleAdditiveRotationX(){
     shouldRotateAdditiveX = !shouldRotateAdditiveX;
@@ -1067,86 +953,6 @@ function toggleAdditiveRotationZ(){
 
 function updateAniSpeed(){
     globalAnimationSpeed = $("#animation-speed-slider").val()*.1;
-}
-
-function GeoHelper(){
-    const geometryHelper = new THREE.ConeGeometry( .1, .2, 5 );
-    geometryHelper.translate( 0, -.1, 0 );
-    geometryHelper.rotateX( Math.PI / 2 );
-    this.mesh = new THREE.Mesh( geometryHelper, new THREE.MeshBasicMaterial({visible:false}) );
-    this.visual = new THREE.Mesh(geometryHelper, new THREE.MeshStandardMaterial());
-    this.holder;
-    this.rotAdditive = new THREE.Euler();
-    scene.add( this.mesh, this.visual );
-    this.update = function(){
-        // if(!this.holder){
-        //     if(mouse.down){
-        //         this.visual.visible = false;
-        //     }else{
-        //         this.visual.visible = true;
-        //     }
-        // }else{
-        //     if(mouse.down){
-        //         this.holder.visible = false;
-        //     }else{
-        //         this.holder.visible = true;
-        //     }
-        // }
-        //this.visual.position.lerp(this.mesh.position, globalSmoothAmount);
-        this.visual.position.lerp(this.mesh.position, globalSmoothAmount);// , globalSmoothAmount);
-        this.visual.rotation.copy(this.mesh.rotation);
-                
-        if(this.holder){
-            this.visual.visible = false;
-            this.holder.scale.set(meshScale, meshScale, meshScale);
-            this.holder.position.lerp(this.mesh.position, globalSmoothAmount);// , globalSmoothAmount);
-            this.rotAdditive.x += shouldRotateAdditiveX ? globalAdditiveRotationSpeed : 0;
-            this.rotAdditive.y += shouldRotateAdditiveY ? globalAdditiveRotationSpeed : 0;
-            this.rotAdditive.z += shouldRotateAdditiveZ ? globalAdditiveRotationSpeed : 0;
-            
-            if(rotationFollowsNormal){
-                this.holder.rotation.set(this.mesh.rotation.x+globalOffsetRotation.x+this.rotAdditive.x, helper.visual.rotation.y+globalOffsetRotation.z+this.rotAdditive.y, helper.visual.rotation.z+globalOffsetRotation.z+this.rotAdditive.z)
-            }else{
-                this.holder.rotation.set(globalOffsetRotation.x+this.rotAdditive.x, globalOffsetRotation.z+this.rotAdditive.x, globalOffsetRotation.z+this.rotAdditive.z)
-            }
-        }
-
- 
-    }
-
-    this.doMouseInteraction = function(){
-        raycaster.setFromCamera( mouse.normal, camera );
-        let mesh = bgMesh;
-        if(drawState=="object"){
-            mesh = drawObject;
-        }
-        const intersects = raycaster.intersectObject( mesh );
-        // Toggle rotation bool for meshes that we clicked
-        if ( intersects.length > 0 ) {
-            
-            //var p = intersects[ 0 ].point;
-            //mouseHelper.position.copy( p );
-            //intersection.point.copy( p );
-            var n = intersects[ 0 ].face.normal.clone();
-            n.transformDirection( drawObject.matrixWorld );
-            n.multiplyScalar( 10 );
-            n.add( intersects[ 0 ].point );
-
-            //intersection.normal.copy( intersects[ 0 ].face.normal );
-            this.mesh.lookAt( n );
-
-            this.mesh.position.copy( intersects[ 0 ].point.add(intersects[ 0 ].face.normal.multiplyScalar(globalNormalOffsetAmount) ) );
-        }
-    }
-
-    this.updateVisual = function(mesh){
-
-        if(this.holder)
-            scene.remove(this.holder);
-        
-        this.holder = mesh.clone();
-        scene.add(this.holder)
-    }
 }
 
 function toggleDrawObject(){
@@ -1164,31 +970,6 @@ function toggleMirrorY(){
 function toggleMirrorZ(){
     mirrorZ = !mirrorZ;
     mirrorMeshZ.visible = mirrorZ;
-}
-
-function rotateVectorWithNormal(toRotate, normal) {
-
-    const newVector = new THREE.Vector3().copy(toRotate);
-
-    // set up direction
-    let up = new THREE.Vector3(0, 1, 0);
-    let axis = new THREE.Vector3();
-    // we want the vector to point in the direction of the face normal
-    // determine an axis to rotate around
-    // cross will not work if vec == +up or -up, so there is a special case
-    if (normal.y == 1 || normal.y == -1) {
-        axis = new THREE.Vector3(1, 0, 0);
-    } else {
-        axis = up.cross( normal);
-    }
-
-    // determine the amount to rotate
-    let radians = Math.acos(normal.dot(up));
-    const quat = new THREE.Quaternion().setFromAxisAngle(axis, radians);
-    newVector.applyQuaternion(quat);
-
-    return newVector;
-
 }
 
 
@@ -1242,15 +1023,11 @@ function exportGLTF(  ) {
 }
 
 function save( blob, filename ) {
-
     link.href = URL.createObjectURL( blob );
     link.download = filename;
     link.click();
-
 }
 
 function saveString( text, filename ) {
-
     save( new Blob( [ text ], { type: 'text/plain' } ), filename );
-
 }

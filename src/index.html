@@ -9,39 +9,44 @@
 	
 		<div class="holders" id="tools-holder">
 			<div class="sub-holders">
-				<button onclick="resetCam()"> reset cam </button> 
-				
-				<button onclick="updateDrawState()" id="draw-toggle"> draw on view </button> 
-				<button onclick="toggleDrawObject()" > toggle draw object </button> 
-				<button onclick="exportGLTF()"> save gltf </button>
+				<button id="reset-cam"> reset cam </button> 
+				<button id="toggle-draw-on-view"> draw on view </button> 
+				<button id="toggle-draw-object"> toggle draw object </button> 				
+				<button id="export-gltf"> save gltf </button>
+
+				<div id="undo-redo-holder" >
+					<button style="position:inline;" id="undo"> undo </button>
+					<button style="position:inline;" id="redo"> redo </button>
+					
+				</div>
 				
 				<!--<button onclick="toggleFollowCurve()"> follow curve </button>-->
 				<!--<button onclick="toggleShouldRotate()"> rotate </button>-->
 				<div id="c-size" class="slider-holder">
 					<span class="slider-info">rotation by normals</span>
-					<input type="checkbox" id="rotation-follows-normal" name="rotationFollowsNormals" onclick="toggleRotationFollowingNormal()" checked>
+					<input type="checkbox" id="rotation-follows-normal" checked>
 				</div>
 
 				<div id="c-size" class="slider-holder">
 					<span class="slider-info">mirror x</span>
-					<input type="checkbox" id="mirror-x" name="rotationFollowsNormals" onclick="toggleMirrorX()" checked>
+					<input type="checkbox" id="mirror-x" checked>
 				</div>
 
 				<div id="c-size" class="slider-holder">
 					<span class="slider-info">mirror y</span>
-					<input type="checkbox" id="mirror-y" name="rotationFollowsNormals" onclick="toggleMirrorY()">
+					<input type="checkbox" id="mirror-y">
 				</div>
 
 				<div id="c-size" class="slider-holder">
 					<span class="slider-info">mirror z</span>
-					<input type="checkbox" id="mirror-z" name="rotationFollowsNormals" onclick="toggleMirrorZ()">
+					<input type="checkbox" id="mirror-z">
 				</div>
 				
 				<div id="c-size" class="slider-holder">
 					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
 					<span class="slider-info">animation speed</span>
 					<form class="control-slider-holder">
-						<input id="animation-speed-slider" class="control-slider" oninput="updateAniSpeed()" onchange="updateAniSpeed()" type="range" name="infoSize" min="0" max="100" value="10" >
+						<input id="animation-speed-slider" class="control-slider" type="range" min="0" max="100" value="10" >
 					</form>
 					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
 				</div>
@@ -50,20 +55,20 @@
 					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
 					<span class="slider-info">size</span>
 					<form class="control-slider-holder">
-						<input id="size-slider" class="control-slider" oninput="updateMeshSize()" onchange="updateMeshSize()" type="range" name="infoSize" min=".1" max="30" value="10" >
+						<input id="size-slider" class="control-slider" type="range" name="infoSize" min=".1" max="30" value="10" >
 					</form>
 					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
 				</div>
 				<div id="c-size" class="slider-holder">
 					<span class="slider-info">animate size in and out</span>
-					<input type="checkbox" id="shouldSizeEaseInOut" name="sizeAni" onclick="toggleSizeEasing()" checked>
+					<input type="checkbox" id="should-size-ease-in-out" onclick="toggleSizeEasing()" checked>
 				</div>
 				
 				<div id="c-size" class="slider-holder">
 					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
 					<span class="slider-info">rotate x</span>
 					<form class="control-slider-holder">
-						<input id="rotate-sliderX" class="control-slider" oninput="rotateBrushX()" onchange="rotateBrushX()" type="range" name="infoSize" min="0" max="628" value="0" >
+						<input id="rotate-slider-x" class="control-slider" type="range" min="0" max="628" value="0" >
 					</form>
 					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
 				</div>
@@ -71,7 +76,7 @@
 					<span class="slider-info">rotate y</span>
 					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
 					<form class="control-slider-holder">
-						<input id="rotate-sliderY" class="control-slider" oninput="rotateBrushY()" onchange="rotateBrushY()" type="range" name="infoSize" min="0" max="360" value="0" >
+						<input id="rotate-slider-y" class="control-slider" type="range" min="0" max="360" value="0" >
 					</form>
 					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
 				</div>
@@ -79,7 +84,7 @@
 					<span class="slider-info">rotate z</span>
 					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
 					<form class="control-slider-holder">
-						<input id="rotate-sliderZ" class="control-slider" oninput="rotateBrushZ()" onchange="rotateBrushZ()" type="range" name="infoSize" min="0" max="360" value="0" >
+						<input id="rotate-slider-z" class="control-slider" type="range" min="0" max="360" value="0" >
 					</form>
 					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
 				</div>
@@ -87,28 +92,28 @@
 					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
 					<span class="slider-info">additive rotation speed</span>
 					<form class="control-slider-holder">
-						<input id="additiveRotationSlider" class="control-slider" oninput="updateRotationSpeed()" onchange="updateRotationSpeed()" type="range" name="infoRotationSpeed" min="0" max="100" value="0" >
+						<input id="additive-rotation-slider" class="control-slider" type="range" min="0" max="100" value="0" >
 					</form>
 					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
 				</div>
 				<div id="c-size" class="slider-holder">
 					<span class="slider-info">additive rotation x</span>
-					<input type="checkbox" id="shouldRotateAdditive" name="addRotation" onclick="toggleAdditiveRotationX()" checked>
+					<input type="checkbox" id="additive-rotation-x" checked>
 				</div>
 				<div id="c-size" class="slider-holder">
 					<span class="slider-info">additive rotation y</span>
-					<input type="checkbox" id="shouldRotateAdditive" name="addRotation" onclick="toggleAdditiveRotationY()" checked>
+					<input type="checkbox" id="additive-rotation-y" checked>
 				</div>
 				<div id="c-size" class="slider-holder">
 					<span class="slider-info">additive rotation z</span>
-					<input type="checkbox" id="shouldRotateAdditive" name="addRotation" onclick="toggleAdditiveRotationZ()" checked>
+					<input type="checkbox" id="additive-rotation-z" checked>
 				</div>
 				
 				<div id="c-size" class="slider-holder">
 					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
 					<span class="slider-info">smooth amount</span>
 					<form class="control-slider-holder">
-						<input id="smoothAmount" class="control-slider" oninput="updateSmoothAmount()" onchange="updateSmoothAmount()" type="range" name="infoSize" min="10" max="100" value="100" >
+						<input id="smooth-amount" class="control-slider" type="range" name="infoSize" min="10" max="100" value="100" >
 					</form>
 					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
 				</div>
@@ -116,7 +121,7 @@
 					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
 					<span class="slider-info">normal offset</span>
 					<form class="control-slider-holder">
-						<input id="normalOffsetAmount" class="control-slider" oninput="updateNormalOffsetAmount()" onchange="updateNormalOffsetAmount()" type="range" name="infoSize" min="-100" max="100" value="20" >
+						<input id="normal-offset-amount" class="control-slider" type="range" min="-100" max="100" value="20" >
 					</form>
 
 					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
@@ -125,7 +130,7 @@
 					<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
 					<span class="slider-info">density</span>
 					<form class="control-slider-holder">
-						<input id="densityAmount" class="control-slider" oninput="updateDensity()" onchange="updateDensity()" type="range" name="infoSize" min="0" max="100" value="20" >
+						<input id="density-amount" class="control-slider" type="range" min="0" max="100" value="20" >
 					</form>
 
 					<!--<img class="i-small" src="assets/svg/paint_grey.svg">-->
