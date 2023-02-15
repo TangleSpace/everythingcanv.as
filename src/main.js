@@ -7,6 +7,8 @@ import { RoomEnvironment } from './scripts/jsm/environments/RoomEnvironment.js';
 import { BrushHelper } from './BrushHelper.js';
 import { Stroke } from './Stroke.js';
 import { ActionHelper } from './ActionHelper.js';
+import { Background } from './Background.js';
+import { CustomMaterial } from './CustomMaterial.js';
 
 let camera, mesh, scene, renderer;
 let mouse = {
@@ -85,10 +87,14 @@ let mirrorMeshX;
 let mirrorMeshY;
 let mirrorMeshZ;
 
-let leftObj; 
-let rightObj;
-let testObject;
-let reflectObject = new THREE.Object3D();
+
+let reflectObjectX = new THREE.Object3D();
+let reflectObjectY = new THREE.Object3D();
+let reflectObjectZ = new THREE.Object3D();
+let reflectObjectXY = new THREE.Object3D();
+let reflectObjectXZ = new THREE.Object3D();
+let background;
+let matHandler;
 
 const actionHelper = new ActionHelper();
 
@@ -120,6 +126,7 @@ document.body.appendChild( link );
 init();
 
 function init(){
+
     for(let i = 1; i<loadobjs.length; i++){
         const amt = loadobjs[i].amount; 
         for(let k = 0; k<amt; k++){
@@ -155,9 +162,6 @@ function init(){
     ctx = canvas.getContext('2d');
     canvas.className = "customCanvas";
     
-    reflectObject = new THREE.Object3D();
-    reflectObject.scale.x =-1;
-    
 
 	raycaster = new THREE.Raycaster();
 
@@ -165,14 +169,30 @@ function init(){
     camera.position.z = 20;
 
 	scene = new THREE.Scene();
-    scene.add(reflectObject);
+
+    reflectObjectX.scale.x =-1;
+
+    reflectObjectY.scale.y =-1;
+
+    reflectObjectZ.scale.z =-1;
+    
+    reflectObjectXY.scale.y =-1;
+    reflectObjectXY.scale.x =-1;
+    
+    reflectObjectXZ.scale.z =-1;
+    reflectObjectXZ.scale.x =-1;
+
+    scene.add(reflectObjectX);
+    scene.add(reflectObjectY);
+    scene.add(reflectObjectZ);
+    scene.add(reflectObjectXY);
+    scene.add(reflectObjectXZ);
     
     object = new THREE.Object3D();
     scene.add(object);
     
     bgHolder = new THREE.Object3D();
     scene.add(bgHolder)
-    testObject = new THREE.Object3D();
 
     //camera.add(bgHolder);
     bgHolder.position.copy(camera.position);
@@ -294,7 +314,8 @@ function init(){
     document.getElementById("density-amount").addEventListener("input", updateDensity);
 
     helper = new BrushHelper({scene:scene, raycaster:raycaster});
-    
+    background = new Background({scene:scene});
+    matHandler = new CustomMaterial();
 	animate();
 }
 
@@ -343,7 +364,7 @@ function animate(){
     for(var i = 0; i<meshObjects.length; i++){
         meshObjects[i].update({delta:delta});
     }
-
+    matHandler.update({delta:delta})
     //composer.render();
     renderer.render(scene,camera);
 	
@@ -353,11 +374,12 @@ function chooseModel(i,k){
     const loader = new GLTFLoader().setPath( loadobjs[i].url );
     loader.load( k+'.glb', function ( gltf ) {
         gltf.scene.traverse( function ( child ) {
-            // if ( child.isMesh ) {
-            //     //roughnessMipmapper.generateMipmaps( child.material );
-            //     //child.material.vertexColors = false;
-                
-            // }
+            if ( child.isMesh ) {
+                //roughnessMipmapper.generateMipmaps( child.material );
+                //child.material.vertexColors = false;
+                const mat = child.material.clone(); 
+                child.material = matHandler.getCustomMaterial(mat);
+            }
         });
 
         meshClone = gltf.scene;
@@ -734,92 +756,40 @@ function buildGeo(){
             globalDensityAmount:globalDensityAmount, 
             meshScale:meshScale,
             globalShouldAnimateSize:globalShouldAnimateSize,
-            mirror: new THREE.Vector3(1,1,1),
-            reflectObject:reflectObject
+          
         }
         //function Stroke(SMOOTHARR, OBJ, DENSITY){
         meshObjects.push(new Stroke( { pos:mouse.smoothAvgs, rots:mouse.rots, all:all } ));
-        strokeFinal.push({pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, mesh:meshClone});
+        strokeFinal.push({pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, mesh:meshClone, scene:all.scene});
 
         if(mirrorX){
-            const posArrX = [];
-            const rotArrX = [];
-            for(let i = 0; i<mouse.smoothAvgs.length; i++){
-                posArrX.push(new THREE.Vector3(mouse.smoothAvgs[i].x, mouse.smoothAvgs[i].y, mouse.smoothAvgs[i].z));
-            }
-            for(let i = 0; i<mouse.rots.length; i++){
-                
-                const s = new THREE.Quaternion().copy( mouse.rots[i] );
-                
-                rotArrX.push( s )
-                
-                all.mirror.x = -1;
-            }
-            meshObjects.push(new Stroke( {pos:posArrX, rots:rotArrX, all:all} ));
-            strokeFinal.push({pos:posArrX, rots:rotArrX, index:actionHelper.currStrokeIndex, mesh:meshClone})
+            all.scene = reflectObjectX;
+            meshObjects.push(new Stroke( {pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
+            strokeFinal.push({pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, mesh:meshClone, scene:all.scene});
         }
+
         if(mirrorY){
-            const posArrY = [];
-            const rotArrY = [];
-            for(let i = 0; i<mouse.smoothAvgs.length; i++){
-                posArrY.push(new THREE.Vector3(mouse.smoothAvgs[i].x, mouse.smoothAvgs[i].y*-1, mouse.smoothAvgs[i].z));
-            }
-            for(let i = 0; i<mouse.rots.length; i++){
-                // const eul = new THREE.Euler().setFromQuaternion(mouse.rots[i]);
-                // eul.x*=-1;
-                // const quat = new THREE.Quaternion().setFromEuler(eul);
-                const quat = new THREE.Quaternion().copy(mouse.rots[i]).invert();
-                rotArrY.push(quat );
-            }
-            meshObjects.push(new Stroke( {pos:posArrY, rots:rotArrY, all:all} ));
-            strokeFinal.push({pos:posArrY, rots:rotArrY, index:actionHelper.currStrokeIndex, mesh:meshClone});
+            all.scene = reflectObjectY;  
+            meshObjects.push(new Stroke( {pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
+            strokeFinal.push({pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, mesh:meshClone, scene:all.scene});
 
             if(mirrorX){
-                const posArrX_Y = [];
-                const rotArrX_Y = [];
-                for(let i = 0; i<posArrY.length; i++){
-                    posArrX_Y.push(new THREE.Vector3(posArrY[i].x*-1, posArrY[i].y, posArrY[i].z));
-                }
-                for(let i = 0; i<rotArrY.length; i++){
-                    const eul = new THREE.Euler().setFromQuaternion(rotArrY[i]);
-                    eul.y*=-1;
-                    const quat = new THREE.Quaternion().setFromEuler(eul);
-                    rotArrX_Y.push(quat);
-                }
-                meshObjects.push(new Stroke( {pos:posArrX_Y, rots:rotArrX_Y, all:all} ));
-                strokeFinal.push({pos:posArrX_Y, rots:rotArrX_Y, index:actionHelper.currStrokeIndex, mesh:meshClone});
+                all.scene = reflectObjectXY;
+                meshObjects.push(new Stroke( {pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
+                strokeFinal.push({pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, mesh:meshClone, scene:all.scene});
+
             }
         }
 
         if(mirrorZ){
-            const posArrZ = [];
-            const rotArrZ = [];
-            for(let i = 0; i<mouse.smoothAvgs.length; i++){
-                posArrZ.push(new THREE.Vector3(mouse.smoothAvgs[i].x, mouse.smoothAvgs[i].y, mouse.smoothAvgs[i].z*-1));
-            }
-            for(let i = 0; i<mouse.rots.length; i++){
-                const eul = new THREE.Euler().setFromQuaternion(mouse.rots[i]);
-                eul.z*=-1;
-                const quat = new THREE.Quaternion().setFromEuler(eul);
-                rotArrZ.push(quat);
-            }
-            meshObjects.push(new Stroke( {pos:posArrZ, rots:rotArrZ, all:all} ));
-            strokeFinal.push({pos:posArrZ, rots:rotArrZ, index:actionHelper.currStrokeIndex, mesh:meshClone});
+            all.scene = reflectObjectZ;
+            meshObjects.push(new Stroke( {pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
+            strokeFinal.push({pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, mesh:meshClone, scene:all.scene});
 
             if(mirrorX){
-                const posArrX_Z = [];
-                const rotArrX_Z = [];
-                for(let i = 0; i<posArrZ.length; i++){
-                    posArrX_Z.push(new THREE.Vector3(posArrZ[i].x*-1, posArrZ[i].y, posArrZ[i].z));
-                }
-                for(let i = 0; i<rotArrZ.length; i++){
-                    const eul = new THREE.Euler().setFromQuaternion(rotArrZ[i]);
-                    eul.y*=-1;
-                    const quat = new THREE.Quaternion().setFromEuler(eul);
-                    rotArrX_Z.push(quat);
-                }
-                meshObjects.push(new Stroke( {pos:posArrX_Z, rots:rotArrX_Z, all:all} ));
-                strokeFinal.push({pos:posArrX_Z, rots:rotArrX_Z, index:actionHelper.currStrokeIndex, mesh:meshClone});
+                all.scene = reflectObjectXZ;
+                meshObjects.push(new Stroke( {pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
+                strokeFinal.push({pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, mesh:meshClone, scene:all.scene});
             }
         }
 
@@ -858,6 +828,7 @@ function redoClick(){
             const pos = actionHelper.actionsArr[ind][i].pos;
             const rots = actionHelper.actionsArr[ind][i].rots; 
             all.meshClone = actionHelper.actionsArr[ind][i].mesh;
+            all.scene = actionHelper.actionsArr[ind][i].scene;
             meshObjects.push( new Stroke( {pos:pos, rots:rots, all:all} ) );
         }   
     

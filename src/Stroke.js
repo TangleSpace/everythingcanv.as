@@ -51,15 +51,9 @@ class Stroke {
             const endInc = (i == this.total-1) ? i : (i + 1); 
             const end = (endInc / this.total);
 
-            //console.log("start = "+start)
-            //console.log("end = "+end)
-            
-            //start += 1/this.total;
             const avgStart = Math.floor(start);
             const rotFnl = {from:this.rots[Math.floor(start*this.rots.length)], to:this.rots[Math.floor(end*this.rots.length)]};
-            // if(i<2){
-                //console.log(rotFnl);
-            // }
+        
             const pmesh = new PaintMesh({
                 parent:this, 
                 geo:this.tubeGeometry, 
@@ -73,8 +67,7 @@ class Stroke {
                 strokeIndex:this.strokeIndex,
                 helper:OBJ.all.helper,
                 globalShouldAnimateSize:OBJ.all.globalShouldAnimateSize,
-                mirror:OBJ.all.mirror,
-                reflectObject:OBJ.all.reflectObject
+            
             });
             pmesh.initAnimation();
             this.meshes.push(pmesh);
@@ -107,27 +100,8 @@ class PaintMesh {
         this.rots = OBJ.rotation;
         
         
-
         this.mesh = OBJ.meshClone.clone();
 
-        // this.mesh.traverse( function ( obj ) {
-        //     if(obj.isMesh || obj.isSkinnedMesh){
-        //        // console.log(OBJ.scale)
-        //        if(OBJ.mirror.x<0){
-        //         obj.rotation.y+=Math.PI;
-        //        }
-        //         //obj.scale.copy(OBJ.mirror);     
-        //     }
-        // });
-        // if(OBJ.mirror.x<0){
-        //     var mS = new Matrix4();//.makeRotationFromQuaternion( mouse.rots[i] );
-        //         //set -1 to the corresponding axis
-        //         //console.log(mS.elements[0])
-        //         mS.elements[0] = -1;
-        //         mS.elements[5] = 1;
-        //         mS.elements[10] = 1;
-        //     this.mesh.applyMatrix4(mS);//obj.rotation.y+=Math.PI;
-        // }
 
         this.mesh.name = "s_"+OBJ.strokeIndex+"_m_"+OBJ.index;
         //conso.e
@@ -136,14 +110,8 @@ class PaintMesh {
         this.i = OBJ.index;
         this.meshScale = OBJ.scale;
         this.globalShouldAnimateSize = OBJ.globalShouldAnimateSize;
-        this.scene = (OBJ.mirror.x<0) ? OBJ.reflectObject : OBJ.scene;
-        console.log(this.scene);
-        //this.mesh.scale.set(s,s,s);
-        // if(!rotationFollowsNormal){
-        //     this.mesh.rotation.set(globalOffsetRotation.x, globalOffsetRotation.y, globalOffsetRotation.z);
-        // }else{
-        //     this.mesh.rotation.set(helper.holder.rotation.x+globalOffsetRotation.x, helper.holder.rotation.y+globalOffsetRotation.z, helper.holder.rotation.z+globalOffsetRotation.z)
-        // }
+        this.scene = OBJ.scene;
+        
         this.mesh.scale.copy(OBJ.helper.holder.scale);
         //this.mesh.rotation.copy(helper.holder.rotation);
         
