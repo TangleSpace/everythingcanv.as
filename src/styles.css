@@ -10,10 +10,37 @@ body{
     color: white;
 }
 
+.brush-thumb{
+
+}
 
 .drop-down-holder{
     /*margin-top: 20px;*/
 }
+
+/*
+#models img{
+    display: block;
+    float: left;
+    width: 6vw;
+    margin-left: 2px;
+    height: auto;
+    cursor: pointer;
+    z-index: 100;
+}
+
+
+
+*/
+
+.drop-down-content img{
+  display: inline-block;
+  width: 6vw;
+  height: 6vw;
+  cursor: pointer;
+}
+
+
 .drop-down-content{
     display: none;
     padding-bottom: 10px;
@@ -125,15 +152,6 @@ body{
     display: block;
 }
 
-#models img{
-    display: block;
-    float: left;
-    width: 6vw;
-    margin-left: 2px;
-    height: auto;
-    cursor: pointer;
-    z-index: 100;
-}
 
 
 input[type=range] {

@@ -52,15 +52,14 @@ const material = new THREE.MeshStandardMaterial();
 let globalShouldAnimateSize = true;
 const loadobjs = [
     //{name:"draw objects", url:"./extras/draw/",           amount:2},
-    {name:"simple shapes", url:"./extras/models/simple-shapes/", amount:7},
-    
-    {name:"animals", url:"./extras/models/everything-animals/", amount:242},
-    {name:"consumables", url:"./extras/models/everything-consumables/", amount:110},
-    {name:"furnishings", url:"./extras/models/everything-furnishings/", amount:288},
-    {name:"flowers", url:"./extras/models/flowers/", amount:19},
-    {name:"rocks", url:"./extras/models/rocks/",   amount:6},
-    {name:"tools", url:"./extras/models/tools/",   amount:90},
-    {name:"toys", url:"./extras/models/toys/",    amount:79}
+    {loaded:false, name:"simple shapes", url:"./extras/models/simple-shapes/", amount:7},
+    {loaded:false, name:"animals", url:"./extras/models/everything-animals/", amount:242},
+    {loaded:false, name:"consumables", url:"./extras/models/everything-consumables/", amount:110},
+    {loaded:false, name:"furnishings", url:"./extras/models/everything-furnishings/", amount:288},
+    {loaded:false, name:"flowers", url:"./extras/models/flowers/", amount:19},
+    {loaded:false, name:"rocks", url:"./extras/models/rocks/",   amount:6},
+    {loaded:false, name:"tools", url:"./extras/models/tools/",   amount:90},
+    {loaded:false, name:"toys", url:"./extras/models/toys/",    amount:79}
 ]
 let drawObject;  
 const toysAmount = 78;
@@ -137,15 +136,55 @@ document.body.appendChild( link );
 init();
 
 function init(){
-
+    
     for(let i = 0; i<loadobjs.length; i++){
         const amt = loadobjs[i].amount; 
-        for(let k = 0; k<amt; k++){
-            const url = loadobjs[i].url;
-            let img = document.createElement("img")
-            img.src = (url+k)+".png";
-            img.onclick = function(){chooseModel(i,k)};
-            document.getElementById("models").append(img);
+        const dHolder = document.createElement("div");
+        const dTitle = document.createElement("div");
+        const dImgs = document.createElement("div");
+        
+        document.getElementById("models").append(dHolder);
+        dHolder.className="drop-down-holder";
+        dTitle.className="drop-down-title";
+        dImgs.className="drop-down-content";
+        dTitle.innerHTML = loadobjs[i].name;
+        dHolder.append(dTitle);
+        dHolder.append(dImgs);
+
+        $(dTitle).click(function(){
+            if ( $( dImgs ).first().is( ":hidden" ) ) {
+                const lo = loadobjs[i]; 
+                if(!lo.loaded){
+                    console.log("loadinggg")
+                    lo.loaded = true;
+                    const a = lo.amount;
+                    for(let k = 0; k<a; k++){
+                        const url = lo.url;
+                        let img = document.createElement("img");
+                        img.className="brush-thumb";
+                        img.src = (url+k)+".png";
+                        img.onclick = function(){chooseModel(i,k)};
+                        dImgs.append(img);
+                    }
+                }
+                $( dImgs ).slideDown();
+            } else {
+                $( dImgs ).slideUp();
+            }
+        })
+        
+
+        if(i==0){
+            $(dImgs).slideDown();
+            loadobjs[i].loaded = true;
+            for(let k = 0; k<amt; k++){
+                const url = loadobjs[i].url;
+                let img = document.createElement("img")
+                img.className="brush-thumb";
+                img.src = (url+k)+".png";
+                img.onclick = function(){chooseModel(i,k)};
+                dImgs.append(img);
+            }
         }
     }
    
@@ -301,6 +340,8 @@ function init(){
 
     }
 
+    
+
     const dds = [
         "draw-object",
         "essentials",
@@ -309,6 +350,8 @@ function init(){
         "background",
         "shader-effects"
     ]
+
+    
 
     for(let i = 0; i<dds.length; i++){
         const t = document.getElementById(dds[i]+"-title");
