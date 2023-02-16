@@ -34,7 +34,7 @@ class CustomMaterial {
 
     getCustomMaterial(mat, param) {
 
-        //const material = mat.clone();
+        //const mat = m.clone();
         const col = mat.color.clone();
 
         mat.onBeforeCompile = function (shader) {
@@ -53,6 +53,7 @@ class CustomMaterial {
             shader.uniforms.bottomColor = { value: param.bottomColor};
             shader.uniforms.deformSpeed = { value: param.deformSpeed};
             shader.uniforms.colorSpeed = { value: param.colorSpeed};
+            shader.uniforms.shouldLoopGradient = { value: param.shouldLoopGradient};
             
             shader.vertexShader = `
                 uniform float time;
@@ -67,7 +68,7 @@ class CustomMaterial {
                 uniform float noiseAmt;
                 uniform float twistSize;
                 uniform float deformSpeed;
-              
+                uniform float shouldLoopGradient;
 
                 float hash(float n) {
                     return fract(sin(n)*43758.5453);
@@ -95,13 +96,13 @@ class CustomMaterial {
                 vec3 view_space_normal = vec3(projectionMatrix  * modelViewMatrix  * vec4(vNormal, 0.0));
                 vNormalW = normalize(normalMatrix * normal);
 
-
                 float theta = sin( (time*deformSpeed) + ( vPos.y * ( twistSize ) ) ) * ( twistAmt );
+                //float theta =  (time*deformSpeed) + (vPos.y *  twistSize) ;
                 float c = cos( theta );
                 float s = sin( theta );
                 mat3 m = mat3( c, 0, s, 0, 1, 0, -s, 0, c );
                 //transformed = vec3( position + ( (view_space_normal*n) ));
-                transformed = vec3( position ) * ( m ) + ( (n) );
+                transformed = vec3( position ) * ( m ) + ( (-n*.5) + (n) );
                 vNormal = vNormal * m;
                 `
             );
@@ -125,6 +126,7 @@ class CustomMaterial {
                 'uniform float rainbowGradientSize;\n' +
                 'uniform float colorSpeed;\n' +
                 'uniform float deformSpeed;\n' +
+                'uniform float shouldLoopGradient;\n'+
               
                 shader.fragmentShader;
                 shader.fragmentShader = shader.fragmentShader.replace(
@@ -142,8 +144,12 @@ class CustomMaterial {
                     trip.y *= (( .5 + sin( (6.28*.33) + ((vPos.y*rainbowGradientSize) + (time*colorSpeed) ) )*.5 ) *1.);
                     trip.z *= (( .5 + sin( (6.28*.66) + ((vPos.y*rainbowGradientSize) + (time*colorSpeed) ) )*.5 ) *1.);
 
-                    float h = normalize( vPos + gradientOffset ).y;
-                    float gradientMix =  max( pow( max( h, 0.0 ), gradientSize ), 0.0 );
+                    float h = normalize( vec3(vPos.x, vPos.y + gradientOffset, vPos.z)  ).y;
+                    float gradientMix = max( pow( max( h, 0.0 ), gradientSize ), 0.0 );
+                    //float gradientMix = clamp( (h+.5) * gradientSize, 0., 1. ) ;
+                    if(shouldLoopGradient>.5){
+                        gradientMix = .5+sin(vPos.y*gradientSize)*.5;
+                    }
                     vec3 gradient = ogColor.xyz * mix( vec4(bottomColor.xyz, 1.), vec4(topColor.xyz,1.),  gradientMix ).xyz;
                     
                     vec3 fnl = mix(vec4(gradient.xyz,1.), vec4(trip.xyz,1.), rainbowAmt).xyz;

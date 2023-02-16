@@ -16,17 +16,17 @@
 					<li>[ALT/CTRL or ALT/CMD] to pan </li>
 					<li>[SPACE] to toggle UI </li>
 					
-					<li>gltf exports <span class="bold">do not</span> retain shader effects</li>
+					<li>gltf exports <span class="bold">DO NOT</span> retain shader effects</li>
 					<li>
-						gltf exports <span class="bold">do</span> retain animation data, but they don't import properly into blender (other apps untested)
+						gltf exports <span class="bold">DO</span> retain animation data, but they don't import properly into blender (other apps untested)
 					</li>
 					<li>
-						download and run <a href="">this python script</a> to attach the animations to the objects. 
+						download and run <a href="https://github.com/vincentmckelvie/geo.ink-attach-animations">this python script</a> to attach the animations to the objects. 
 					</li>
 					<li>drag and drop a glb or gltf on the scene to use a custom draw object</li>
 					<li>drag and drop a goe.ink json to reload a saved project</li>
-					<li>some models by david orielly</li>
-					<li>site by <a class="normal-link" href="https://twitter.com/strugggggs"> vince mckelvie</a> </li>
+					<li>most models by <a href="https://www.davidoreilly.com/">David Oreilly's</a> <a href="https://www.davidoreilly.com/library"> Everything Library</a></li>
+					<li>site by <a class="normal-link" href="https://twitter.com/strugggggs"> Vince Mckelvie</a> </li>
 
 				</ul>
 				<div id="got-it-btn-holder">
@@ -44,7 +44,7 @@
 					<button class="btn inline-btns" id="toggle-draw-object"> toggle draw object </button> <br/>				
 					<button class="btn inline-btns" id="export-gltf"> save gltf </button> <br/>
 					<button class="btn inline-btns" id="save-geo-ink-file"> save geo.ink file </button> <br/>
-
+					<button class="btn inline-btns" id="show-instructions"> show instructions </button> <br/>
 				</div>
 				<div id="undo-redo-holder"  >
 					<button class="btn inline-btns" id="undo"> undo </button>
@@ -58,6 +58,14 @@
 						<div id="c-size" class="draw-objects-holder" >
 							<button id="draw-object-0" class="btn inline-btns" > 0 </button> 				
 							<button id="draw-object-1" class="btn inline-btns" > 1 </button>
+							<button id="draw-object-2" class="btn inline-btns" > 2 </button>
+							<button id="draw-object-3" class="btn inline-btns" > 3 </button>
+							<button id="draw-object-4" class="btn inline-btns" > 4 </button>
+							<button id="draw-object-5" class="btn inline-btns" > 5 </button>
+							<button id="draw-object-6" class="btn inline-btns" > 6 </button>
+							<button id="draw-object-7" class="btn inline-btns" > 7 </button>
+							<button id="draw-object-8" class="btn inline-btns" > 8 </button>
+							<button id="draw-object-9" class="btn inline-btns" > 9 </button>
 						</div>
 					</div>
 				</div>
@@ -82,7 +90,7 @@
 						<div class="slider-holder">
 							<span class="slider-info">size</span>
 							<form class="control-slider-holder">
-								<input id="size-slider" class="control-slider" type="range" min=".1" max="30" value="10" >
+								<input id="size-slider" class="control-slider" type="range" min="0" max="100" value="10" >
 							</form>
 						</div>
 						<div class="check-holder">
@@ -100,7 +108,7 @@
 						<div class="slider-holder">
 							<span class="slider-info">normal offset</span>
 							<form class="control-slider-holder">
-								<input id="normal-offset-amount" class="control-slider" type="range" min="-100" max="100" value="20" >
+								<input id="normal-offset-amount" class="control-slider" type="range" min="0" max="100" value="20" >
 							</form>
 						</div>
 						<div class="slider-holder">
@@ -240,8 +248,14 @@
 						</div>
 						<div class="slider-holder">
 							<span class="slider-info">model gradient offset</span>
-							<input id="model-gradient-offset" class="control-slider" type="range" min="-100" max="100" value="0" >
+							<input id="model-gradient-offset" class="control-slider" type="range" min="-200" max="200" value="0" >
 						</div>
+
+						<div class="check-holder">
+							<span class="slider-info">loop gradient</span>
+							<input class="control control-checkbox" type="checkbox" id="loop-gradient">
+						</div>
+
 						<div class="slider-holder">
 							<span class="slider-info">model tint gradient top</span>
 							<input class="color-select" type="color" id="model-color-top" type="color" value="#ffffff">
@@ -258,15 +272,15 @@
 						</div>
 						<div class="slider-holder">
 							<span class="slider-info">noise size</span>
-							<input id="noise-size" class="control-slider" type="range" min="0" max="100" value="0" >
+							<input id="noise-size" class="control-slider" type="range" min="0" max="200" value="100" >
 						</div>
 						<div class="slider-holder">
 							<span class="slider-info">twist deform amount</span>
-							<input id="twist-deform" class="control-slider" type="range" min="0" max="200" value="20" >
+							<input id="twist-deform" class="control-slider" type="range" min="0" max="200" value="0" >
 						</div>
 						<div class="slider-holder">
 							<span class="slider-info">twist size</span>
-							<input id="twist-size" class="control-slider" type="range" min="0" max="200" value="20" >
+							<input id="twist-size" class="control-slider" type="range" min="0" max="200" value="100" >
 						</div>
 						<div class="slider-holder">
 							<span class="slider-info">deform speed</span>

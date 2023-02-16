@@ -51,11 +51,16 @@ const material = new THREE.MeshStandardMaterial();
 
 let globalShouldAnimateSize = true;
 const loadobjs = [
-    {url:"./extras/assets/draw/",           amount:2},
-    {url:"./extras/assets/models/flowers/", amount:74},
-    {url:"./extras/assets/models/rocks/",   amount:27},
-    {url:"./extras/assets/models/tools/",   amount:80},
-    {url:"./extras/assets/models/toys/",    amount:79}
+    //{name:"draw objects", url:"./extras/draw/",           amount:2},
+    {name:"simple shapes", url:"./extras/models/simple-shapes/", amount:7},
+    
+    {name:"animals", url:"./extras/models/everything-animals/", amount:242},
+    {name:"consumables", url:"./extras/models/everything-consumables/", amount:110},
+    {name:"furnishings", url:"./extras/models/everything-furnishings/", amount:288},
+    {name:"flowers", url:"./extras/models/flowers/", amount:19},
+    {name:"rocks", url:"./extras/models/rocks/",   amount:6},
+    {name:"tools", url:"./extras/models/tools/",   amount:90},
+    {name:"toys", url:"./extras/models/toys/",    amount:79}
 ]
 let drawObject;  
 const toysAmount = 78;
@@ -98,9 +103,9 @@ let reflectObjectXZ = new THREE.Object3D();
 let background;
 let matHandler;
 let didDrawLast = false;
-
 let urlIndex = 0;
 let modelIndex = 0;
+const paintMeshes = [];
 
 const actionHelper = new ActionHelper();
 
@@ -133,7 +138,7 @@ init();
 
 function init(){
 
-    for(let i = 1; i<loadobjs.length; i++){
+    for(let i = 0; i<loadobjs.length; i++){
         const amt = loadobjs[i].amount; 
         for(let k = 0; k<amt; k++){
             const url = loadobjs[i].url;
@@ -144,18 +149,20 @@ function init(){
         }
     }
    
-    chooseModel(1,0);
+    chooseModel(0,0);
 
-    const loader = new GLTFLoader().setPath( loadobjs[0].url );
+    const loader = new GLTFLoader().setPath("./extras/draw/" );
     loader.load( 0+'.glb', function ( gltf ) {
         gltf.scene.traverse( function ( child ) {
             if ( child.isMesh ) {
                 child.material.vertexColors = false;
-                drawObject = child;
-                scene.add(drawObject);
+                
+                //scene.add(drawObject);
 
             }
         });
+        drawObject = gltf.scene;
+        scene.add(gltf.scene)
         //drawObject = gltf.scene;
         
         
@@ -168,7 +175,6 @@ function init(){
     ctx = canvas.getContext('2d');
     canvas.className = "customCanvas";
     
-
 	raycaster = new THREE.Raycaster();
 
 	camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 10000 );
@@ -188,7 +194,7 @@ function init(){
     reflectObjectXZ.scale.z =-1;
     reflectObjectXZ.scale.x =-1;
 
-    strokeHolder.name="strokeHolder";
+    strokeHolder.name = "strokeHolder";
     reflectObjectX.name = "reflectObjectX";
     reflectObjectY.name = "reflectObjectY";
     reflectObjectZ.name = "reflectObjectZ";
@@ -282,20 +288,20 @@ function init(){
     
     clock = new THREE.Clock();
 
-    for(let i = 0; i<2; i++){
+    for(let i = 0; i<10; i++){
         
         document.getElementById("draw-object-"+i).addEventListener("click", function(){
             
             if(i!=currentDrawObjectIndex){
                 currentDrawObjectIndex = i;
-                replaceDrawObject("./extras/assets/draw/"+i+".glb");
+                replaceDrawObject("./extras/draw/"+i+".glb");
             }
             
         });
 
     }
 
-    const dds=[
+    const dds = [
         "draw-object",
         "essentials",
         "mirror",
@@ -335,8 +341,10 @@ function init(){
 
     document.getElementById("reset-cam").addEventListener("click", resetCam);
     
-    document.getElementById("got-it-btn").addEventListener("click", killIntroScene);
-    document.getElementById("instructions-overlay").addEventListener("click", killIntroScene);
+    document.getElementById("got-it-btn").addEventListener("click", toggleInstructions);
+    document.getElementById("instructions-overlay").addEventListener("click", toggleInstructions);
+    
+    document.getElementById("show-instructions").addEventListener("click", toggleInstructions)
     
     document.getElementById("save-geo-ink-file").addEventListener("click", saveGeoInkFile)
     document.getElementById("toggle-draw-on-view").addEventListener("click", updateDrawState);
@@ -345,6 +353,7 @@ function init(){
     document.getElementById("rotation-follows-normal").addEventListener("click", toggleRotationFollowingNormal);
     document.getElementById("mirror-x").addEventListener("click", toggleMirrorX);
     document.getElementById("mirror-y").addEventListener("click", toggleMirrorY);
+    document.getElementById("loop-gradient").addEventListener("click", updateModelParams);
     document.getElementById("mirror-z").addEventListener("click", toggleMirrorZ);
     document.getElementById("undo").addEventListener("click", undoClick);
     document.getElementById("redo").addEventListener("click", redoClick);
@@ -452,22 +461,25 @@ function updateModelParams(){
     //this.all[i].mat.userData.shader.uniforms.time.value = this.inc;
     // 
     const param = getMatParam();
+    console.log(param.gradientSize)
             
     helper.holder.traverse( function ( child ) {
         if ( child.isMesh ) {
-            
-            child.material.userData.shader.uniforms.twistAmt.value = param.twistAmt;
-            child.material.userData.shader.uniforms.noiseSize.value = param.noiseSize;
-            child.material.userData.shader.uniforms.twistSize.value = param.twistSize;
-            child.material.userData.shader.uniforms.noiseAmt.value = param.noiseAmt;
-            child.material.userData.shader.uniforms.rainbowAmt.value = param.rainbowAmt;
-            child.material.userData.shader.uniforms.gradientSize.value = param.gradientSize;
-            child.material.userData.shader.uniforms.rainbowGradientSize.value = param.rainbowGradientSize;
-            child.material.userData.shader.uniforms.gradientOffset.value = param.gradientOffset;
-            child.material.userData.shader.uniforms.topColor.value = param.topColor;
-            child.material.userData.shader.uniforms.bottomColor.value = param.bottomColor;
-            child.material.userData.shader.uniforms.deformSpeed.value = param.deformSpeed;
-            child.material.userData.shader.uniforms.colorSpeed.value = param.colorSpeed;
+            if(child.material.userData.shader!=null){
+                child.material.userData.shader.uniforms.twistAmt.value = param.twistAmt;
+                child.material.userData.shader.uniforms.noiseSize.value = param.noiseSize;
+                child.material.userData.shader.uniforms.twistSize.value = param.twistSize;
+                child.material.userData.shader.uniforms.noiseAmt.value = param.noiseAmt;
+                child.material.userData.shader.uniforms.rainbowAmt.value = param.rainbowAmt;
+                child.material.userData.shader.uniforms.gradientSize.value = param.gradientSize;
+                child.material.userData.shader.uniforms.rainbowGradientSize.value = param.rainbowGradientSize;
+                child.material.userData.shader.uniforms.gradientOffset.value = param.gradientOffset;
+                child.material.userData.shader.uniforms.topColor.value = param.topColor;
+                child.material.userData.shader.uniforms.bottomColor.value = param.bottomColor;
+                child.material.userData.shader.uniforms.deformSpeed.value = param.deformSpeed;
+                child.material.userData.shader.uniforms.colorSpeed.value = param.colorSpeed;
+                child.material.userData.shader.uniforms.shouldLoopGradient.value = param.shouldLoopGradient;
+            }
 
         }
     });
@@ -476,7 +488,7 @@ function updateModelParams(){
 
         const ind = actionHelper.currStrokeIndex-1;
         for(let i = 0; i<actionHelper.actionsArr[ind].length; i++){
-            actionHelper.actionsArr[ind][i].all = param;
+            actionHelper.actionsArr[ind][i].all.param = param;
         }
 
     } 
@@ -517,7 +529,6 @@ function animate(){
             globalAdditiveRotationSpeed:globalAdditiveRotationSpeed,
             globalOffsetRotation:globalOffsetRotation,
             rotationFollowsNormal:rotationFollowsNormal
-
         });
     }
     
@@ -535,19 +546,23 @@ function animate(){
 }
 
 function getMatParam(){
+    
+    const loop = $("#loop-gradient:checked").val() ? 1. : 0.0;
+    
     return { 
-        twistAmt:$("#twist-deform").val()*.01,
-        noiseSize:$("#noise-size").val()*.01,
-        twistSize:$("#twist-size").val()*.01,
+        twistAmt:$("#twist-deform").val()*.03,
+        noiseSize:$("#noise-size").val()*.04,
+        twistSize:$("#twist-size").val()*.04,
         noiseAmt:$("#noise-deform").val()*.01,
         rainbowAmt:$("#rainbow-tint-amount").val()*.01,
-        gradientSize:.5+$("#model-gradient-size").val()*.03,
-        rainbowGradientSize:$("#rainbow-size").val()*.03,
-        gradientOffset:+$("#model-gradient-offset").val()*.1,
+        gradientSize:.1+$("#model-gradient-size").val()*.09,
+        rainbowGradientSize:$("#rainbow-size").val()*.08,
+        gradientOffset:+$("#model-gradient-offset").val()*.3,
         topColor:new THREE.Color( $("#model-color-top").val() ),
         bottomColor:new THREE.Color( $("#model-color-bottom").val() ),
         deformSpeed:$("#deform-speed").val()*.03,
         colorSpeed:$("#color-speed").val()*.03,
+        shouldLoopGradient: loop
     }
 }
 
@@ -558,14 +573,37 @@ function chooseModel(i,k){
     loader.load( k+'.glb', function ( gltf ) {
         gltf.scene.traverse( function ( child ) {
             if ( child.isMesh ) {
+                if(didDrawLast){
+
+                }
                 const param = getMatParam();
                 child.material = matHandler.getCustomMaterial(child.material, param);
             }
         });
         //meshClone = gltf.scene;
+        if(checkShouldAddToPaintMeshes()){
+            paintMeshes.push({urlIndex:urlIndex, modelIndex:modelIndex, model:gltf.scene.clone()});
+        }
         helper.updateVisual({mesh:gltf.scene});
 
     });
+}
+
+function checkShouldAddToPaintMeshes(){
+    for(let i = 0; i<paintMeshes.length; i++){
+        if(urlIndex == paintMeshes[i].urlIndex && modelIndex == paintMeshes[i].modelIndex)
+            return false;
+    }
+    return true;
+}
+
+function getModelByIndex(ui,mi){
+    for(let i = 0; i<paintMeshes.length; i++){
+        if(ui == paintMeshes[i].urlIndex && mi == paintMeshes[i].modelIndex){
+            return paintMeshes[i].model;
+        }
+    }
+
 }
 
 function resetCam(){
@@ -594,7 +632,7 @@ function getHitPointFromMesh(msh, mse){
 
 
 function onKeyDown(e) {
-    console.log(e.keyCode)
+
     if(e.keyCode == 18){
         if(controls){
             controls.enableRotate = true;
@@ -635,10 +673,7 @@ function onKeyUp(e) {
 }
 
 function onWindowResize() {
-    
-    if(controls)
-        //controls.handleResize();
-	
+
     camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
 	renderer.setSize( window.innerWidth, window.innerHeight );
@@ -717,8 +752,7 @@ function onMouseDown(e){
     var cntrl = false;
 
     if(controls){
-        console.log(controls.enableDamping)
-        console.log(controls.enablePan);
+        
         if(!controls.enableRotate && !controls.enablePan ){
             cntrl = true;
         }else{
@@ -729,9 +763,8 @@ function onMouseDown(e){
 
     if(e.button == 0 && cntrl){
         if(didDrawLast){
-            console.log("DID DRAW LAST")
-            //const copy = helper
-            helper.copyMaterial({  param:getMatParam() });
+        
+            helper.copyMaterial({  param:getMatParam(), matHandler:matHandler });
         }
         mouse.down = true;
 
@@ -825,6 +858,20 @@ function onMouseMove(e){
     // }
 }
 
+function toggleInstructions(){
+    // showingInstructions = !showingInstructions;
+    // if(showingInstructions){
+    //     $("#")
+    // }else{
+
+    // }
+    if ( $( "#instructions-overlay" ).is( ":hidden" ) ) {
+        $( "#instructions-overlay" ).fadeIn( );
+    } else {
+        $( "#instructions-overlay" ).fadeOut();
+    }
+}
+
 function handleDrawGeo(){
     
     if(!ot){
@@ -859,9 +906,10 @@ function buildGeo(){
     
     if(mouse.smoothAvgs.length>0 ){
         
-        const meshClone = helper.holder;
+        const meshClone = helper.holder.clone();
 
         const all = {
+            modelInfo:{modelIndex:modelIndex,urlIndex:urlIndex}, 
             meshClone:meshClone, 
             index:actionHelper.currStrokeIndex, 
             scene:strokeHolder, 
@@ -964,7 +1012,10 @@ function redoClick(){
     if(actionHelper.currStrokeIndex < actionHelper.actionsArr.length){
 
         const ind = actionHelper.currStrokeIndex;
-        let meshCopy;
+        const mi = actionHelper.actionsArr[ind][0].all.modelInfo.modelIndex;
+        const ui = actionHelper.actionsArr[ind][0].all.modelInfo.urlIndex;
+        const model = getModelByIndex(ui, mi);
+
         for(let i = 0; i<actionHelper.actionsArr[ind].length; i++){
             
             const pos = actionHelper.actionsArr[ind][i].pos;
@@ -972,40 +1023,22 @@ function redoClick(){
             //all.meshClone = actionHelper.actionsArr[ind][i].all.meshClone;
             const all = actionHelper.actionsArr[ind][i].all;
             all.scene = actionHelper.actionsArr[ind][i].scene;
+            all.meshClone = model;
             if(i==0){
-                meshCopy = all.meshClone.clone();
-                meshCopy.traverse( function ( child ) {
+                
+                model.traverse( function ( child ) {
                 
                     if ( child.isMesh ) {
                         if(child.material!=null){
-                            
-                            let copy = new THREE.MeshStandardMaterial();
-                            
-                            for (const [key, value] of Object.entries(child.material)) {
-                                copy[key] = value;
-                            }
-
-                            const newParam = {};
-                            for (const [key, value] of Object.entries(all.param)) {
-                                newParam[key] = value;
-                            }
-                            
-                            copy = matHandler.getCustomMaterial(copy, newParam);
+                            let copy = child.material.clone();
+                            copy = matHandler.getCustomMaterial(copy, all.param);
                             child.material = copy;
                         }
                     }
-
                 });
-                all.meshClone = meshCopy;
-            }else{
-                all.meshClone = meshCopy;
+
             }
-
-            //if(i==0)
             
-            
-            //console.log(all)
-
             meshObjects.push( new Stroke( {pos:pos, rots:rots, all:all} ) );
 
         }   
@@ -1034,13 +1067,13 @@ function updateDrawState(){
     }
 }
 
-function killIntroScene(){
-    document.getElementById("instructions-overlay").style.display = "none";
-}
+// function killIntroScene(){
+//     document.getElementById("instructions-overlay").style.display = "none";
+// }
 
 function updateMeshSize(val){
     handleUiUpdating();
-    meshScale = $("#size-slider").val()*.1;
+    meshScale = $("#size-slider").val()*.08;
 }
 
 function rotateBrushX(){
@@ -1135,8 +1168,7 @@ function exportGLTF(  ) {
             anis.push( meshObjects[i].meshes[k].mesh.animations[0] )
         }
     }
-    console.log(anis)
-    
+   
     const gltfExporter = new GLTFExporter();
 
     const options = {
@@ -1158,7 +1190,6 @@ function exportGLTF(  ) {
             } else {
 
                 const output = JSON.stringify( result, null, 2 );
-                console.log( output );
                 saveString( output, 'scene.gltf' );
 
             }
@@ -1171,7 +1202,6 @@ function exportGLTF(  ) {
         },
         options
     );
-   
 
 }
 
@@ -1188,8 +1218,6 @@ function saveArrayBuffer( buffer, filename ) {
 function saveString( text, filename ) {
     save( new Blob( [ text ], { type: 'text/plain' } ), filename );
 }
-
-
 
 function onDocumentDragOver( event ) {
 
@@ -1208,6 +1236,14 @@ function replaceDrawObject(src){
     const loader = new GLTFLoader();
     loader.load( src, function ( gltf ) {
         killObject(drawObject);
+       
+        gltf.scene.traverse( function ( child ) {
+            if ( child.isMesh ) {
+                child.material.vertexColors = false;
+               // drawObject = child;
+               // scene.add(drawObject);
+            }
+        });
         scene.add(gltf.scene)
         drawObject = gltf.scene;
     });
