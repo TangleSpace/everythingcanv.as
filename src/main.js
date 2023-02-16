@@ -53,9 +53,9 @@ let globalShouldAnimateSize = true;
 const loadobjs = [
     //{name:"draw objects", url:"./extras/draw/",           amount:2},
     {loaded:false, name:"simple shapes", url:"./extras/models/simple-shapes/", amount:7},
-    {loaded:false, name:"animals", url:"./extras/models/everything-animals/", amount:242},
-    {loaded:false, name:"consumables", url:"./extras/models/everything-consumables/", amount:110},
-    {loaded:false, name:"furnishings", url:"./extras/models/everything-furnishings/", amount:288},
+    {loaded:false, name:"animals", url:"./extras/models/everything-animals/", amount:232},
+    {loaded:false, name:"consumables", url:"./extras/models/everything-consumables/", amount:107},
+    {loaded:false, name:"furnishings", url:"./extras/models/everything-furnishings/", amount:232},
     {loaded:false, name:"flowers", url:"./extras/models/flowers/", amount:19},
     {loaded:false, name:"rocks", url:"./extras/models/rocks/",   amount:6},
     {loaded:false, name:"tools", url:"./extras/models/tools/",   amount:90},
@@ -501,10 +501,8 @@ function updateBackgroundParms(){
 }
 
 function updateModelParams(){
-    //this.all[i].mat.userData.shader.uniforms.time.value = this.inc;
-    // 
+    
     const param = getMatParam();
-    console.log(param.gradientSize)
             
     helper.holder.traverse( function ( child ) {
         if ( child.isMesh ) {
@@ -527,7 +525,7 @@ function updateModelParams(){
         }
     });
 
-    if(actionHelper.currStrokeIndex>0){
+    if(actionHelper.currStrokeIndex>0){ //update the param variable of current stroke 
 
         const ind = actionHelper.currStrokeIndex-1;
         for(let i = 0; i<actionHelper.actionsArr[ind].length; i++){
