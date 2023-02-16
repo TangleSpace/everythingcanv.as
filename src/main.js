@@ -673,7 +673,7 @@ function getHitPointFromMesh(msh, mse){
 
 
 function onKeyDown(e) {
-
+    console.log(e.keyCode)
     if(e.keyCode == 18){
         if(controls){
             controls.enableRotate = true;
@@ -681,6 +681,19 @@ function onKeyDown(e) {
     }else if(e.keyCode== 17){
         if(controls){
             controls.enablePan = true;
+        }
+    }
+    if(e.keyCode==90){
+        console.log("jsdfsdfkjsdf")
+        console.log(controls.enablePan)
+        if(controls.enablePan){
+            console.log("hiii")
+            undoClick();
+        }
+    }
+    if(e.keyCode==89){
+        if(controls.enablePan){
+            redoClick();
         }
     }
 }
