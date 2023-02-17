@@ -20,9 +20,13 @@ class Stroke {
 
         this.arr = OBJ.pos;
         this.rots = OBJ.rots;
-        this.strokeIndex = OBJ.all.index;
-        this.modelInfo = OBJ.all.modelInfo;
-        this.total = Math.ceil( this.arr.length * OBJ.all.globalDensityAmount);
+        this.all = OBJ.all;
+        this.scene = OBJ.all.scene;
+        this.param = OBJ.all.param;
+        this.strokeIndex = this.all.index;
+        this.modelInfo = this.all.modelInfo;
+
+        this.total = Math.ceil( this.arr.length * this.all.globalDensityAmount);
         this.speed = 200;
         this.meshes = [];
 
@@ -58,15 +62,15 @@ class Stroke {
                 parent:this, 
                 geo:this.tubeGeometry, 
                 start:start, 
-                scene:OBJ.all.scene, 
-                scale:OBJ.all.meshScale, 
+                scene:this.scene, 
+                scale:this.all.meshScale, 
                 total:this.total, 
                 index:i, 
                 rotation:rotFnl,
-                meshClone:OBJ.all.meshClone,
+                meshClone:this.all.meshClone,
                 strokeIndex:this.strokeIndex,
-                helper:OBJ.all.helper,
-                globalShouldAnimateSize:OBJ.all.globalShouldAnimateSize,
+                helper:this.all.helper,
+                globalShouldAnimateSize:this.all.globalShouldAnimateSize,
             
             });
             pmesh.initAnimation();
@@ -75,6 +79,14 @@ class Stroke {
        
     
     }
+
+    updateParam(param){
+        this.param = param;
+        for(var i = 0; i<this.meshes.length; i++){
+            this.meshes[i].updateMat(param);
+        }  
+    }
+
     update = function(OBJ){
         for(var i = 0; i<this.meshes.length; i++){
             this.meshes[i].update(OBJ);
@@ -86,7 +98,35 @@ class Stroke {
             this.meshes[i].kill();
         }
     }
-
+    getExportData(){
+        return {
+            pos:this.arr,
+            rots:this.rots,
+            all:{
+                param:{
+                    twistAmt:this.param.twistAmt,
+                    noiseSize:this.param.noiseSize,
+                    twistSize:this.param.twistSize,
+                    noiseAmt:this.param.noiseAmt,
+                    rainbowAmt:this.param.rainbowAmt,
+                    gradientSize:this.param.gradientSize,
+                    rainbowGradientSize:this.param.rainbowGradientSize,
+                    gradientOffset:this.param.gradientOffset,
+                    topColor:this.param.topColor.getHexString(),
+                    bottomColor:this.param.bottomColor.getHexString(),
+                    deformSpeed:this.param.deformSpeed,
+                    colorSpeed:this.param.colorSpeed,
+                    shouldLoopGradient:this.param.shouldLoopGradient
+                },
+                modelInfo:this.all.modelInfo,
+                index:this.all.index,
+                scene:this.scene.name,
+                globalDensityAmount:this.all.globalDensityAmount, 
+                meshScale:this.all.meshScale,
+                globalShouldAnimateSize:this.all.globalShouldAnimateSize
+            }
+        }
+    }
 }
 
 
@@ -168,6 +208,31 @@ class PaintMesh {
             obj.geometry.dispose();
             //obj.dispose();
         }
+    }
+
+    updateMat(param){
+
+        this.mesh.traverse( function ( child ) {
+            if ( child.isMesh ) {
+                if(child.material.userData.shader!=null){
+                    child.material.userData.shader.uniforms.twistAmt.value = param.twistAmt;
+                    child.material.userData.shader.uniforms.noiseSize.value = param.noiseSize;
+                    child.material.userData.shader.uniforms.twistSize.value = param.twistSize;
+                    child.material.userData.shader.uniforms.noiseAmt.value = param.noiseAmt;
+                    child.material.userData.shader.uniforms.rainbowAmt.value = param.rainbowAmt;
+                    child.material.userData.shader.uniforms.gradientSize.value = param.gradientSize;
+                    child.material.userData.shader.uniforms.rainbowGradientSize.value = param.rainbowGradientSize;
+                    child.material.userData.shader.uniforms.gradientOffset.value = param.gradientOffset;
+                    child.material.userData.shader.uniforms.topColor.value = param.topColor;
+                    child.material.userData.shader.uniforms.bottomColor.value = param.bottomColor;
+                    child.material.userData.shader.uniforms.deformSpeed.value = param.deformSpeed;
+                    child.material.userData.shader.uniforms.colorSpeed.value = param.colorSpeed;
+                    child.material.userData.shader.uniforms.shouldLoopGradient.value = param.shouldLoopGradient;
+                }
+    
+            }
+        });
+        
     }
 
     initAnimation (){

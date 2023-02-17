@@ -23,7 +23,7 @@ let mouse = {
     smoothLerp:new THREE.Vector3(),
     rots:[],
 };
-
+let usingCustomDrawObject = false;
 let world, meshBody, joint;
 let bodies=[], visuals=[];
 let dt = 1 / 60;
@@ -332,6 +332,7 @@ function init(){
         document.getElementById("draw-object-"+i).addEventListener("click", function(){
             
             if(i!=currentDrawObjectIndex){
+                usingCustomDrawObject = false;
                 currentDrawObjectIndex = i;
                 replaceDrawObject("./extras/draw/"+i+".glb");
             }
@@ -528,8 +529,10 @@ function updateModelParams(){
     if(actionHelper.currStrokeIndex>0){ //update the param variable of current stroke 
 
         const ind = actionHelper.currStrokeIndex-1;
-        for(let i = 0; i<actionHelper.actionsArr[ind].length; i++){
-            actionHelper.actionsArr[ind][i].all.param = param;
+        for(let i = 0; i<meshObjects.length; i++){
+            if(meshObjects[i].strokeIndex == ind){
+                meshObjects[i].updateParam( param ) ;            
+            }
         }
 
     } 
@@ -607,25 +610,30 @@ function getMatParam(){
     }
 }
 
-function chooseModel(i,k){
+function chooseModel(i,k, customParams, callback){
     urlIndex = i;
     modelIndex = k;
     const loader = new GLTFLoader().setPath( loadobjs[i].url );
     loader.load( k+'.glb', function ( gltf ) {
+
+        const param = customParams == null ? getMatParam() : customParams;
+
         gltf.scene.traverse( function ( child ) {
             if ( child.isMesh ) {
-                if(didDrawLast){
-
-                }
-                const param = getMatParam();
                 child.material = matHandler.getCustomMaterial(child.material, param);
             }
         });
+
         //meshClone = gltf.scene;
         if(checkShouldAddToPaintMeshes()){
             paintMeshes.push({urlIndex:urlIndex, modelIndex:modelIndex, model:gltf.scene.clone()});
         }
+        
         helper.updateVisual({mesh:gltf.scene});
+        
+        if(callback !=null ){
+            callback(gltf.scene);
+        }
 
     });
 }
@@ -684,10 +692,7 @@ function onKeyDown(e) {
         }
     }
     if(e.keyCode==90){
-        console.log("jsdfsdfkjsdf")
-        console.log(controls.enablePan)
         if(controls.enablePan){
-            console.log("hiii")
             undoClick();
         }
     }
@@ -970,9 +975,7 @@ function buildGeo(){
             globalDensityAmount:globalDensityAmount, 
             meshScale:meshScale,
             globalShouldAnimateSize:globalShouldAnimateSize,
-            param:getMatParam(),
-            urlIndex:urlIndex,
-            modelIndex:modelIndex
+            param:getMatParam()
         }
         
         meshObjects.push(new Stroke( { pos:mouse.smoothAvgs, rots:mouse.rots, all:all } ));
@@ -1026,16 +1029,23 @@ function onBlur(){
 function saveGeoInkFile(){
     const arr = [];
     for(let i = 0;i< meshObjects.length; i++){
-        arr.push(meshObjects[i].getExportData());
+        if(meshObjects[i].strokeIndex < actionHelper.currStrokeIndex){//make sure you don't export undo  meshes
+            arr.push(meshObjects[i].getExportData());
+        }
     }
-    download(arr);
+
+    let drawObj = 0;
+    if(!usingCustomDrawObject){
+        drawObj = currentDrawObjectIndex;
+    }
+    download( {strokes:arr, background: background.getExportData(), drawObj:drawObj});
 }
 
 
-function download (arr){
+function download (geoink){
   const hash = "geo-ink-file";
   const blob = createBlobFromData({
-    arr,
+    geoink,
   });
   const fileUrl = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -1317,23 +1327,84 @@ function onDocumentDrop( event ) {
             reader.onload = function ( event ) {
                 //console.log(event.target.result);
                 //loadImage( event.target.result );
+                usingCustomDrawObject = true;
                 replaceDrawObject(event.target.result);
             };
-
             reader.readAsDataURL( file );
         }else if(ext == "txt"){
 
             const reader = new FileReader();
             reader.onload = function ( event ) {
-                //console.log(event.target.result);
-                //loadImage( event.target.result );
-                //replaceDrawObject(event.target.result);
-                //console.log(event.target.result);
-                // $.getJSON(event.target.result, function(data) {
-                //     // JSON result in `data` variable
-                //     var mydata = JSON.parse(data);
-                //     console.log(mydata)
-                // });
+
+                readTextFile( event.target.result,  function(text){
+                    //const urlFinal = "final-json-info.json"
+                    //{ obj:JSON.parse(text), hash:hash }
+                    const obj = JSON.parse(text);
+
+                    const bg = obj.geoink.background;
+                    bg.top = new THREE.Color("#"+bg.top);
+                    bg.bottom = new THREE.Color("#"+bg.bottom);
+                    background.update(bg);
+                    
+                    if(obj.geoink.drawObj!=currentDrawObjectIndex){
+                        replaceDrawObject("./extras/draw/"+obj.geoink.drawObj+".glb");
+                    }
+                    const strokes = obj.geoink.strokes;
+                
+                    //while(i < strokes.length ){
+                    for(let i = 0; i<strokes.length; i++){
+
+                        const a = strokes[i].all; 
+                        const mi = a.modelInfo.modelIndex;
+                        const ui = a.modelInfo.urlIndex;
+                        const p =  a.param;
+                        const param = {
+                            twistAmt:p.twistAmt,
+                            noiseSize:p.noiseSize,
+                            twistSize:p.twistSize,
+                            noiseAmt:p.noiseAmt,
+                            rainbowAmt:p.rainbowAmt,
+                            gradientSize:p.gradientSize,
+                            rainbowGradientSize:p.rainbowGradientSize,
+                            gradientOffset:p.gradientOffset,
+                            topColor:new THREE.Color("#"+p.topColor),
+                            bottomColor:new THREE.Color("#"+p.bottomColor),
+                            deformSpeed:p.deformSpeed,
+                            colorSpeed:p.colorSpeed,
+                            shouldLoopGradient:p.shouldLoopGradient
+                        }
+                        
+                        chooseModel(ui, mi, param, function(sn){
+                           
+                            const meshClone = sn.clone();
+                            const rots = [];
+                            const pos = [];
+                            
+                            for(let k = 0; k<strokes[i].rots.length; k++){
+                                const r = strokes[i].rots[k];
+                                const p = strokes[i].pos[k];
+                                rots.push(new THREE.Quaternion(r._x, r._y, r._z, r._w))
+                                pos.push(new THREE.Vector3(p.x, p.y, p.z));
+                            }
+                            const ss = scene.getObjectByName(a.scene);
+                            
+                            const all = {
+                                modelInfo:{modelIndex:mi,urlIndex:ui}, 
+                                meshClone:meshClone, 
+                                index:i, 
+                                scene:ss, 
+                                globalDensityAmount:a.globalDensityAmount, 
+                                meshScale:a.meshScale,
+                                globalShouldAnimateSize:a.globalShouldAnimateSize,
+                                param:param
+                            }
+                            meshObjects.push(new Stroke( { pos:pos, rots:rots, all:all } ));
+                            //i++;
+                        });
+                        
+                    }
+
+                });
 
             };
             reader.readAsDataURL( file );
@@ -1342,6 +1413,21 @@ function onDocumentDrop( event ) {
     }
 
 }
+
+
+
+function readTextFile(file, callback) {
+    const rawFile = new XMLHttpRequest();
+    rawFile.overrideMimeType("application/json");
+    rawFile.open("GET", file, true);
+    rawFile.onreadystatechange = function() {
+        if (rawFile.readyState === 4 && rawFile.status == "200") {
+            callback(rawFile.responseText);
+        }
+    }
+    rawFile.send(null);
+}
+  
 
 function killObject(obj){
     

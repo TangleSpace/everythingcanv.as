@@ -16,6 +16,12 @@ class Background {
         const self = this;
         const vertexShader = self.getBgVertex();
 		const fragmentShader = self.getBgFragment();
+		this.param = {
+			top:new Color(0x333333),
+			bottom:new Color(0x333333),
+			size:.9,
+			offset:0
+		}
 		const uniforms = {
 			topColor: { value: new Color(0x333333) },
 			bottomColor: { value: new Color(0x333333) },
@@ -34,13 +40,13 @@ class Background {
 		} );
 
 		this.sky = new Mesh( skyGeo, skyMat );
-		//this.sky.material.uniforms.topColor.value = new Color(0x777777);
-		//this.sky.material.uniforms.bottomColor.value = new Color(0x777777);
 		OBJ.scene.add(this.sky);
+
       
     }
 
 	update(OBJ){
+		this.param = OBJ;
 		if(this.sky.material.uniforms!=null){
 			this.sky.material.uniforms.topColor.value = OBJ.top;
 			this.sky.material.uniforms.bottomColor.value = OBJ.bottom;
@@ -78,6 +84,15 @@ class Background {
 			
 		].join( '\n' );
 		return str;
+	}
+
+	getExportData(){
+		return {
+			top:this.param.top.getHexString(),
+			bottom:this.param.bottom.getHexString(),
+			size:this.param.size,
+			offset:this.param.offset
+		};
 	}
 
 
