@@ -13,8 +13,10 @@
 					<li>[LMB] to draw</li>
 					<li>[ALT + LMB] to rotate </li>
 					<li>[Scroll] to zoom in/out</li>
-					<li>[ALT/CTRL or ALT/CMD] to pan </li>
+					<li>[CTRL + LMB] to pan up and down</li>
 					<li>[CTRL Z / CTRL Y] undo and redo </li>
+					<li>[SHIFT + HOVER] to select a stroke to edit </li>
+					
 					<li>[SPACE] to toggle UI </li>
 					
 					<li>gltf exports <span class="bold">DO NOT</span> retain shader effects</li>
@@ -26,6 +28,8 @@
 					</li>
 					<li>drag and drop a glb or gltf on the scene to use a custom draw object</li>
 					<li>drag and drop a goe.ink json to reload a saved project</li>
+					<li>this works additively so you can layer multiple geo.ink files on top of each other </li>
+					
 					<li>most models by <a href="https://www.davidoreilly.com/">David Oreilly's</a> <a href="https://www.davidoreilly.com/library"> Everything Library</a></li>
 					<li>site by <a class="normal-link" href="https://twitter.com/strugggggs"> Vince Mckelvie</a> </li>
 
@@ -49,11 +53,13 @@
 					<button class="btn inline-btns" id="export-gltf"> save gltf </button> <br/>
 					<button class="btn inline-btns" id="save-geo-ink-file"> save geo.ink file </button> <br/>
 					<button class="btn inline-btns" id="show-instructions"> show instructions </button> <br/>
-				</div>
-				<div id="undo-redo-holder"  >
+					<div style="margin-top: 20px; margin-bottom: 0px; font-size: 12px;">selected stroke index <input id="stroke-index-input" style="width:30px" value="0" type="text" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" /> </div>
+					
 					<button class="btn inline-btns" id="undo"> undo </button>
 					<button class="btn inline-btns" id="redo"> redo </button>
+					
 				</div>
+				
 				<div class="drop-down-holder">
 					<div class="drop-down-title" id="draw-object-title" >
 						draw object

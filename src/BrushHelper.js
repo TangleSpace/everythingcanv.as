@@ -31,7 +31,13 @@ class BrushHelper {
         if(this.holder){
 
             this.visual.visible = false;
-            this.holder.scale.set(OBJ.meshScale, OBJ.meshScale, OBJ.meshScale);
+            if(OBJ.drawing){
+                this.holder.scale.set(OBJ.meshScale*OBJ.penSense, OBJ.meshScale*OBJ.penSense, OBJ.meshScale*OBJ.penSense);
+            }else{
+                this.holder.scale.set(OBJ.meshScale, OBJ.meshScale, OBJ.meshScale);  
+            }
+            //this.holder.scale.set(OBJ.meshScale, OBJ.meshScale, OBJ.meshScale);
+            
             this.holder.position.lerp(this.mesh.position, OBJ.globalSmoothAmount);// , globalSmoothAmount);
             this.rotAdditive.x += OBJ.shouldRotateAdditiveX ? OBJ.globalAdditiveRotationSpeed : 0;
             this.rotAdditive.y += OBJ.shouldRotateAdditiveY ? OBJ.globalAdditiveRotationSpeed : 0;

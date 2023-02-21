@@ -4,22 +4,18 @@ import {
     Object3D,
     CatmullRomCurve3,
     TubeGeometry,
-    ConeGeometry,
-    MeshBasicMaterial,
-    MeshStandardMaterial,
-    Euler,
-    Mesh,
     VectorKeyframeTrack,
     QuaternionKeyframeTrack,
     AnimationClip,
     Quaternion,
-    Matrix4
+    Color
 } from './build/three.module.js';
 class Stroke {
     constructor(OBJ){
 
         this.arr = OBJ.pos;
         this.rots = OBJ.rots;
+        this.scales = OBJ.scl;
         this.all = OBJ.all;
         this.scene = OBJ.all.scene;
         this.param = OBJ.all.param;
@@ -55,9 +51,9 @@ class Stroke {
             const endInc = (i == this.total-1) ? i : (i + 1); 
             const end = (endInc / this.total);
 
-            const avgStart = Math.floor(start);
             const rotFnl = {from:this.rots[Math.floor(start*this.rots.length)], to:this.rots[Math.floor(end*this.rots.length)]};
-        
+            const sclFnl = {from:this.scales[Math.floor(start*this.scales.length)], to:this.scales[Math.floor(end*this.scales.length)]};
+            
             const pmesh = new PaintMesh({
                 parent:this, 
                 geo:this.tubeGeometry, 
@@ -67,6 +63,7 @@ class Stroke {
                 total:this.total, 
                 index:i, 
                 rotation:rotFnl,
+                scaleToFrom:sclFnl,
                 meshClone:this.all.meshClone,
                 strokeIndex:this.strokeIndex,
                 helper:this.all.helper,
@@ -78,6 +75,25 @@ class Stroke {
         }
        
     
+    }
+
+    hover(){
+        for(var i = 0; i<this.meshes.length; i++){
+            this.meshes[i].hover();
+        }
+    }
+
+    unHover(){
+        for(var i = 0; i<this.meshes.length; i++){
+            this.meshes[i].unHover();
+        }  
+    }
+
+    updateModel (OBJ) {
+        for(var i = 0; i<this.meshes.length; i++){
+            this.meshes[i].updateModel();
+
+        }
     }
 
     updateParam(param){
@@ -102,6 +118,7 @@ class Stroke {
         return {
             pos:this.arr,
             rots:this.rots,
+            scales:this.scales,
             all:{
                 param:{
                     twistAmt:this.param.twistAmt,
@@ -134,24 +151,22 @@ class Stroke {
 class PaintMesh {
     constructor(OBJ) {
         //this.mesh = new THREE.Mesh(geometry.clone(), material.clone());
-        //console.log(ROTATION)
+        //console.log(ROTATION)\
+        const self = this;
         this.parent = OBJ.parent;
-
         this.rots = OBJ.rotation;
-        
-    
+        this.scaleToFrom = OBJ.scaleToFrom;
         this.mesh = OBJ.meshClone.clone();
-        ///this.material = OBJ.material;
+        
         this.scene = OBJ.scene;
         
         this.mesh.name = "scn_"+this.scene.name+"_s_"+OBJ.strokeIndex+"_m_"+OBJ.index;
         //conso.e
         this.total = OBJ.total;
-        const s = OBJ.scale;
         this.i = OBJ.index;
         this.meshScale = OBJ.scale;
+
         this.globalShouldAnimateSize = OBJ.globalShouldAnimateSize;
-        
         this.mesh.scale.set(this.meshScale, this.meshScale, this.meshScale);
         //this.mesh.rotation.copy(helper.holder.rotation);
         
@@ -173,6 +188,14 @@ class PaintMesh {
         this.scalef;
         this.rotationkf
         this.lookObj = new Object3D();
+        this.ogEmissives = [];
+
+        this.mesh.traverse( function ( child ) {
+            if ( child.isMesh ) {
+                child.paintIndex = OBJ.strokeIndex;
+                self.ogEmissives.push(child.material.emissive);
+            }
+        });
         
         //scene.add(this.lookObj);
 
@@ -182,6 +205,27 @@ class PaintMesh {
             //constraint.offset_factor = fnl
             //constraint.keyframe_insert(data_path="offset_factor")
     }
+
+    hover(){
+        this.mesh.traverse( function ( child ) {
+            if ( child.isMesh ) {
+
+                child.material.emissive = new Color(0xff0000);
+    
+            }
+        });
+    }
+    unHover(){
+        let i = 0;
+        const self = this;
+        this.mesh.traverse( function ( child ) {
+            if ( child.isMesh ) {
+                child.material.emissive = self.ogEmissives[i];
+                i++;
+            }
+        });
+    }
+    
     kill(){
         const self = this;
         // this.mesh.traverse( function ( obj ) {
@@ -252,9 +296,14 @@ class PaintMesh {
             const trans = this.getTransforms( key );//.pos;
 
             let rots = new Quaternion();
-           
             rots.slerpQuaternions ( this.rots.from, this.rots.to, t / this.keyframelength );
             
+            const sFrm = this.scaleToFrom.from;
+            const sTo = this.scaleToFrom.to;
+            console.log()
+            let scl = new Vector3();
+            scl.lerpVectors(new Vector3(sFrm,sFrm,sFrm), new Vector3(sTo,sTo,sTo), t / this.keyframelength);
+
             valuesP.push(trans.pos.x);
             valuesP.push(trans.pos.y);
             valuesP.push(trans.pos.z);
@@ -262,19 +311,21 @@ class PaintMesh {
             valuesR.push(rots.y);
             valuesR.push(rots.z);
             valuesR.push(rots.w);
-            let s = this.meshScale;
+            
+            let s = 1;//this.meshScale;
+
             if(this.globalShouldAnimateSize){
                 if(this.i == 0){
-                    s = (t / this.keyframelength) * this.meshScale;
+                    s = (t / this.keyframelength);// * this.meshScale;
                 } 
                 if(this.i == this.total-1){
-                    s = (1.0 - (t / this.keyframelength)) * this.meshScale;
+                    s = (1.0 - (t / this.keyframelength));// * this.meshScale;
                 }
             }
 
-            valuesS.push(s);
-            valuesS.push(s);
-            valuesS.push(s);
+            valuesS.push(scl.x*s);
+            valuesS.push(scl.y*s);
+            valuesS.push(scl.z*s);
 
         }   
       

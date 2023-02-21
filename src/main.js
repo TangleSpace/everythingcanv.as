@@ -9,6 +9,7 @@ import { Stroke } from './Stroke.js';
 import { ActionHelper } from './ActionHelper.js';
 import { Background } from './Background.js';
 import { CustomMaterial } from './CustomMaterial.js';
+import { TWEEN } from './scripts/jsm/libs/tween.module.min.js';
 
 let camera, mesh, scene, renderer;
 let mouse = {
@@ -22,7 +23,9 @@ let mouse = {
     smoothInc:0,
     smoothLerp:new THREE.Vector3(),
     rots:[],
+    scales:[]
 };
+let strokeSelect = false;
 let usingCustomDrawObject = false;
 let world, meshBody, joint;
 let bodies=[], visuals=[];
@@ -70,6 +73,8 @@ let showingSideBar = true;
 let movingCamera = false;
 let showingDrawObject = true;
 let meshScale = 1;
+let penSense = 1;
+let shouldDoPenPressure = true;
 let currentDrawHitPoint;
 let globalOffsetRotation = new THREE.Euler( 0, 0, 0, 'XYZ' );
 let globalLerpAmount = 1;
@@ -101,10 +106,10 @@ let reflectObjectXY = new THREE.Object3D();
 let reflectObjectXZ = new THREE.Object3D();
 let background;
 let matHandler;
-let didDrawLast = false;
 let urlIndex = 0;
 let modelIndex = 0;
 const paintMeshes = [];
+let strokeSelectStrokes = [];
 
 const actionHelper = new ActionHelper();
 
@@ -155,7 +160,6 @@ function init(){
             if ( $( dImgs ).first().is( ":hidden" ) ) {
                 const lo = loadobjs[i]; 
                 if(!lo.loaded){
-                    console.log("loadinggg")
                     lo.loaded = true;
                     const a = lo.amount;
                     for(let k = 0; k<a; k++){
@@ -317,13 +321,13 @@ function init(){
     controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
     controls.dampingFactor = 0.05;
 
-    controls.screenSpacePanning = false;
+    //controls.screenSpacePanning = false;
 
     controls.minDistance = .5;
     controls.maxDistance = 250;
     controls.enableRotate = false;
     controls.enablePan = false;
-    controls.screenSpacePanning = false;
+    //controls.screenSpacePanning = false;
     
     clock = new THREE.Clock();
 
@@ -352,19 +356,17 @@ function init(){
         "shader-effects"
     ]
 
-    
-
     for(let i = 0; i<dds.length; i++){
         const t = document.getElementById(dds[i]+"-title");
 
         t.addEventListener( "click", function(){
+
             const el = "#"+dds[i]+"-content";
             if ( $( el ).first().is( ":hidden" ) ) {
                 $( el ).slideDown( );
             } else {
                 $( el ).slideUp();
             }
-            
             
         })
     }
@@ -373,15 +375,19 @@ function init(){
     window.addEventListener('blur', onBlur );
 
 	window.addEventListener( 'resize', onWindowResize, false );
-	document.addEventListener( 'mousemove', onMouseMove, false );
-    document.addEventListener( 'keydown', onKeyDown, false );
-    document.addEventListener( 'keyup', onKeyUp, false );
-    document.addEventListener( 'touchmove', onTouchMove, false );
-	canvas.addEventListener( 'mousedown', onMouseDown, false );
-    document.addEventListener( 'touchstart', onTouchDown, false );
-	canvas.addEventListener( 'mouseup', onMouseUp, false );
-    document.addEventListener( 'touchend', onTouchUp, false );
-    document.addEventListener( 'touchcancel', onTouchUp, false );
+    
+    window.addEventListener( 'keydown', onKeyDown, false );
+    window.addEventListener( 'keyup', onKeyUp, false );
+    
+    //document.addEventListener( 'touchmove', onTouchMove, false );
+	document.addEventListener( 'pointermove', onMouseMove, false );
+    canvas.addEventListener( 'pointerdown', onMouseDown, false );
+    canvas.addEventListener( 'pointerup', onMouseUp, false );
+    
+    //document.addEventListener( 'touchstart', onTouchDown, false );
+	//canvas.addEventListener( 'mouseup', onMouseUp, false );
+    //document.addEventListener( 'touchend', onTouchUp, false );
+    //document.addEventListener( 'touchcancel', onTouchUp, false );
 
     document.getElementById("reset-cam").addEventListener("click", resetCam);
     
@@ -480,7 +486,9 @@ function init(){
 
     document.getElementById("color-speed").addEventListener("input", updateModelParams);
     document.getElementById("color-speed").addEventListener("change", updateModelParams);
-
+    
+    document.getElementById("stroke-index-input").addEventListener("input", updateSelectedStroke)
+    
     document.addEventListener( 'dragover', onDocumentDragOver, false );
     document.addEventListener( 'dragleave', onDocumentLeave, false );
     document.addEventListener( 'drop', onDocumentDrop, false );
@@ -489,6 +497,49 @@ function init(){
     background = new Background({scene:scene});
     matHandler = new CustomMaterial();
 	animate();
+}
+let hoverTimeout;
+function updateSelectedStroke(){
+    
+    let val = $("#stroke-index-input").val();
+    
+    clearTimeout(hoverTimeout);
+
+    if(strokeSelectStrokes.length>0){
+        unHoverStrokes();
+    }
+    strokeSelectStrokes = [];
+
+    if(val!="" && val!=null){
+        if(val > actionHelper.currStrokeIndex-1)val = actionHelper.currStrokeIndex-1;
+        if(val<0)val=0
+        $("#stroke-index-input").val(val);
+
+        for(let i = 0; i<meshObjects.length; i++){
+            if(meshObjects[i].strokeIndex == val){
+                strokeSelectStrokes.push(meshObjects[i]);
+            }
+        }
+
+        hoverStrokes();
+        hoverTimeout = setTimeout( function(){
+            unHoverStrokes();
+        },300)
+    }
+
+}
+
+
+function hoverStrokes(){
+    for(let i = 0; i < strokeSelectStrokes.length;i++){
+        strokeSelectStrokes[i].hover();
+    }
+}
+
+function unHoverStrokes(){
+    for(let i = 0; i < strokeSelectStrokes.length;i++){
+        strokeSelectStrokes[i].unHover();
+    }
 }
 
 function updateBackgroundParms(){
@@ -524,25 +575,32 @@ function updateModelParams(){
             }
 
         }
+
     });
 
     if(actionHelper.currStrokeIndex>0){ //update the param variable of current stroke 
-
-        const ind = actionHelper.currStrokeIndex-1;
-        for(let i = 0; i<meshObjects.length; i++){
-            if(meshObjects[i].strokeIndex == ind){
-                meshObjects[i].updateParam( param ) ;            
+        if(strokeSelectStrokes.length>0){
+            for(let i = 0;i <strokeSelectStrokes.length; i++){
+                strokeSelectStrokes[i].updateParam(param)
             }
-        }
+        }else{
+            const ind = actionHelper.currStrokeIndex-1;
+            for(let i = 0; i<meshObjects.length; i++){
+                if(meshObjects[i].strokeIndex == ind){
+                    meshObjects[i].updateParam( param ) ;            
+                }
+            }
+        }   
+    }
 
-    } 
+} 
     
-}
+
 
 function animate(){
 
 	requestAnimationFrame( animate );
-    
+    TWEEN.update();
     if(controls)
         controls.update();
 
@@ -558,6 +616,7 @@ function animate(){
             const targ = new THREE.Quaternion();
             helper.holder.getWorldQuaternion(targ);
             mouse.rots.push( targ );
+            mouse.scales.push( meshScale*penSense );
             mouse.smoothInc ++;
         }
     }
@@ -572,14 +631,18 @@ function animate(){
             shouldRotateAdditiveZ:shouldRotateAdditiveZ,
             globalAdditiveRotationSpeed:globalAdditiveRotationSpeed,
             globalOffsetRotation:globalOffsetRotation,
-            rotationFollowsNormal:rotationFollowsNormal
+            rotationFollowsNormal:rotationFollowsNormal,
+            drawing: mouse.down && currentDrawHitPoint,
+            penSense:penSense
         });
     }
     
     bgHolder.position.copy(camera.position);
     bgHolder.rotation.copy(camera.rotation);
 
-    const delta = clock.getDelta()*globalAnimationSpeed;
+
+    const selectMult = strokeSelect?0:1;
+    const delta = clock.getDelta()*globalAnimationSpeed*selectMult ;
     for(var i = 0; i<meshObjects.length; i++){
         meshObjects[i].update({delta:delta});
     }
@@ -628,9 +691,13 @@ function chooseModel(i,k, customParams, callback){
         if(checkShouldAddToPaintMeshes()){
             paintMeshes.push({urlIndex:urlIndex, modelIndex:modelIndex, model:gltf.scene.clone()});
         }
-        
-        helper.updateVisual({mesh:gltf.scene});
-        
+        if(!strokeSelect){
+            helper.updateVisual({mesh:gltf.scene});
+        }else{
+            for(let i = 0; i<strokeSelectStrokes.length; i++){
+                strokeSelectStrokes[i].updateModel( {mesh:gltf.scene} );
+            }
+        }
         if(callback !=null ){
             callback(gltf.scene);
         }
@@ -681,17 +748,27 @@ function getHitPointFromMesh(msh, mse){
 
 
 function onKeyDown(e) {
-    console.log(e.keyCode)
-    if(e.keyCode == 18){
+    //console.log(e.keyCode)
+    //e.preventDefault();
+    //console.log(e.keyCode)
+    
+    if(e.keyCode == 18){//alt
         if(controls){
             controls.enableRotate = true;
         }
-    }else if(e.keyCode== 17){
+    }
+    if(e.keyCode == 17){//ctrl
         if(controls){
             controls.enablePan = true;
         }
     }
-    if(e.keyCode==90){
+    if(e.keyCode==16){//shift
+        strokeSelect = true;
+        helper.holder.visible = false;
+    }
+
+
+    if(e.keyCode == 90){
         if(controls.enablePan){
             undoClick();
         }
@@ -706,15 +783,26 @@ function onKeyDown(e) {
 
 function onKeyUp(e) {
     
+    e.preventDefault();
+    if(e.keyCode==16){//shift
+        strokeSelect = false;
+        helper.holder.visible = true;
+        for(let i = 0; i<meshObjects.length; i++){
+            meshObjects[i].unHover();
+        }
+
+    }
     if(e.keyCode == 18){
         if(controls){
             controls.enableRotate = false;
         }
-    }else if(e.keyCode == 17){
+    } 
+    if(e.keyCode == 17){
         if(controls){
             controls.enablePan = false;
         }
-    }else if(e.keyCode==32){
+    }
+    if(e.keyCode==32){
 
         btns.space = !btns.space;
         $(".holders").css( "display", btns.space ? "block" :"none" );
@@ -743,30 +831,6 @@ function onWindowResize() {
 
 }
 
-function onTouchUp(e){
-
-    mouse.down = false;
-    holding = false;
-
-    mouseConstraint = null;
-    mouse.previous = new THREE.Vector2();
-    ot = false;
-
-    buildGeo();
-
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-
-    mouse.avgs = [];
-    mouse.smoothAvgs = [];
-    mouse.rots = [];
-    currentDrawHitPoint = null;
-    mouse.smoothInc = 0;
-    geoArr = [];
-
-    yInc+=yOff;
-    bgMesh.position.z = yInc;
-
-}
 
 function onMouseUp(e){
 	
@@ -781,9 +845,8 @@ function onMouseUp(e){
         
         if(!movingCamera){
             buildGeo();
-            didDrawLast = true;    
-        }else{
-            didDrawLast = false;
+            helper.copyMaterial({  param:getMatParam(), matHandler:matHandler });
+          
         }
 
         movingCamera = false;
@@ -791,6 +854,7 @@ function onMouseUp(e){
         ctx.clearRect(0,0,canvas.width,canvas.height);
         
         mouse.rots = [];
+        mouse.scales = [];
         mouse.avgs = [];
         mouse.smoothAvgs = [];
         currentDrawHitPoint = null;
@@ -806,77 +870,104 @@ function onMouseUp(e){
 
 }
 
+let currentSelectedStrokeIndex = 100000;
+function strokeSelectHelper(down){
+    raycaster.setFromCamera( mouse.normal, camera );
+  
+    const intersects = raycaster.intersectObjects( strokeHolder.children );
+    // Toggle rotation bool for meshes that we clicked
+    if ( intersects.length > 0 ) {
+        
+        document.body.style.cursor = "pointer";
+        
+        const ind = intersects[ 0 ].object.paintIndex;
+
+        if(ind!=currentSelectedStrokeIndex){
+            strokeSelectStrokes = [];
+            currentSelectedStrokeIndex = ind;
+            $("#stroke-index-input").val(currentSelectedStrokeIndex)
+            for(let i = 0; i<meshObjects.length; i++){
+                if(meshObjects[i].strokeIndex == ind){
+                    strokeSelectStrokes.push( meshObjects[i] );
+                }    
+            }
+        }
+        for(let i = 0; i<meshObjects.length; i++){
+            meshObjects[i].unHover();
+        }
+        for(let i = 0; i<meshObjects.length; i++){
+            if(meshObjects[i].strokeIndex == ind){
+                meshObjects[i].hover();
+            }    
+        }
+        
+    }else{
+    
+        for(let i = 0; i<meshObjects.length; i++){
+            meshObjects[i].unHover();
+        }
+      
+        document.body.style.cursor = "auto";
+    }
+}
+
+//function getMeshesFrom
+
+
+
 function onMouseDown(e){
     
-    var cntrl = false;
+    //window.focus();
+    
+    
+    // if(strokeSelect){
+    //     //helper.copyMaterial({  param:getMatParam(), matHandler:matHandler });
+    //     strokeSelectHelper(true);
+    //     return;
+
+    // }
+
+    strokeSelectStrokes = [];
 
     if(controls){
-        
-        if(!controls.enableRotate && !controls.enablePan ){
-            cntrl = true;
-        }else{
+        if(controls.enableRotate || controls.enablePan){
             movingCamera = true;
-            cntrl = false;
+            return;
         }
     }
 
-    if(e.button == 0 && cntrl){
-        if(didDrawLast){
+    if(e.button == 0){
         
-            helper.copyMaterial({  param:getMatParam(), matHandler:matHandler });
-        }
+       
+        if(e.pointerType == "pen" && shouldDoPenPressure){
+            penSense = e.pressure;
+        }else{
+            penSense = 1;
+        } 
+
         mouse.down = true;
 
-        //if(controls)
-            //controls.enabled = false;
-
     }
     
 }
 
-
-function onTouchDown(e){
-    
-    mouse.down = true;
-    
-}
-
-function onTouchMove(e){
-    
-    e.preventDefault();
-    var touch = e.touches[0];
-        
-    var x = touch.pageX;
-    var y = touch.pageY;
-    
-    mouse.position.x =  x;
-    mouse.position.y =  y;
-
-    mouse.normal.x =    ( x / window.innerWidth ) * 2 - 1;
-    mouse.normal.y =  - ( y / window.innerHeight ) * 2 + 1;
-
-    if(mouse.down){
-        
-        if(mouse.previous.x != 0 || mouse.previous.y != 0)
-            handleDrawGeo();
-
-    }
-    
-    mouse.previous = x;
-    mouse.previous = y;
-   
-    mouse.previousNormal.x =    ( mouse.position.x / window.innerWidth ) * 2 - 1;
-    mouse.previousNormal.y =  - ( mouse.position.y / window.innerHeight ) * 2 + 1;
-    
-}
 function onMouseMove(e){
+
+    //window.focus();
+    if(strokeSelect){
+       
+        strokeSelectHelper(false);
+        //return;
+
+    }
 
 	mouse.position.x =  e.clientX;
 	mouse.position.y =  e.clientY;
 
 	mouse.normal.x =    ( e.clientX / window.innerWidth ) * 2 - 1;
 	mouse.normal.y =  - ( e.clientY / window.innerHeight ) * 2 + 1;
-
+    
+    
     // See if the ray from the camera into the world hits one of our meshes
     if(drawObject){
         if(helper){
@@ -890,12 +981,18 @@ function onMouseMove(e){
             });
         }
     }
-
+    
     if(mouse.down){
         
-        if(mouse.previous.x != 0 || mouse.previous.y != 0)
+        if(mouse.previous.x != 0 || mouse.previous.y != 0){
             handleDrawGeo();
-
+            if(e.pointerType  == "pen" && shouldDoPenPressure){
+                penSense = e.pressure;
+            }else{
+                penSense = 1;
+            }
+        }
+        
     }
     
     mouse.previous = e.clientX;
@@ -978,33 +1075,33 @@ function buildGeo(){
             param:getMatParam()
         }
         
-        meshObjects.push(new Stroke( { pos:mouse.smoothAvgs, rots:mouse.rots, all:all } ));
-        strokeFinal.push({pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
+        meshObjects.push(new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all } ));
+        strokeFinal.push({scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
         if(mirrorX){
             all.scene = reflectObjectX;
-            meshObjects.push(new Stroke( {pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
-            strokeFinal.push({pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
+            meshObjects.push(new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
+            strokeFinal.push({scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
         }
 
         if(mirrorY){
             all.scene = reflectObjectY;  
-            meshObjects.push(new Stroke( {pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
-            strokeFinal.push({pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
+            meshObjects.push(new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
+            strokeFinal.push({scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
             if(mirrorX){
                 all.scene = reflectObjectXY;
-                meshObjects.push(new Stroke( {pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
-                strokeFinal.push({pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
+                meshObjects.push(new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
+                strokeFinal.push({scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
             }
         }
 
         if(mirrorZ){
             all.scene = reflectObjectZ;
-            meshObjects.push(new Stroke( {pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
-            strokeFinal.push({pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
+            meshObjects.push(new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
+            strokeFinal.push({scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
             if(mirrorX){
                 all.scene = reflectObjectXZ;
-                meshObjects.push(new Stroke( {pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
-                strokeFinal.push({pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
+                meshObjects.push(new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
+                strokeFinal.push({scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
             }
         }
 
@@ -1020,10 +1117,10 @@ function onFocus(){
     
 }
 function onBlur(){
-    if(controls){
-        controls.enableRotate=false;
-        controls.enablePan = false;
-    }
+    // if(controls){
+    //     controls.enableRotate=false;
+    //     controls.enablePan = false;
+    // }
 }
 
 function saveGeoInkFile(){
@@ -1109,6 +1206,7 @@ function redoClick(){
     
         actionHelper.redo();
     }
+    
 }
 
 function updateDrawState(){
@@ -1284,9 +1382,7 @@ function saveString( text, filename ) {
 }
 
 function onDocumentDragOver( event ) {
-
     event.preventDefault();
-
 }
 
 function onDocumentLeave( event ) {
@@ -1350,7 +1446,7 @@ function onDocumentDrop( event ) {
                         replaceDrawObject("./extras/draw/"+obj.geoink.drawObj+".glb");
                     }
                     const strokes = obj.geoink.strokes;
-                
+                    
                     //while(i < strokes.length ){
                     for(let i = 0; i<strokes.length; i++){
 
@@ -1379,13 +1475,20 @@ function onDocumentDrop( event ) {
                             const meshClone = sn.clone();
                             const rots = [];
                             const pos = [];
+                            const scls = [];
                             
                             for(let k = 0; k<strokes[i].rots.length; k++){
+                                
                                 const r = strokes[i].rots[k];
                                 const p = strokes[i].pos[k];
+                                
+                                const s = strokes[i].scales == null ? a.meshScale : strokes[i].scales[k];
+                                
                                 rots.push(new THREE.Quaternion(r._x, r._y, r._z, r._w))
                                 pos.push(new THREE.Vector3(p.x, p.y, p.z));
+                                scls.push(s);
                             }
+
                             const ss = scene.getObjectByName(a.scene);
                             
                             const all = {
@@ -1398,7 +1501,8 @@ function onDocumentDrop( event ) {
                                 globalShouldAnimateSize:a.globalShouldAnimateSize,
                                 param:param
                             }
-                            meshObjects.push(new Stroke( { pos:pos, rots:rots, all:all } ));
+
+                            meshObjects.push(new Stroke( { scl:scls, pos:pos, rots:rots, all:all } ));
                             //i++;
                         });
                         
