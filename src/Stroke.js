@@ -281,6 +281,8 @@ class PaintMesh {
         this.kill();
 
         this.mesh = OBJ.mesh.clone();
+        this.mesh.name = "scn_"+this.scene.name+"_s_"+this.strokeIndex+"_m_"+this.i;
+        
         this.scene.add(this.mesh);
         this.ogEmissives = [];
         this.mesh.traverse( function ( child ) {
