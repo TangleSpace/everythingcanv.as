@@ -199,13 +199,14 @@ class PaintMesh {
         this.scaleToFromOG = {to:OBJ.scaleToFrom.to, from:OBJ.scaleToFrom.from};
 
         this.mesh = OBJ.meshClone.clone();
+        console.log(this.mesh)
         this.scene = OBJ.scene;
         
         this.total = OBJ.total;
         this.i = OBJ.index;
         this.meshScale = OBJ.scale;
-
-        this.mesh.name = "scn_"+this.scene.name+"_s_"+this.strokeIndex+"_m_"+this.i;
+        
+        this.mesh.name = ""+this.mesh.uuid.slice(0, 12);//"scn_"+this.scene.name+"_s_"+this.strokeIndex+"_m_"+this.i;
         
         this.globalShouldAnimateSize = OBJ.globalShouldAnimateSize;
         this.mesh.scale.set(this.meshScale, this.meshScale, this.meshScale);
@@ -281,7 +282,8 @@ class PaintMesh {
         this.kill();
 
         this.mesh = OBJ.mesh.clone();
-        this.mesh.name = "scn_"+this.scene.name+"_s_"+this.strokeIndex+"_m_"+this.i;
+       
+        this.mesh.name = ""+this.mesh.uuid.slice(0, 12);
         
         this.scene.add(this.mesh);
         this.ogEmissives = [];

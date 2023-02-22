@@ -2,7 +2,7 @@
 import * as THREE from './build/three.module.js';
 import { GLTFLoader } from './scripts/jsm/loaders/GLTFLoader.js';
 import { GLTFExporter } from './scripts/jsm/exporters/GLTFExporter.js';
-import { OrbitControls } from './scripts/jsm/controls/OrbitControls.js';
+import { OrbitControls } from './scripts/jsm/controls/OrbitControls2.js';
 import { RoomEnvironment } from './scripts/jsm/environments/RoomEnvironment.js';
 import { BrushHelper } from './BrushHelper.js';
 import { Stroke } from './Stroke.js';

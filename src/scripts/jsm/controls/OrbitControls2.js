@@ -924,7 +924,110 @@ class OrbitControls extends EventDispatcher {
 					mouseAction = - 1;
 
 			}
+			
+			switch ( mouseAction ) {
 
+				case MOUSE.DOLLY:
+				case MOUSE.PAN:
+				case MOUSE.ROTATE:
+
+				
+
+					//break;
+
+				
+					if ( event.ctrlKey && !event.altKey) {
+
+						if ( scope.enablePan === false ) return;
+
+						handleMouseDownPan( event );
+
+						state = STATE.PAN;
+
+					} else if(event.altKey && !event.ctrlKey) {
+
+						if ( scope.enableRotate === false ) return;
+
+						handleMouseDownRotate( event );
+
+						state = STATE.ROTATE;
+
+					}else if(event.altKey && event.ctrlKey){
+						
+						if ( scope.enableZoom === false ) return;
+
+						handleMouseDownDolly( event );
+	
+						state = STATE.DOLLY;
+
+					}
+
+					//break;
+
+				
+
+					// if ( event.ctrlKey || event.metaKey || event.shiftKey ) {
+
+					// 	if ( scope.enableRotate === false ) return;
+
+					// 	handleMouseDownRotate( event );
+
+					// 	state = STATE.ROTATE;
+
+					// } else {
+
+					// 	if ( scope.enablePan === false ) return;
+
+					// 	handleMouseDownPan( event );
+
+					// 	state = STATE.PAN;
+
+					// }
+
+					break;
+
+				default:
+
+					state = STATE.NONE;
+
+			}
+
+			if ( state !== STATE.NONE ) {
+
+				scope.dispatchEvent( _startEvent );
+
+			}
+
+		}
+
+		/*
+		function onMouseDown( event ) {
+
+			let mouseAction;
+
+			switch ( event.button ) {
+
+				case 0:
+
+					mouseAction = scope.mouseButtons.LEFT;
+					break;
+
+				case 1:
+
+					mouseAction = scope.mouseButtons.MIDDLE;
+					break;
+
+				case 2:
+
+					mouseAction = scope.mouseButtons.RIGHT;
+					break;
+
+				default:
+
+					mouseAction = - 1;
+
+			}
+			
 			switch ( mouseAction ) {
 
 				case MOUSE.DOLLY:
@@ -994,6 +1097,7 @@ class OrbitControls extends EventDispatcher {
 			}
 
 		}
+		*/
 
 		function onMouseMove( event ) {
 
