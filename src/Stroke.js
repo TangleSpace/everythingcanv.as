@@ -448,7 +448,7 @@ class PaintMesh {
         this.clip = new AnimationClip( 'Action_'+this.mesh.name, -1  , [ this.positionkf, this.rotationkf, this.scalef  ] );
         const clipAction = this.mixer.clipAction( this.clip );
         clipAction.play();
-        //this.mesh.animations.push(this.clip);
+        this.mesh.animations.push(this.clip);
     
     }
 
