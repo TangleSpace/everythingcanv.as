@@ -12,13 +12,17 @@ import {
 } from './build/three.module.js';
 class Stroke {
     constructor(OBJ){
-
+        const self = this;
         this.arr = OBJ.pos;
         this.rots = OBJ.rots;
         this.scales = OBJ.scl;
         this.all = OBJ.all;
         this.scene = OBJ.all.scene;
-        this.param = OBJ.all.param;
+        this.param = {};
+        for (const property in OBJ.all.param) {
+            this.param[property] = OBJ.all.param[property];
+        }
+        //OBJ.all.param;
         this.strokeIndex = this.all.index;
         this.modelInfo = this.all.modelInfo;
 
@@ -30,22 +34,14 @@ class Stroke {
         this.curve.curveType = 'centripetal';
         this.curve.closed = false;
         this.curve.tension = .5;
-
-        // const points = this.curve.getPoints( 50 );
-        // const geometry = new THREE.BufferGeometry().setFromPoints( points );
-        // const material = new THREE.LineBasicMaterial( { color : 0xff0000 } );
-
-        // const curveObject = new THREE.Line( geometry, material );
-        // scene.add(curveObject)
-        //const points = this.curve.getPoints( 10 );
-        //const extrudePath = this.curve;
-        //tubeGeometry = new THREE.TubeGeometry( extrudePath, params.extrusionSegments, 2, params.radiusSegments, params.closed );
-        this.tubeGeometry = new TubeGeometry( this.curve, 10, .01, 10, false );
-        //this.tubeGeometry = new THREE.TubeGeometry( extrudePath, 2, .1, 2, false );
-        //this.mesh = new Mesh( this.tubeGeometry, material.clone() );
         
-        //scene.add(this.mesh)
-        //let start = 0;
+        this.sclMult = OBJ.all.sclMult;
+        this.rotOffsetX = OBJ.all.rotOffsetX;
+        this.rotOffsetY = OBJ.all.rotOffsetY;
+        this.rotOffsetZ = OBJ.all.rotOffsetZ;
+
+        this.tubeGeometry = new TubeGeometry( this.curve, 10, .01, 10, false );
+     
         for(var i = 0; i<this.total; i++){
             const start = (i / this.total);
             const endInc = (i == this.total-1) ? i : (i + 1); 
@@ -68,12 +64,16 @@ class Stroke {
                 strokeIndex:this.strokeIndex,
                 helper:this.all.helper,
                 globalShouldAnimateSize:this.all.globalShouldAnimateSize,
-            
+                sclMult:this.sclMult,
+                rotOffsetX:this.rotOffsetX,
+                rotOffsetY:this.rotOffsetY,
+                rotOffsetZ:this.rotOffsetZ,
             });
             pmesh.initAnimation();
             this.meshes.push(pmesh);
         }
        
+        self.updateParam(OBJ.all.param)
     
     }
 
@@ -90,14 +90,48 @@ class Stroke {
     }
 
     updateModel (OBJ) {
+        this.all.modelInfo.modelIndex = OBJ.modelInfo.modelIndex;
+        this.all.modelInfo.urlIndex = OBJ.modelInfo.urlIndex;
         for(var i = 0; i<this.meshes.length; i++){
-            this.meshes[i].updateModel();
+            this.meshes[i].updateModel(OBJ);
 
         }
     }
 
+    updateScale (OBJ) {
+        this.sclMult = OBJ.scale;
+        for(var i = 0; i<this.meshes.length; i++){
+            this.meshes[i].updateScale({scale:this.sclMult});
+        }
+    }
+
+    updateRotX(val){
+        this.rotOffsetX = val;
+        for(var i = 0; i<this.meshes.length; i++){
+            this.meshes[i].updateRotX(val);
+        }
+    }
+    
+    updateRotY(val){
+        this.rotOffsetY = val;
+        for(var i = 0; i<this.meshes.length; i++){
+            this.meshes[i].updateRotY(val);
+        }
+    }
+
+    updateRotZ(val){
+        this.rotOffsetZ = val;
+        for(var i = 0; i<this.meshes.length; i++){
+            this.meshes[i].updateRotZ(val);
+        }
+    }
+
     updateParam(param){
-        this.param = param;
+        this.param = {};
+        for (const property in param) {
+            this.param[property] = param[property]
+        }
+          
         for(var i = 0; i<this.meshes.length; i++){
             this.meshes[i].updateMat(param);
         }  
@@ -133,8 +167,12 @@ class Stroke {
                     bottomColor:this.param.bottomColor.getHexString(),
                     deformSpeed:this.param.deformSpeed,
                     colorSpeed:this.param.colorSpeed,
-                    shouldLoopGradient:this.param.shouldLoopGradient
+                    shouldLoopGradient:this.param.shouldLoopGradient,  
                 },
+                sclMult:this.sclMult,
+                rotOffsetX:this.rotOffsetX,
+                rotOffsetY:this.rotOffsetY,
+                rotOffsetZ:this.rotOffsetZ,
                 modelInfo:this.all.modelInfo,
                 index:this.all.index,
                 scene:this.scene.name,
@@ -153,19 +191,22 @@ class PaintMesh {
         //this.mesh = new THREE.Mesh(geometry.clone(), material.clone());
         //console.log(ROTATION)\
         const self = this;
+        
+        this.strokeIndex = OBJ.strokeIndex;
         this.parent = OBJ.parent;
         this.rots = OBJ.rotation;
-        this.scaleToFrom = OBJ.scaleToFrom;
+        this.scaleToFrom = {to:OBJ.scaleToFrom.to, from:OBJ.scaleToFrom.from};
+        this.scaleToFromOG = {to:OBJ.scaleToFrom.to, from:OBJ.scaleToFrom.from};
+
         this.mesh = OBJ.meshClone.clone();
-        
         this.scene = OBJ.scene;
         
-        this.mesh.name = "scn_"+this.scene.name+"_s_"+OBJ.strokeIndex+"_m_"+OBJ.index;
-        //conso.e
         this.total = OBJ.total;
         this.i = OBJ.index;
         this.meshScale = OBJ.scale;
 
+        this.mesh.name = "scn_"+this.scene.name+"_s_"+this.strokeIndex+"_m_"+this.i;
+        
         this.globalShouldAnimateSize = OBJ.globalShouldAnimateSize;
         this.mesh.scale.set(this.meshScale, this.meshScale, this.meshScale);
         //this.mesh.rotation.copy(helper.holder.rotation);
@@ -186,13 +227,22 @@ class PaintMesh {
         this.clip;
         this.positionkf;
         this.scalef;
-        this.rotationkf
+        this.rotationkf;
         this.lookObj = new Object3D();
         this.ogEmissives = [];
-
+        
+        this.sclMult = OBJ.sclMult;
+        this.rotOffsetX = OBJ.rotOffsetX;
+        this.rotOffsetY = OBJ.rotOffsetY;
+        this.rotOffsetZ = OBJ.rotOffsetZ;
+        
         this.mesh.traverse( function ( child ) {
             if ( child.isMesh ) {
-                child.paintIndex = OBJ.strokeIndex;
+                child.scale.set(self.sclMult, self.sclMult, self.sclMult);
+                child.rotation.x = self.rotOffsetX;
+                child.rotation.y = self.rotOffsetY;
+                child.rotation.z = self.rotOffsetZ;
+                child.paintIndex = self.strokeIndex;
                 self.ogEmissives.push(child.material.emissive);
             }
         });
@@ -209,9 +259,7 @@ class PaintMesh {
     hover(){
         this.mesh.traverse( function ( child ) {
             if ( child.isMesh ) {
-
                 child.material.emissive = new Color(0xff0000);
-    
             }
         });
     }
@@ -225,21 +273,85 @@ class PaintMesh {
             }
         });
     }
+
+    updateModel(OBJ){
+
+        const self = this;
+        
+        this.kill();
+
+        this.mesh = OBJ.mesh.clone();
+        this.scene.add(this.mesh);
+        this.ogEmissives = [];
+        this.mesh.traverse( function ( child ) {
+            if ( child.isMesh ) {
+                child.scale.set(self.sclMult, self.sclMult, self.sclMult);
+                child.rotation.x = self.rotOffsetX;
+                child.rotation.y = self.rotOffsetY;
+                child.rotation.z = self.rotOffsetZ;
+                child.paintIndex = self.strokeIndex;
+                self.ogEmissives.push(child.material.emissive);
+            }
+        });
+
+        this.mixer = new AnimationMixer(this.mesh); 
+        this.initAnimation();
+    }
+
+    updateScale(OBJ){
+        const self = this;
+        this.sclMult = OBJ.scale;
+        this.mesh.traverse(function(child){
+            if(child.isMesh){
+                child.scale.set(self.sclMult, self.sclMult, self.sclMult);
+            }
+        })   
+    }
+
+    updateRotX(val){
+        const self = this;
+        this.rotOffsetX = val;
+        this.mesh.traverse(function(child){
+            if(child.isMesh){
+                child.rotation.x = self.rotOffsetX;
+            }
+        })   
+    }
+
+    updateRotY(val){
+        const self = this;
+        this.rotOffsetY = val;
+        this.mesh.traverse(function(child){
+            if(child.isMesh){
+                child.rotation.y = self.rotOffsetY;
+            }
+        })   
+    }
+    
+    updateRotZ(val){
+        const self = this;
+        this.rotOffsetZ = val;
+        this.mesh.traverse(function(child){
+            if(child.isMesh){
+                child.rotation.z = self.rotOffsetZ;
+            }
+        })   
+    }
     
     kill(){
         const self = this;
+        
         // this.mesh.traverse( function ( obj ) {
         //     self.handleKill(obj);
         // });
-        // this.handleKill(this.mesh); 
+        // this.handleKill(this.mesh);
+
         this.scene.remove(this.mesh);
     }
 
     handleKill(obj){
         if(obj.isMesh || obj.isSkinnedMesh){
-               
             if(obj.material !=null ){
-                
                 for (const [key, value] of Object.entries(obj.material)) {
                     if( key.includes("Map") || key.includes("map") ){
                         if(value != null && value.isTexture){
@@ -300,7 +412,7 @@ class PaintMesh {
             
             const sFrm = this.scaleToFrom.from;
             const sTo = this.scaleToFrom.to;
-            console.log()
+            
             let scl = new Vector3();
             scl.lerpVectors(new Vector3(sFrm,sFrm,sFrm), new Vector3(sTo,sTo,sTo), t / this.keyframelength);
 
@@ -336,7 +448,7 @@ class PaintMesh {
         this.clip = new AnimationClip( 'Action_'+this.mesh.name, -1  , [ this.positionkf, this.rotationkf, this.scalef  ] );
         const clipAction = this.mixer.clipAction( this.clip );
         clipAction.play();
-        this.mesh.animations.push(this.clip);
+        //this.mesh.animations.push(this.clip);
     
     }
 

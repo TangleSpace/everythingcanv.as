@@ -25,6 +25,8 @@ let mouse = {
     rots:[],
     scales:[]
 };
+let canTogglStrokeSelect = true;
+let hoverTimeout;
 let strokeSelect = false;
 let usingCustomDrawObject = false;
 let world, meshBody, joint;
@@ -71,7 +73,7 @@ const flowersAmount = 73;
 let drawState = "object" 
 let showingSideBar = true;
 let movingCamera = false;
-let showingDrawObject = true;
+
 let meshScale = 1;
 let penSense = 1;
 let shouldDoPenPressure = true;
@@ -80,7 +82,7 @@ let globalOffsetRotation = new THREE.Euler( 0, 0, 0, 'XYZ' );
 let globalLerpAmount = 1;
 let globalDensityAmount = .1;
 let globalSmoothAmount = .1;
-let globalNormalOffsetAmount = .2;
+let globalNormalOffsetAmount = .05;
 let previewMesh;
 let clock;
 let rotationFollowsNormal = true;
@@ -304,7 +306,7 @@ function init(){
 
     scene.add(dlight)
     
-	renderer = new THREE.WebGLRenderer();
+	renderer = new THREE.WebGLRenderer({antialias:true});
 	renderer.shadowMap.enabled = true;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
 	renderer.toneMappingExposure = .5;  
@@ -348,6 +350,7 @@ function init(){
     
 
     const dds = [
+        "export",
         "draw-object",
         "essentials",
         "mirror",
@@ -397,6 +400,8 @@ function init(){
     document.getElementById("show-instructions").addEventListener("click", toggleInstructions)
     
     document.getElementById("save-geo-ink-file").addEventListener("click", saveGeoInkFile)
+    document.getElementById("stroke-select-toggle").addEventListener("click", toggleStrokeSelect)
+    
     document.getElementById("toggle-draw-on-view").addEventListener("click", updateDrawState);
     document.getElementById("toggle-draw-object").addEventListener("click", toggleDrawObject);
     document.getElementById("export-gltf").addEventListener("click", exportGLTF);
@@ -409,6 +414,20 @@ function init(){
     document.getElementById("redo").addEventListener("click", redoClick);
 
     document.getElementById("animation-speed-slider").addEventListener("change", updateAniSpeed);
+    //updateScaleOffset
+
+    document.getElementById("stroke-scale-offset").addEventListener("change", updateScaleOffset);
+    document.getElementById("stroke-scale-offset").addEventListener("input", updateScaleOffset);
+
+    document.getElementById("stroke-rot-offset-x").addEventListener("change", updateRotOffsetX);
+    document.getElementById("stroke-rot-offset-x").addEventListener("input", updateRotOffsetX);
+    document.getElementById("stroke-rot-offset-y").addEventListener("change", updateRotOffsetY);
+    document.getElementById("stroke-rot-offset-y").addEventListener("input", updateRotOffsetY);
+    document.getElementById("stroke-rot-offset-z").addEventListener("change", updateRotOffsetZ);
+    document.getElementById("stroke-rot-offset-z").addEventListener("input", updateRotOffsetZ);
+    
+    
+
     document.getElementById("size-slider").addEventListener("change", updateMeshSize);
     document.getElementById("size-slider").addEventListener("input", updateMeshSize);
 
@@ -498,7 +517,28 @@ function init(){
     matHandler = new CustomMaterial();
 	animate();
 }
-let hoverTimeout;
+
+
+function toggleStrokeSelect(){
+    strokeSelect = !strokeSelect;   
+    const val = strokeSelect ? "draw mode":"stroke select";
+    $("#stroke-select-toggle").html(val);
+    helper.holder.visible = !strokeSelect;
+    
+    if(strokeSelect){
+        $("#stroke-select-options").slideDown();
+        $("#draw-mode-options").slideUp();
+    }else{
+        $("#draw-mode-options").slideDown();
+        $("#stroke-select-options").slideUp();
+    }
+    
+    for(let i = 0; i<meshObjects.length; i++){
+        meshObjects[i].unHover();
+    }
+    
+}
+
 function updateSelectedStroke(){
     
     let val = $("#stroke-index-input").val();
@@ -508,6 +548,7 @@ function updateSelectedStroke(){
     if(strokeSelectStrokes.length>0){
         unHoverStrokes();
     }
+
     strokeSelectStrokes = [];
 
     if(val!="" && val!=null){
@@ -555,43 +596,52 @@ function updateBackgroundParms(){
 function updateModelParams(){
     
     const param = getMatParam();
-            
-    helper.holder.traverse( function ( child ) {
-        if ( child.isMesh ) {
-            if(child.material.userData.shader!=null){
-                child.material.userData.shader.uniforms.twistAmt.value = param.twistAmt;
-                child.material.userData.shader.uniforms.noiseSize.value = param.noiseSize;
-                child.material.userData.shader.uniforms.twistSize.value = param.twistSize;
-                child.material.userData.shader.uniforms.noiseAmt.value = param.noiseAmt;
-                child.material.userData.shader.uniforms.rainbowAmt.value = param.rainbowAmt;
-                child.material.userData.shader.uniforms.gradientSize.value = param.gradientSize;
-                child.material.userData.shader.uniforms.rainbowGradientSize.value = param.rainbowGradientSize;
-                child.material.userData.shader.uniforms.gradientOffset.value = param.gradientOffset;
-                child.material.userData.shader.uniforms.topColor.value = param.topColor;
-                child.material.userData.shader.uniforms.bottomColor.value = param.bottomColor;
-                child.material.userData.shader.uniforms.deformSpeed.value = param.deformSpeed;
-                child.material.userData.shader.uniforms.colorSpeed.value = param.colorSpeed;
-                child.material.userData.shader.uniforms.shouldLoopGradient.value = param.shouldLoopGradient;
-            }
-
+    
+    if(strokeSelect){
+    
+        for(let i = 0;i <strokeSelectStrokes.length; i++){
+            strokeSelectStrokes[i].updateParam(param)
         }
+        if(strokeSelectStrokes.length > 0){
+            actionHelper.updateMatParam(currentSelectedStrokeIndex, param);
+        }
+        
 
-    });
+    }else{
 
-    if(actionHelper.currStrokeIndex>0){ //update the param variable of current stroke 
-        if(strokeSelectStrokes.length>0){
-            for(let i = 0;i <strokeSelectStrokes.length; i++){
-                strokeSelectStrokes[i].updateParam(param)
-            }
-        }else{
-            const ind = actionHelper.currStrokeIndex-1;
-            for(let i = 0; i<meshObjects.length; i++){
-                if(meshObjects[i].strokeIndex == ind){
-                    meshObjects[i].updateParam( param ) ;            
+        helper.holder.traverse( function ( child ) {
+            if ( child.isMesh ) {
+                if(child.material.userData.shader!=null){
+                    child.material.userData.shader.uniforms.twistAmt.value = param.twistAmt;
+                    child.material.userData.shader.uniforms.noiseSize.value = param.noiseSize;
+                    child.material.userData.shader.uniforms.twistSize.value = param.twistSize;
+                    child.material.userData.shader.uniforms.noiseAmt.value = param.noiseAmt;
+                    child.material.userData.shader.uniforms.rainbowAmt.value = param.rainbowAmt;
+                    child.material.userData.shader.uniforms.gradientSize.value = param.gradientSize;
+                    child.material.userData.shader.uniforms.rainbowGradientSize.value = param.rainbowGradientSize;
+                    child.material.userData.shader.uniforms.gradientOffset.value = param.gradientOffset;
+                    child.material.userData.shader.uniforms.topColor.value = param.topColor;
+                    child.material.userData.shader.uniforms.bottomColor.value = param.bottomColor;
+                    child.material.userData.shader.uniforms.deformSpeed.value = param.deformSpeed;
+                    child.material.userData.shader.uniforms.colorSpeed.value = param.colorSpeed;
+                    child.material.userData.shader.uniforms.shouldLoopGradient.value = param.shouldLoopGradient;
                 }
+    
             }
-        }   
+    
+        });
+
+        // const ind = actionHelper.currStrokeIndex-1;
+        // for(let i = 0; i<meshObjects.length; i++){
+        //     if(meshObjects[i].strokeIndex == ind){
+        //         meshObjects[i].updateParam( param ) ;            
+        //     }
+        // }
+        // actionHelper.updateMatParam(ind, param);
+
+    
     }
+        
 
 } 
     
@@ -694,9 +744,17 @@ function chooseModel(i,k, customParams, callback){
         if(!strokeSelect){
             helper.updateVisual({mesh:gltf.scene});
         }else{
+
+            const mi = { modelIndex : modelIndex, urlIndex : urlIndex};
+            
             for(let i = 0; i<strokeSelectStrokes.length; i++){
-                strokeSelectStrokes[i].updateModel( {mesh:gltf.scene} );
+                strokeSelectStrokes[i].updateModel( { mesh:gltf.scene, modelInfo : mi } );
             }
+            
+            if(strokeSelectStrokes.length > 0){
+                actionHelper.updateModelInfo(currentSelectedStrokeIndex, mi);
+            }
+
         }
         if(callback !=null ){
             callback(gltf.scene);
@@ -763,8 +821,17 @@ function onKeyDown(e) {
         }
     }
     if(e.keyCode==16){//shift
-        strokeSelect = true;
-        helper.holder.visible = false;
+        if(canTogglStrokeSelect){
+            toggleStrokeSelect();
+            canTogglStrokeSelect = false;
+        }
+        // strokeSelect = !strokeSelect;
+        // helper.holder.visible = !strokeSelect;
+        // //if(!strokeSelect){
+        //     for(let i = 0; i<meshObjects.length; i++){
+        //         meshObjects[i].unHover();
+        //     }
+        //}
     }
 
 
@@ -785,13 +852,16 @@ function onKeyUp(e) {
     
     e.preventDefault();
     if(e.keyCode==16){//shift
-        strokeSelect = false;
-        helper.holder.visible = true;
-        for(let i = 0; i<meshObjects.length; i++){
-            meshObjects[i].unHover();
-        }
-
+        //if(canTogglStrokeSelect){
+            canTogglStrokeSelect = true;
+        //}
+        // strokeSelect = false;
+        // helper.holder.visible = true;
+        // for(let i = 0; i<meshObjects.length; i++){
+        //     meshObjects[i].unHover();
+        // }
     }
+
     if(e.keyCode == 18){
         if(controls){
             controls.enableRotate = false;
@@ -881,15 +951,22 @@ function strokeSelectHelper(down){
         document.body.style.cursor = "pointer";
         
         const ind = intersects[ 0 ].object.paintIndex;
+        
+        if(down){
+            
+            if(ind!=currentSelectedStrokeIndex){
 
-        if(ind!=currentSelectedStrokeIndex){
-            strokeSelectStrokes = [];
-            currentSelectedStrokeIndex = ind;
-            $("#stroke-index-input").val(currentSelectedStrokeIndex)
-            for(let i = 0; i<meshObjects.length; i++){
-                if(meshObjects[i].strokeIndex == ind){
-                    strokeSelectStrokes.push( meshObjects[i] );
-                }    
+                strokeSelectStrokes = [];
+                currentSelectedStrokeIndex = ind;
+                
+                $("#stroke-index-input").val(currentSelectedStrokeIndex)
+
+                for(let i = 0; i<meshObjects.length; i++){
+                    if(meshObjects[i].strokeIndex == ind){
+                        strokeSelectStrokes.push( meshObjects[i] );
+                    }    
+                }
+
             }
         }
         for(let i = 0; i<meshObjects.length; i++){
@@ -902,7 +979,11 @@ function strokeSelectHelper(down){
         }
         
     }else{
-    
+        
+        if(down){
+            strokeSelectStrokes = [];
+        }
+
         for(let i = 0; i<meshObjects.length; i++){
             meshObjects[i].unHover();
         }
@@ -917,15 +998,10 @@ function strokeSelectHelper(down){
 
 function onMouseDown(e){
     
-    //window.focus();
-    
-    
-    // if(strokeSelect){
-    //     //helper.copyMaterial({  param:getMatParam(), matHandler:matHandler });
-    //     strokeSelectHelper(true);
-    //     return;
-
-    // }
+    if(strokeSelect){
+        strokeSelectHelper(true);
+        return;
+    }
 
     strokeSelectStrokes = [];
 
@@ -936,9 +1012,8 @@ function onMouseDown(e){
         }
     }
 
-    if(e.button == 0){
-        
-       
+    if(e.button == 0 ){
+            
         if(e.pointerType == "pen" && shouldDoPenPressure){
             penSense = e.pressure;
         }else{
@@ -1015,12 +1090,7 @@ function onMouseMove(e){
 }
 
 function toggleInstructions(){
-    // showingInstructions = !showingInstructions;
-    // if(showingInstructions){
-    //     $("#")
-    // }else{
-
-    // }
+  
     if ( $( "#instructions-overlay" ).is( ":hidden" ) ) {
         $( "#instructions-overlay" ).fadeIn( );
     } else {
@@ -1072,7 +1142,11 @@ function buildGeo(){
             globalDensityAmount:globalDensityAmount, 
             meshScale:meshScale,
             globalShouldAnimateSize:globalShouldAnimateSize,
-            param:getMatParam()
+            param:getMatParam(),
+            sclMult:1,
+            rotOffsetX:0,
+            rotOffsetY:0,
+            rotOffsetZ:0,
         }
         
         meshObjects.push(new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all } ));
@@ -1106,7 +1180,6 @@ function buildGeo(){
         }
 
         actionHelper.addStrokesArray({array:strokeFinal});
-
 
     }
 
@@ -1160,6 +1233,9 @@ function createBlobFromData (data) {
 
 function undoClick(){
     if(actionHelper.currStrokeIndex > 0){
+        
+        strokeSelectStrokes = [];
+        
         for(let i = 0; i<meshObjects.length; i++){
             if(meshObjects[i].strokeIndex == actionHelper.currStrokeIndex - 1){
                 meshObjects[i].killStroke();
@@ -1181,30 +1257,29 @@ function redoClick(){
             
             const pos = actionHelper.actionsArr[ind][i].pos;
             const rots = actionHelper.actionsArr[ind][i].rots; 
+            const scl = actionHelper.actionsArr[ind][i].scl; 
+            
             //all.meshClone = actionHelper.actionsArr[ind][i].all.meshClone;
             const all = actionHelper.actionsArr[ind][i].all;
+            console.log(all)
             all.scene = actionHelper.actionsArr[ind][i].scene;
-            all.meshClone = model;
-            if(i==0){
-                
-                model.traverse( function ( child ) {
-                
-                    if ( child.isMesh ) {
-                        if(child.material!=null){
-                            let copy = child.material.clone();
-                            copy = matHandler.getCustomMaterial(copy, all.param);
-                            child.material = copy;
-                        }
-                    }
-                });
-
-            }
             
-            meshObjects.push( new Stroke( {pos:pos, rots:rots, all:all} ) );
+            all.meshClone = model.clone();            
+            //console.log(all.meshClone)
+            all.meshClone.traverse(function(child){
+                if(child.isMesh){
+                    let copy = child.material.clone();
+                    copy = matHandler.getCustomMaterial(copy, all.param);
+                    child.material = copy;
+                }
+            });
+
+            meshObjects.push( new Stroke( {scl:scl, pos:pos, rots:rots, all:all} ) );
 
         }   
     
         actionHelper.redo();
+
     }
     
 }
@@ -1212,14 +1287,13 @@ function redoClick(){
 function updateDrawState(){
     if(drawObject){
         if(drawState == "object"){
-            //drawObject.visible = false;
+            drawObject.visible = false;
             //showingDrawObject = false;
             bgMesh.visible = true;
             drawState = "view";
             document.getElementById("toggle-draw-on-view").innerHTML = "draw on object";
         }else{
-            drawObject.material.visible = true;
-            showingDrawObject = true;
+            //drawObject.material.visible = true;
             drawObject.visible = true;
             drawState = "object";
             bgMesh.visible = false;
@@ -1233,9 +1307,49 @@ function updateDrawState(){
 //     document.getElementById("instructions-overlay").style.display = "none";
 // }
 
-function updateMeshSize(val){
+function updateRotOffsetX(){
+    const rx = $("#stroke-rot-offset-x").val() * Math.PI/180;
+    for(let i = 0; i<strokeSelectStrokes.length; i++){
+        strokeSelectStrokes[i].updateRotX( rx );
+    }
+    if(strokeSelectStrokes.length > 0){
+        actionHelper.updateRotOffsetX(currentSelectedStrokeIndex, rx)
+    }
+}
+function updateRotOffsetY(){
+    const ry = $("#stroke-rot-offset-y").val() * Math.PI/180;
+    for(let i = 0; i<strokeSelectStrokes.length; i++){
+        strokeSelectStrokes[i].updateRotY( ry );
+    }
+    if(strokeSelectStrokes.length > 0){
+        actionHelper.updateRotOffsetY(currentSelectedStrokeIndex, ry)
+    }
+}
+function updateRotOffsetZ(){
+    const rz = $("#stroke-rot-offset-z").val() * Math.PI/180;
+    for(let i = 0; i<strokeSelectStrokes.length; i++){
+        strokeSelectStrokes[i].updateRotZ( rz );
+    }
+    if(strokeSelectStrokes.length > 0){
+        actionHelper.updateRotOffsetZ(currentSelectedStrokeIndex, rz)
+    }
+}
+
+function updateScaleOffset(){
+    const s = $("#stroke-scale-offset").val()*.01;
+    for(let i = 0; i<strokeSelectStrokes.length; i++){
+        strokeSelectStrokes[i].updateScale( {scale:s} );
+    }
+    if(strokeSelectStrokes.length > 0){
+        actionHelper.updateScaleOffset(currentSelectedStrokeIndex, s)
+    }
+}
+
+function updateMeshSize(){
     handleUiUpdating();
-    meshScale = $("#size-slider").val()*.08;
+    const s = $("#size-slider").val()*.08;
+    meshScale = s;
+   
 }
 
 function rotateBrushX(){
@@ -1256,7 +1370,50 @@ function updateSmoothAmount(){
 function updateNormalOffsetAmount(){
    
     globalNormalOffsetAmount = $("#normal-offset-amount").val()*.01;
+    if(globalNormalOffsetAmount<0){
+        if(drawObject.isMesh){
+            drawObject.material.opacity = .2;
+            drawObject.material.transparent  = true;
+            drawObject.material.blending = THREE.AdditiveBlending
+            drawObject.material.depthWrite = false;
+            drawObject.material.needsUpdate = true;
+        }else{
+            drawObject.traverse(function(obj){
+                if(obj.isMesh){
+                    obj.material.opacity = .2;
+                    obj.material.transparent  = true;
+                    obj.material.blending = THREE.AdditiveBlending
+                    obj.material.depthWrite = false;
+                    obj.material.needsUpdate = true;
+
+                }
+            })
+        }
+        
+    }else{
+
+        if(drawObject.isMesh){
+            drawObject.material.transparent = false;
+            drawObject.material.opacity = 1;
+            drawObject.material.blending = THREE.NormalBlending;
+            drawObject.material.depthWrite = true;
+            drawObject.material.needsUpdate = true;
+        }else{
+            drawObject.traverse(function(obj){
+                if(obj.isMesh){
+                    obj.material.transparent = false;
+                    obj.material.opacity = 1;
+                    obj.material.blending = THREE.NormalBlending;
+                    obj.material.depthWrite = true;
+                    obj.material.needsUpdate = true;
+                }
+            })
+        }
+       
+    }
+
     handleUiUpdating();
+
 }
 
 function toggleSizeEasing(){
@@ -1386,9 +1543,7 @@ function onDocumentDragOver( event ) {
 }
 
 function onDocumentLeave( event ) {
-
     event.preventDefault();
-
 }
 
 
@@ -1421,8 +1576,7 @@ function onDocumentDrop( event ) {
         if( ext == "glb" || ext == "ltf" ){
             const reader = new FileReader();
             reader.onload = function ( event ) {
-                //console.log(event.target.result);
-                //loadImage( event.target.result );
+             
                 usingCustomDrawObject = true;
                 replaceDrawObject(event.target.result);
             };
@@ -1470,6 +1624,9 @@ function onDocumentDrop( event ) {
                             shouldLoopGradient:p.shouldLoopGradient
                         }
                         
+                        console.log(ui)
+                        console.log(mi)
+
                         chooseModel(ui, mi, param, function(sn){
                            
                             const meshClone = sn.clone();
@@ -1487,17 +1644,27 @@ function onDocumentDrop( event ) {
                                 rots.push(new THREE.Quaternion(r._x, r._y, r._z, r._w))
                                 pos.push(new THREE.Vector3(p.x, p.y, p.z));
                                 scls.push(s);
+
                             }
 
+                            const sclMult = a.sclMult == null ? 1. : a.sclMult;
+                            const rotOffsetX = a.rotOffsetX == null ? 0. : a.rotOffsetX;
+                            const rotOffsetY = a.rotOffsetY == null ? 0. : a.rotOffsetY;
+                            const rotOffsetZ = a.rotOffsetZ == null ? 0. : a.rotOffsetZ;
+                            
                             const ss = scene.getObjectByName(a.scene);
                             
                             const all = {
                                 modelInfo:{modelIndex:mi,urlIndex:ui}, 
                                 meshClone:meshClone, 
-                                index:i, 
+                                index:a.index, 
                                 scene:ss, 
                                 globalDensityAmount:a.globalDensityAmount, 
                                 meshScale:a.meshScale,
+                                sclMult:sclMult,
+                                rotOffsetX:rotOffsetX,
+                                rotOffsetY:rotOffsetY,
+                                rotOffsetZ:rotOffsetZ,
                                 globalShouldAnimateSize:a.globalShouldAnimateSize,
                                 param:param
                             }

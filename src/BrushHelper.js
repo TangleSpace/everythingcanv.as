@@ -78,9 +78,7 @@ class BrushHelper {
     updateVisual(OBJ){
         if(this.holder){
             this.killObject(this.holder);
-           // this.scene.remove(this.holder);
         }
-
         this.holder = OBJ.mesh.clone();
         this.scene.add(this.holder);
     }
