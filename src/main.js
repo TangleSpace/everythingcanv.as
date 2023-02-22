@@ -1570,6 +1570,29 @@ function replaceDrawObject(src){
     });
 }
 
+function imgPlaneDrawObject(src){
+    killObject(drawObject);
+    //const tex = new THREE.Texture()
+    const tex = new THREE.TextureLoader().load( src, function(){
+        const w = tex.image.width;
+        const h = tex.image.height;
+        
+        let aspect = (h > w) ? w / h : h / w;  
+        let wF = (h > w) ?  1 * aspect : 1;  
+        let hF = (w > h) ?  1 * aspect : 1;
+
+        const mat = new THREE.MeshBasicMaterial({map:tex})
+        const geo = new THREE.PlaneGeometry(wF*7,hF*7,1,1);
+        const plane = new THREE.Mesh(geo,mat);
+        const obj = new THREE.Object3D();
+        obj.add(plane);
+        scene.add(obj);
+        drawObject = obj;
+        
+    } );
+    
+}
+
 
 function onDocumentDrop( event ) {
 
@@ -1577,7 +1600,7 @@ function onDocumentDrop( event ) {
 
     const file = event.dataTransfer.files[ 0 ];
     if(file != null){
-        const ext = file.name.substr(file.name.length - 3);
+        const ext = file.name.substr(file.name.length - 3).toLowerCase();
         
         if( ext == "glb" || ext == "ltf" ){
             const reader = new FileReader();
@@ -1587,6 +1610,16 @@ function onDocumentDrop( event ) {
                 replaceDrawObject(event.target.result);
             };
             reader.readAsDataURL( file );
+        }else if(ext=="peg" || ext=="jpg" || ext=="png" ){
+
+            const reader = new FileReader();
+            reader.onload = function ( event ) {
+                usingCustomDrawObject = true;
+                imgPlaneDrawObject(event.target.result);
+                //replaceDrawObject(event.target.result);
+            };
+            reader.readAsDataURL( file );
+        
         }else if(ext == "txt"){
             
             if(strokeSelect){
@@ -1609,6 +1642,7 @@ function onDocumentDrop( event ) {
                     if(obj.geoink.drawObj!=currentDrawObjectIndex){
                         replaceDrawObject("./extras/draw/"+obj.geoink.drawObj+".glb");
                     }
+
                     const strokes = obj.geoink.strokes;
                     const addedStrokeArray = [];
                     //while(i < strokes.length ){
