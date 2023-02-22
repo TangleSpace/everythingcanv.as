@@ -605,7 +605,6 @@ function updateModelParams(){
         if(strokeSelectStrokes.length > 0){
             actionHelper.updateMatParam(currentSelectedStrokeIndex, param);
         }
-        
 
     }else{
 
@@ -726,6 +725,9 @@ function getMatParam(){
 function chooseModel(i,k, customParams, callback){
     urlIndex = i;
     modelIndex = k;
+    const ui = urlIndex;
+    const mi = modelIndex;
+    
     const loader = new GLTFLoader().setPath( loadobjs[i].url );
     loader.load( k+'.glb', function ( gltf ) {
 
@@ -737,25 +739,25 @@ function chooseModel(i,k, customParams, callback){
             }
         });
 
-        //meshClone = gltf.scene;
         if(checkShouldAddToPaintMeshes()){
-            paintMeshes.push({urlIndex:urlIndex, modelIndex:modelIndex, model:gltf.scene.clone()});
+            paintMeshes.push({urlIndex:ui, modelIndex:mi, model:gltf.scene.clone()});
         }
+
         if(!strokeSelect){
             helper.updateVisual({mesh:gltf.scene});
         }else{
 
-            const mi = { modelIndex : modelIndex, urlIndex : urlIndex};
+            const modelInfo = { modelIndex : mi, urlIndex : ui};
             
             for(let i = 0; i<strokeSelectStrokes.length; i++){
-                strokeSelectStrokes[i].updateModel( { mesh:gltf.scene, modelInfo : mi } );
+                strokeSelectStrokes[i].updateModel( { mesh:gltf.scene, modelInfo : modelInfo } );
             }
             
             if(strokeSelectStrokes.length > 0){
-                actionHelper.updateModelInfo(currentSelectedStrokeIndex, mi);
+                actionHelper.updateModelInfo(currentSelectedStrokeIndex, modelInfo);
             }
-
         }
+
         if(callback !=null ){
             callback(gltf.scene);
         }
@@ -773,11 +775,17 @@ function checkShouldAddToPaintMeshes(){
 
 function getModelByIndex(ui,mi){
     for(let i = 0; i<paintMeshes.length; i++){
+        // console.log("ui = "+ui)
+        // console.log("mi = "+mi)
+        // console.log("model = ")
+        // console.log(paintMeshes[i].model)
+        // console.log("pmesh url index "+paintMeshes[i].urlIndex);
+        // console.log("pmesh model index "+paintMeshes[i].modelIndex);
         if(ui == paintMeshes[i].urlIndex && mi == paintMeshes[i].modelIndex){
+           // console.log("return")
             return paintMeshes[i].model;
         }
     }
-
 }
 
 function resetCam(){
@@ -1246,26 +1254,24 @@ function undoClick(){
 }
 
 function redoClick(){
+    
     if(actionHelper.currStrokeIndex < actionHelper.actionsArr.length){
-
         const ind = actionHelper.currStrokeIndex;
         const mi = actionHelper.actionsArr[ind][0].all.modelInfo.modelIndex;
         const ui = actionHelper.actionsArr[ind][0].all.modelInfo.urlIndex;
         const model = getModelByIndex(ui, mi);
-
+      
         for(let i = 0; i<actionHelper.actionsArr[ind].length; i++){
             
             const pos = actionHelper.actionsArr[ind][i].pos;
             const rots = actionHelper.actionsArr[ind][i].rots; 
             const scl = actionHelper.actionsArr[ind][i].scl; 
-            
-            //all.meshClone = actionHelper.actionsArr[ind][i].all.meshClone;
             const all = actionHelper.actionsArr[ind][i].all;
-            console.log(all)
+            
             all.scene = actionHelper.actionsArr[ind][i].scene;
             
-            all.meshClone = model.clone();            
-            //console.log(all.meshClone)
+            all.meshClone = model;//.clone();       
+            //console.log(all.meshClone)     
             all.meshClone.traverse(function(child){
                 if(child.isMesh){
                     let copy = child.material.clone();
@@ -1582,6 +1588,10 @@ function onDocumentDrop( event ) {
             };
             reader.readAsDataURL( file );
         }else if(ext == "txt"){
+            
+            if(strokeSelect){
+                toggleStrokeSelect();
+            }
 
             const reader = new FileReader();
             reader.onload = function ( event ) {
@@ -1600,11 +1610,12 @@ function onDocumentDrop( event ) {
                         replaceDrawObject("./extras/draw/"+obj.geoink.drawObj+".glb");
                     }
                     const strokes = obj.geoink.strokes;
-                    
+                    const addedStrokeArray = [];
                     //while(i < strokes.length ){
                     for(let i = 0; i<strokes.length; i++){
 
                         const a = strokes[i].all; 
+                        
                         const mi = a.modelInfo.modelIndex;
                         const ui = a.modelInfo.urlIndex;
                         const p =  a.param;
@@ -1623,58 +1634,65 @@ function onDocumentDrop( event ) {
                             colorSpeed:p.colorSpeed,
                             shouldLoopGradient:p.shouldLoopGradient
                         }
-                        
-                        console.log(ui)
-                        console.log(mi)
 
+                        const rots = [];
+                        const pos = [];
+                        const scls = [];
+                        
+                        for(let k = 0; k<strokes[i].rots.length; k++){
+                            
+                            const r = strokes[i].rots[k];
+                            const p = strokes[i].pos[k];
+                            const s = strokes[i].scales == null ? a.meshScale : strokes[i].scales[k];
+                            
+                            rots.push(new THREE.Quaternion(r._x, r._y, r._z, r._w))
+                            pos.push(new THREE.Vector3(p.x, p.y, p.z));
+                            scls.push(s);
+
+                        }
+
+                        const sclMult = a.sclMult == null ? 1. : a.sclMult;
+                        const rotOffsetX = a.rotOffsetX == null ? 0. : a.rotOffsetX;
+                        const rotOffsetY = a.rotOffsetY == null ? 0. : a.rotOffsetY;
+                        const rotOffsetZ = a.rotOffsetZ == null ? 0. : a.rotOffsetZ;
+                        
+                        const ss = scene.getObjectByName(a.scene);
+                        
+                        const all = {
+                            modelInfo:{modelIndex:mi,urlIndex:ui}, 
+                            meshClone:null, 
+                            index:a.index, 
+                            scene:ss, 
+                            globalDensityAmount:a.globalDensityAmount, 
+                            meshScale:a.meshScale,
+                            sclMult:sclMult,
+                            rotOffsetX:rotOffsetX,
+                            rotOffsetY:rotOffsetY,
+                            rotOffsetZ:rotOffsetZ,
+                            globalShouldAnimateSize:a.globalShouldAnimateSize,
+                            param:param
+                        }
+
+                      
                         chooseModel(ui, mi, param, function(sn){
                            
                             const meshClone = sn.clone();
-                            const rots = [];
-                            const pos = [];
-                            const scls = [];
-                            
-                            for(let k = 0; k<strokes[i].rots.length; k++){
-                                
-                                const r = strokes[i].rots[k];
-                                const p = strokes[i].pos[k];
-                                
-                                const s = strokes[i].scales == null ? a.meshScale : strokes[i].scales[k];
-                                
-                                rots.push(new THREE.Quaternion(r._x, r._y, r._z, r._w))
-                                pos.push(new THREE.Vector3(p.x, p.y, p.z));
-                                scls.push(s);
-
-                            }
-
-                            const sclMult = a.sclMult == null ? 1. : a.sclMult;
-                            const rotOffsetX = a.rotOffsetX == null ? 0. : a.rotOffsetX;
-                            const rotOffsetY = a.rotOffsetY == null ? 0. : a.rotOffsetY;
-                            const rotOffsetZ = a.rotOffsetZ == null ? 0. : a.rotOffsetZ;
-                            
-                            const ss = scene.getObjectByName(a.scene);
-                            
-                            const all = {
-                                modelInfo:{modelIndex:mi,urlIndex:ui}, 
-                                meshClone:meshClone, 
-                                index:a.index, 
-                                scene:ss, 
-                                globalDensityAmount:a.globalDensityAmount, 
-                                meshScale:a.meshScale,
-                                sclMult:sclMult,
-                                rotOffsetX:rotOffsetX,
-                                rotOffsetY:rotOffsetY,
-                                rotOffsetZ:rotOffsetZ,
-                                globalShouldAnimateSize:a.globalShouldAnimateSize,
-                                param:param
-                            }
+                            all.meshClone = meshClone;
 
                             meshObjects.push(new Stroke( { scl:scls, pos:pos, rots:rots, all:all } ));
-                            //i++;
+                            
+                            if(meshObjects.length == strokes.length){
+                                for(let f = 0; f < meshObjects.length; f++){
+                                    const ind = meshObjects[f].strokeIndex;
+                                    if( !hasAddedStrokeIndex(addedStrokeArray, ind) ){
+                                        const arr = getAllMeshObjectsWithSameIndex(ind);
+                                        actionHelper.addStrokesArray({array:arr});
+                                        addedStrokeArray.push(ind);
+                                    }
+                                }
+                            }
                         });
-                        
                     }
-
                 });
 
             };
@@ -1685,6 +1703,34 @@ function onDocumentDrop( event ) {
 
 }
 
+
+function getAllMeshObjectsWithSameIndex(index){
+    const arr = [];
+    for(let i = 0; i<meshObjects.length; i++){
+        if(meshObjects[i].strokeIndex == index){
+            //strokeFinal.push({scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
+            const scl = meshObjects[i].scales;
+            const pos = meshObjects[i].arr;
+            const rots = meshObjects[i].rots;
+            const index = meshObjects[i].strokeIndex;
+            const scene = meshObjects[i].scene;
+            const all = meshObjects[i].all;
+
+            const obj = {scl:scl, pos:pos, rots:rots, index:index, all:all, scene:scene}
+            arr.push(obj);
+        }
+    }
+    return arr;
+}
+
+function hasAddedStrokeIndex(arr, index){
+    for(let i = 0; i<arr.length; i++){
+        if(arr[i] == index){
+            return true;
+        }
+    }
+    return false;
+}
 
 
 function readTextFile(file, callback) {

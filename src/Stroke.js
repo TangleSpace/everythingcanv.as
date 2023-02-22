@@ -18,10 +18,10 @@ class Stroke {
         this.scales = OBJ.scl;
         this.all = OBJ.all;
         this.scene = OBJ.all.scene;
-        this.param = {};
-        for (const property in OBJ.all.param) {
-            this.param[property] = OBJ.all.param[property];
-        }
+        this.param = OBJ.all.param;
+        // for (const property in OBJ.all.param) {
+        //     this.param[property] = OBJ.all.param[property];
+        // }
         //OBJ.all.param;
         this.strokeIndex = this.all.index;
         this.modelInfo = this.all.modelInfo;
@@ -127,11 +127,11 @@ class Stroke {
     }
 
     updateParam(param){
-        this.param = {};
-        for (const property in param) {
-            this.param[property] = param[property]
-        }
-          
+        // this.param = {};
+        // for (const property in param) {
+        //     this.param[property] = param[property]
+        // }
+        this.param = param;
         for(var i = 0; i<this.meshes.length; i++){
             this.meshes[i].updateMat(param);
         }  
