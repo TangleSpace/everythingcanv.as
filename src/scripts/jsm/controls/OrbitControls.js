@@ -87,7 +87,8 @@ class OrbitControls extends EventDispatcher {
 		this.mouseButtons = { LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN };
 
 		// Touch fingers
-		this.touches = { ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN };
+		//this.touches = { ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN };
+		this.touches = { ONE: TOUCH.ROTATE, ONE: TOUCH.DOLLY_PAN };
 
 		// for reset
 		this.target0 = this.target.clone();

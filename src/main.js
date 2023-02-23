@@ -328,6 +328,7 @@ function init(){
 
     controls.minDistance = .5;
     controls.maxDistance = 250;
+
     controls.enableRotate = false;
     controls.enablePan = false;
     //controls.screenSpacePanning = false;
@@ -376,6 +377,7 @@ function init(){
     }
     
     if(isMobile){
+
         controls.enableZoom = false;
         document.getElementById("mobile-controls").style.display = "block";
         
@@ -396,6 +398,7 @@ function init(){
             arr[i].ondragstart = function() { return false; };
 
         }
+        document.getElementById("show-instructions").style.display = "none";
         
     }
 
