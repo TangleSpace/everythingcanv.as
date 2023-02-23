@@ -199,7 +199,7 @@ class PaintMesh {
         this.scaleToFromOG = {to:OBJ.scaleToFrom.to, from:OBJ.scaleToFrom.from};
 
         this.mesh = OBJ.meshClone.clone();
-        console.log(this.mesh)
+        
         this.scene = OBJ.scene;
         
         this.total = OBJ.total;

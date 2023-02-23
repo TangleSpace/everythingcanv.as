@@ -398,8 +398,7 @@ function init(){
             arr[i].ondragstart = function() { return false; };
 
         }
-
-        document.getElementById("show-instructions").style.display = "none";
+        $("#show-instructions").remove();        
         
     }
 
@@ -436,7 +435,7 @@ function init(){
     document.getElementById("got-it-btn").addEventListener("click", toggleInstructions);
     document.getElementById("instructions-overlay").addEventListener("click", toggleInstructions);
     
-    document.getElementById("show-instructions").addEventListener("click", toggleInstructions)
+        
     
     document.getElementById("save-geo-ink-file").addEventListener("click", saveGeoInkFile)
     document.getElementById("stroke-select-toggle").addEventListener("click", toggleStrokeSelect)
@@ -1095,18 +1094,30 @@ function onMouseDown(e){
     if(controls){
 
         let mobileTwoFingerCheck = false;
+        
         if ( e.touches!=null ) {
             if(e.touches.length > 1)
                 mobileTwoFingerCheck = true;
         }
-
+        
         if(controls.enableRotate || controls.enablePan || controls.enableZoom || mobileTwoFingerCheck){
             movingCamera = true;
             return;
         }
     }
 
-    if(e.button == 0 ){
+    let canDraw = false;
+    if(e.button!=null){
+        if(e.button==0)
+            canDraw = true;
+    }
+    if(e.touches != null){
+        if(e.touches.length == 1)
+            canDraw = true;
+    }
+
+
+    if(canDraw ){
             
         if(e.pointerType == "pen" && shouldDoPenPressure){
             penSense = e.pressure;
@@ -1125,18 +1136,27 @@ function onMouseMove(e){
 
     //window.focus();
     if(strokeSelect){
-       
         strokeSelectHelper(false);
         //return;
-
     }
 
-	mouse.position.x =  e.clientX;
-	mouse.position.y =  e.clientY;
+    let x = 0;
+    let y = 0;
 
-	mouse.normal.x =    ( e.clientX / window.innerWidth ) * 2 - 1;
-	mouse.normal.y =  - ( e.clientY / window.innerHeight ) * 2 + 1;
+    if(e.touches!=null){
+        var touch = e.touches[0];
+        x = touch.pageX;
+        y = touch.pageY;
+    }else{
+        x = e.clientX;
+        y = e.clientY;
+    }
     
+    // mouse.position.x =  e.clientX;
+	// mouse.position.y =  e.clientY;
+
+	mouse.normal.x =    ( x / window.innerWidth ) * 2 - 1;
+	mouse.normal.y =  - ( y / window.innerHeight ) * 2 + 1;
     
     // See if the ray from the camera into the world hits one of our meshes
     if(drawObject){
@@ -1153,7 +1173,7 @@ function onMouseMove(e){
     }
     
     
-    if ( e.touches!=null ) {
+    if ( e.touches != null ) {
         if(e.touches.length > 1)
             return;
     }
@@ -1171,8 +1191,8 @@ function onMouseMove(e){
         
     }
     
-    mouse.previous = e.clientX;
-    mouse.previous = e.clientY;
+    mouse.previous = x;
+    mouse.previous = y;
    
     mouse.previousNormal.x =    ( mouse.position.x / window.innerWidth ) * 2 - 1;
     mouse.previousNormal.y =  - ( mouse.position.y / window.innerHeight ) * 2 + 1;
