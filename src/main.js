@@ -398,6 +398,7 @@ function init(){
             arr[i].ondragstart = function() { return false; };
 
         }
+
         document.getElementById("show-instructions").style.display = "none";
         
     }
@@ -412,8 +413,17 @@ function init(){
     window.addEventListener( 'keyup', onKeyUp, false );
     
     //document.addEventListener( 'touchmove', onTouchMove, false );
-	document.addEventListener( 'pointermove', onMouseMove, false );
-    canvas.addEventListener( 'pointerdown', onMouseDown, false );
+    if(!isMobile){
+	   document.addEventListener( 'pointermove', onMouseMove, false );
+    }else{
+        document.addEventListener( 'touchmove', onMouseMove, false );
+    }
+    if(!isMobile){
+        canvas.addEventListener( 'pointerdown', onMouseDown, false );
+    }else{
+        canvas.addEventListener( 'touchstart', onMouseDown, false );
+    }
+
     canvas.addEventListener( 'pointerup', onMouseUp, false );
     
     //document.addEventListener( 'touchstart', onTouchDown, false );
@@ -1083,7 +1093,14 @@ function onMouseDown(e){
     strokeSelectStrokes = [];
 
     if(controls){
-        if(controls.enableRotate || controls.enablePan || controls.enableZoom){
+
+        let mobileTwoFingerCheck = false;
+        if ( e.touches!=null ) {
+            if(e.touches.length > 1)
+                mobileTwoFingerCheck = true;
+        }
+
+        if(controls.enableRotate || controls.enablePan || controls.enableZoom || mobileTwoFingerCheck){
             movingCamera = true;
             return;
         }
@@ -1102,6 +1119,7 @@ function onMouseDown(e){
     }
     
 }
+
 
 function onMouseMove(e){
 
@@ -1133,11 +1151,13 @@ function onMouseMove(e){
             });
         }
     }
-
-    if ( event.touches.length > 1 ) {
-        return;
-    }
     
+    
+    if ( e.touches!=null ) {
+        if(e.touches.length > 1)
+            return;
+    }
+
     if(mouse.down){
         
         if(mouse.previous.x != 0 || mouse.previous.y != 0){
