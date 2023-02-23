@@ -1067,7 +1067,7 @@ function strokeSelectHelper(down){
 
 
 function onMouseDown(e){
-    console.log(e)
+    
     if(strokeSelect){
         strokeSelectHelper(true);
         return;
@@ -1076,7 +1076,7 @@ function onMouseDown(e){
     strokeSelectStrokes = [];
 
     if(controls){
-        if(controls.enableRotate || controls.enablePan){
+        if(controls.enableRotate || controls.enablePan || controls.enableZoom){
             movingCamera = true;
             return;
         }

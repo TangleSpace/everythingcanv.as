@@ -66,8 +66,8 @@ body{
 }
 
 .mobile-brush-thumb{
-    width: 10vw !important;
-    height: 10vw !important;
+    width: 15vw !important;
+    height: 15vw !important;
 }
 
 .drop-down-content{
@@ -111,6 +111,7 @@ body{
   background-color: rgba(0,0,0,.5);
   z-index: 20;
 }
+
 #instructions-holder{
   position: fixed;
   top: 50%;
@@ -169,9 +170,13 @@ body{
 #select{
     width: 22vw;
     left: 0px;
+    min-width:150px;
 }
 
 
+.mobile-select{
+    min-width: ;
+}
 
 .sub-holders{
     position: relative;
