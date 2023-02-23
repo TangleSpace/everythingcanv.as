@@ -196,6 +196,7 @@ function init(){
             }
         }
     }
+    
    
     chooseModel(0,0);
 
@@ -378,7 +379,7 @@ function init(){
     
     if(isMobile){
 
-        controls.enableZoom = false;
+        //controls.enableZoom = false;
         document.getElementById("mobile-controls").style.display = "block";
         
         document.getElementById("mobile-rotate").addEventListener("pointerdown", mobileRotateDown)
@@ -387,8 +388,8 @@ function init(){
         document.getElementById("mobile-pan").addEventListener("pointerdown", mobilePanDown)
         document.getElementById("mobile-pan").addEventListener("pointerup", mobilePanUp)
 
-        document.getElementById("mobile-zoom").addEventListener("pointerdown", mobileZoomDown)
-        document.getElementById("mobile-zoom").addEventListener("pointerup", mobileZoomUp)
+        // document.getElementById("mobile-zoom").addEventListener("pointerdown", mobileZoomDown)
+        // document.getElementById("mobile-zoom").addEventListener("pointerup", mobileZoomUp)
 
         document.getElementById("mobile-eye").addEventListener("pointerdown", mobileEyeDown)
         const arr = document.getElementsByClassName('mobile-icons');
@@ -398,7 +399,10 @@ function init(){
             arr[i].ondragstart = function() { return false; };
 
         }
-        $("#show-instructions").remove();        
+        $("#show-instructions").remove();   
+        document.getElementById("tools-holder").classList.add("holders-mobile");
+        document.getElementById("select").classList.add("holders-mobile");
+         
         
     }
 
@@ -580,16 +584,16 @@ function mobilePanUp(e){
     if(controls)
         controls.enablePan = false;
 }
-function mobileZoomDown(e){
-    e.preventDefault();
-    if(controls)
-        controls.enableZoom = true;
-}
-function mobileZoomUp(e){
-    e.preventDefault();
-    if(controls)
-        controls.enableZoom = false;
-}
+// function mobileZoomDown(e){
+//     e.preventDefault();
+//     if(controls)
+//         controls.enableZoom = true;
+// }
+// function mobileZoomUp(e){
+//     e.preventDefault();
+//     if(controls)
+//         controls.enableZoom = false;
+// }
 
 
 
@@ -1100,7 +1104,7 @@ function onMouseDown(e){
                 mobileTwoFingerCheck = true;
         }
         
-        if(controls.enableRotate || controls.enablePan || controls.enableZoom || mobileTwoFingerCheck){
+        if(controls.enableRotate || controls.enablePan || mobileTwoFingerCheck){
             movingCamera = true;
             return;
         }
@@ -1152,8 +1156,8 @@ function onMouseMove(e){
         y = e.clientY;
     }
     
-    // mouse.position.x =  e.clientX;
-	// mouse.position.y =  e.clientY;
+    mouse.position.x =  x;
+	mouse.position.y =  y;
 
 	mouse.normal.x =    ( x / window.innerWidth ) * 2 - 1;
 	mouse.normal.y =  - ( y / window.innerHeight ) * 2 + 1;
