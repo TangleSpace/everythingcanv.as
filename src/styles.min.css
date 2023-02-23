@@ -10,6 +10,23 @@ body{
     color: white;
 }
 
+#mobile-rotate{
+    background-image: url("./extras/rotate.svg");
+    background-size: 40px;
+}
+#mobile-pan{
+    background-image: url("./extras/pan.svg");
+    background-size: 40px;
+}
+#mobile-zoom{
+    background-image: url("./extras/zoom.svg");
+    background-size: 40px;
+}
+#mobile-eye{
+    background-image: url("./extras/eye.svg");
+    background-size: 40px;
+}
+
 #mobile-controls{
     position: fixed;
     bottom: 0px;
@@ -24,8 +41,10 @@ body{
     display: none;
 }
 .mobile-icons-holder{
-    display: inline;
+    display: inline-block;
     margin-left: 20px;
+    height: 40px;
+    width: 40px;
 }
 
 .mobile-icons{
