@@ -115,26 +115,22 @@ let strokeSelectStrokes = [];
 
 const actionHelper = new ActionHelper();
 
-const isMobile = {
-    Android: function() {
-        return navigator.userAgent.match(/Android/i);
-    },
-    BlackBerry: function() {
-        return navigator.userAgent.match(/BlackBerry/i);
-    },
-    iOS: function() {
-        return navigator.userAgent.match(/iPhone|iPad|iPod/i);
-    },
-    Opera: function() {
-        return navigator.userAgent.match(/Opera Mini/i);
-    },
-    Windows: function() {
-        return navigator.userAgent.match(/IEMobile/i);
-    },
-    any: function() {
-        return (isMobile.Android() || isMobile.BlackBerry() || isMobile.iOS() || isMobile.Opera() || isMobile.Windows());
+function mobileCheck() {
+    //console.log(navigator.userAgent.match())
+    //return navigator.userAgent.match(/Android/i) || navigator.userAgent.match(/iPhone|iPad|iPod/i) || navigator.userAgent.match(/Opera Mini/i) || navigator.userAgent.match(/IEMobile/i);
+    //return navigator.userAgent.match(/iPhone|iPad|iPod/i);
+    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        // This checks if the current device is in fact mobile
+        return true;
     }
+    return false;
+    
+    
 };
+
+
+const isMobile = mobileCheck();
+
 
 const link = document.createElement( 'a' );
 link.style.display = 'none';
@@ -168,6 +164,10 @@ function init(){
                         const url = lo.url;
                         let img = document.createElement("img");
                         img.className="brush-thumb";
+                        
+                        if(isMobile)
+                            img.classList.add("mobile-brush-thumb");
+                        
                         img.src = (url+k)+".png";
                         img.onclick = function(){chooseModel(i,k)};
                         dImgs.append(img);
@@ -187,6 +187,9 @@ function init(){
                 const url = loadobjs[i].url;
                 let img = document.createElement("img")
                 img.className="brush-thumb";
+                if(isMobile)
+                    img.classList.add("mobile-brush-thumb");
+                        
                 img.src = (url+k)+".png";
                 img.onclick = function(){chooseModel(i,k)};
                 dImgs.append(img);
@@ -202,8 +205,6 @@ function init(){
             if ( child.isMesh ) {
                 child.material.vertexColors = false;
                 
-                //scene.add(drawObject);
-
             }
         });
         drawObject = gltf.scene;
@@ -373,7 +374,24 @@ function init(){
             
         })
     }
+    
+    if(isMobile){
+        document.getElementById("mobile-controls").style.display = "block";
+        
+        document.getElementById("mobile-rotate").addEventListener("pointerdown", mobileRotateDown)
+        document.getElementById("mobile-rotate").addEventListener("pointerup", mobileRotateUp)
 
+        document.getElementById("mobile-pan").addEventListener("pointerdown", mobilePanDown)
+        document.getElementById("mobile-pan").addEventListener("pointerup", mobilePanUp)
+
+        document.getElementById("mobile-zoom").addEventListener("pointerdown", mobileZoomDown)
+        document.getElementById("mobile-zoom").addEventListener("pointerup", mobileZoomUp)
+
+        document.getElementById("mobile-eye").addEventListener("pointerdown", mobileEyeDown)
+        
+    }
+
+   
     window.addEventListener('focus', onFocus );
     window.addEventListener('blur', onBlur );
 
@@ -517,6 +535,36 @@ function init(){
     matHandler = new CustomMaterial();
 	animate();
 }
+
+function mobileEyeDown(){
+    toggleUI();
+}
+
+function mobileRotateDown(){
+    if(controls)
+        controls.enableRotate = true;
+}
+function mobileRotateUp(){
+    if(controls)
+        controls.enableRotate = false;
+}
+function mobilePanDown(){
+    if(controls)
+        controls.enablePan = true;
+}
+function mobilePanUp(){
+    if(controls)
+        controls.enablePan = false;
+}
+function mobileZoomDown(){
+    if(controls)
+        controls.enableZoom = true;
+}
+function mobileZoomUp(){
+    if(controls)
+        controls.enableZoom = false;
+}
+
 
 
 function toggleStrokeSelect(){
@@ -882,18 +930,22 @@ function onKeyUp(e) {
     }
     if(e.keyCode==32){
 
-        btns.space = !btns.space;
-        $(".holders").css( "display", btns.space ? "block" :"none" );
-        if(mirrorX){
-            mirrorMeshX.visible = btns.space; 
-        }
-        if(mirrorY){
-            mirrorMeshY.visible = btns.space; 
-        }
-        if(mirrorZ){
-            mirrorMeshZ.visible = btns.space; 
-        }
+        toggleUI();
 
+    }
+}
+
+function toggleUI(){
+    btns.space = !btns.space;
+    $(".holders").css( "display", btns.space ? "block" :"none" );
+    if(mirrorX){
+        mirrorMeshX.visible = btns.space; 
+    }
+    if(mirrorY){
+        mirrorMeshY.visible = btns.space; 
+    }
+    if(mirrorZ){
+        mirrorMeshZ.visible = btns.space; 
     }
 }
 
@@ -1005,7 +1057,7 @@ function strokeSelectHelper(down){
 
 
 function onMouseDown(e){
-    
+    console.log(e)
     if(strokeSelect){
         strokeSelectHelper(true);
         return;

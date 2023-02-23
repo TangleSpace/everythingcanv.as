@@ -10,9 +10,34 @@ body{
     color: white;
 }
 
+#mobile-controls{
+    position: fixed;
+    bottom: 0px;
+    width: 300px;
+    height:70px;
+    left: 50%;
+    margin-left:-150px;
+    z-index: 200000;
+    padding-top: 10px;
+    background-color: black;
+    text-align: center;
+    display: none;
+}
+.mobile-icons-holder{
+    display: inline;
+    margin-left: 20px;
+}
+
+.mobile-icons{
+    height: 50px;
+}
+
+
 .brush-thumb{
 
 }
+
+
 
 .drop-down-holder{
     /*margin-top: 20px;*/
@@ -40,6 +65,10 @@ body{
   cursor: pointer;
 }
 
+.mobile-brush-thumb{
+    width: 10vw !important;
+    height: 10vw !important;
+}
 
 .drop-down-content{
     display: none;
@@ -142,6 +171,8 @@ body{
     left: 0px;
 }
 
+
+
 .sub-holders{
     position: relative;
 }
@@ -156,6 +187,7 @@ body{
   padding-bottom: 20px;
   min-width: 160px;
 }
+
 #tools-holder button{
     margin-top: 10px;
     display: block;
@@ -472,3 +504,5 @@ input[type=range]:focus::-ms-fill-upper {
   outline: none;
   padding:4px 7px;
 }
+
+
