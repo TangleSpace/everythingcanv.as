@@ -54,12 +54,9 @@ body{
     -webkit-user-select: none;
 }
 
-
 .brush-thumb{
 
 }
-
-
 
 .drop-down-holder{
     /*margin-top: 20px;*/
@@ -75,9 +72,6 @@ body{
     cursor: pointer;
     z-index: 100;
 }
-
-
-
 */
 
 .drop-down-content img{
@@ -124,8 +118,10 @@ body{
 .bold{
   font-weight: bold;
 }
+
 #instructions-overlay{
   position: fixed;
+  display: none;
   top: 0px;
   left: 0px;
   width: 100%;
@@ -133,7 +129,9 @@ body{
   background-color: rgba(0,0,0,.5);
   z-index: 20;
 }
-
+.instructions-img{
+ height: 20px; 
+}
 #instructions-holder{
   position: fixed;
   top: 50%;
@@ -143,11 +141,26 @@ body{
   margin-left: -350px;
   margin-top: -300px;
   text-align: left;
-
+  display: none;
   background-color: black;
   padding: 20px;
-  max-width: 
 }
+
+#instructions-holder-mobile{
+  position: fixed;
+  display: none;
+  top: 50%;
+  left: 0px;
+  width: 80vw;
+  height: 600px;
+  margin-left: 5vw;
+  margin-top: -300px;
+  text-align: left;
+  background-color: black;
+  padding: 5vw; 
+}
+
+
 
 .instruction-list li{
   margin-bottom: 10px;
@@ -182,7 +195,8 @@ body{
 }
 .holders{
     position: absolute;
-    background-color: #000;
+    /*background-color: #000;*/
+    background-color: rgba(0,0,0,.3) !important;
     pointer-events: auto;
     overflow-y: auto;
     height:100vh;

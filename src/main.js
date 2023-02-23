@@ -9,7 +9,7 @@ import { Stroke } from './Stroke.js';
 import { ActionHelper } from './ActionHelper.js';
 import { Background } from './Background.js';
 import { CustomMaterial } from './CustomMaterial.js';
-import { TWEEN } from './scripts/jsm/libs/tween.module.min.js';
+//import { TWEEN } from './scripts/jsm/libs/tween.module.min.js';
 
 let camera, mesh, scene, renderer;
 let mouse = {
@@ -58,13 +58,27 @@ let globalShouldAnimateSize = true;
 const loadobjs = [
     //{name:"draw objects", url:"./extras/draw/",           amount:2},
     {loaded:false, name:"simple shapes", url:"./extras/models/simple-shapes/", amount:7},
-    {loaded:false, name:"animals", url:"./extras/models/everything-animals/", amount:232},
+    {loaded:false, name:"animals", url:"./extras/models/everything-animals/", amount:231},
     {loaded:false, name:"consumables", url:"./extras/models/everything-consumables/", amount:107},
     {loaded:false, name:"furnishings", url:"./extras/models/everything-furnishings/", amount:232},
+    
+    /*
     {loaded:false, name:"flowers", url:"./extras/models/flowers/", amount:19},
     {loaded:false, name:"rocks", url:"./extras/models/rocks/",   amount:6},
     {loaded:false, name:"tools", url:"./extras/models/tools/",   amount:90},
-    {loaded:false, name:"toys", url:"./extras/models/toys/",    amount:79}
+    {loaded:false, name:"toys", url:"./extras/models/toys/",    amount:79},
+    */
+
+    {loaded:false, name:"microscopic", url:"./extras/models/everything-microscopic/", amount:226},
+    {loaded:false, name:"plants", url:"./extras/models/everything-plants/", amount:496},
+    {loaded:false, name:"underwater", url:"./extras/models/everything-underwater/", amount:107},
+    {loaded:false, name:"trees", url:"./extras/models/everything-trees/", amount:273},
+    {loaded:false, name:"rocks", url:"./extras/models/everything-rocks/", amount:465},
+    {loaded:false, name:"human", url:"./extras/models/everything-human/", amount:332},
+    {loaded:false, name:"vehicles", url:"./extras/models/everything-vehicles/", amount:83},
+    {loaded:false, name:"buildings", url:"./extras/models/everything-buildings/", amount:213},
+    {loaded:false, name:"zeometry", url:"./extras/models/everything-geo/", amount:297},
+    
 ]
 let drawObject;  
 const toysAmount = 78;
@@ -399,7 +413,7 @@ function init(){
             arr[i].ondragstart = function() { return false; };
 
         }
-        $("#show-instructions").remove();   
+        //$("#show-instructions").remove();   
         document.getElementById("tools-holder").classList.add("holders-mobile");
         document.getElementById("select").classList.add("holders-mobile");
          
@@ -418,28 +432,22 @@ function init(){
     //document.addEventListener( 'touchmove', onTouchMove, false );
     if(!isMobile){
 	   document.addEventListener( 'pointermove', onMouseMove, false );
+       canvas.addEventListener( 'pointerdown', onMouseDown, false );
     }else{
         document.addEventListener( 'touchmove', onMouseMove, false );
-    }
-    if(!isMobile){
-        canvas.addEventListener( 'pointerdown', onMouseDown, false );
-    }else{
         canvas.addEventListener( 'touchstart', onMouseDown, false );
     }
-
+    
     canvas.addEventListener( 'pointerup', onMouseUp, false );
     
-    //document.addEventListener( 'touchstart', onTouchDown, false );
-	//canvas.addEventListener( 'mouseup', onMouseUp, false );
-    //document.addEventListener( 'touchend', onTouchUp, false );
-    //document.addEventListener( 'touchcancel', onTouchUp, false );
-
     document.getElementById("reset-cam").addEventListener("click", resetCam);
+
+    document.getElementById("show-instructions").addEventListener("click", toggleInstructions);
     
     document.getElementById("got-it-btn").addEventListener("click", toggleInstructions);
-    document.getElementById("instructions-overlay").addEventListener("click", toggleInstructions);
+    document.getElementById("got-it-mobile-btn").addEventListener("click", toggleInstructions);
     
-        
+    document.getElementById("instructions-overlay").addEventListener("click", toggleInstructions);
     
     document.getElementById("save-geo-ink-file").addEventListener("click", saveGeoInkFile)
     document.getElementById("stroke-select-toggle").addEventListener("click", toggleStrokeSelect)
@@ -595,8 +603,6 @@ function mobilePanUp(e){
 //         controls.enableZoom = false;
 // }
 
-
-
 function toggleStrokeSelect(){
     strokeSelect = !strokeSelect;   
     const val = strokeSelect ? "draw mode":"stroke select";
@@ -727,7 +733,7 @@ function updateModelParams(){
 function animate(){
 
 	requestAnimationFrame( animate );
-    TWEEN.update();
+    //TWEEN.update();
     if(controls)
         controls.update();
 
@@ -1218,6 +1224,11 @@ function toggleInstructions(){
   
     if ( $( "#instructions-overlay" ).is( ":hidden" ) ) {
         $( "#instructions-overlay" ).fadeIn( );
+        if(!isMobile){
+            $( "#instructions-holder" ).fadeIn( );
+        }else{
+            $( "#instructions-holder-mobile" ).fadeIn( );
+        }
     } else {
         $( "#instructions-overlay" ).fadeOut();
     }

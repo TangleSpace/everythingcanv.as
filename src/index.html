@@ -16,25 +16,23 @@
 			<!--<div class="mobile-icons-holder" id="mobile-zoom"></div>-->
 			<div class="mobile-icons-holder" id="mobile-eye"></div>
 		</div>
-		<div id="instructions-overlay" style="display:none;" >
+		
+		
+		<div id="instructions-overlay" >
 			<div id="instructions-holder">
 				<h1>Instructions</h1>
 				<ul class="instruction-list">
 					<li>[LMB] to draw</li>
 					<li>[ALT + LMB] to rotate </li>
-					<li>[Scroll] to zoom in/out</li>
+					<li>[Scroll / ALT + CTRL + LMB] to zoom in/out</li>
 					<li>[CTRL + LMB] to pan up and down</li>
 					<li>[CTRL Z / CTRL Y] undo and redo </li>
 					<li>[SHIFT] toggle stroke select </li>
 					<li>[SPACE] to toggle UI </li>
-					
+					<li>Tablets and mobile supported</li>
 					<li>gltf exports <span class="bold">DO NOT</span> retain shader effects</li>
-					<li>
-						gltf exports <span class="bold">DO</span> retain animation data, but they don't import properly into blender (other apps untested)
-					</li>
-					<li>
-						download and run <a href="https://github.com/vincentmckelvie/geo.ink-attach-animations">this python script</a> to attach the animations to the objects. 
-					</li>
+					<li>gltf exports <span class="bold">DO</span> retain animation data, but they don't import properly into blender (other apps untested)</li>
+					<li>download and run <a href="https://github.com/vincentmckelvie/geo.ink-attach-animations">this python script</a> to attach the animations to the objects. </li>
 					<li>drag and drop a glb or gltf on the scene to use a custom draw object</li>
 					<li>drag and drop an img to make the draw object an image plane</li>
 					<li>drag and drop a goe.ink txt to reload a saved project</li>
@@ -46,7 +44,33 @@
 					<button class="btn" id="got-it-btn">got it.</button>
 				</div>
 			</div>
+			<div id="instructions-holder-mobile">
+				<h1>Instructions</h1>
+				<ul class="instruction-list">
+					<li>[PRESS] to draw</li>
+					<li>[PRESS + <img class="instructions-img" src="./extras/rotate.svg"/> ] to rotate </li>
+					<li>[PINCH + <img class="instructions-img" src="./extras/pan.svg"/> ] to zoom in/out</li>
+					<li>[TWO FINGER PAN + <img class="instructions-img" src="./extras/pan.svg"/> ] to pan up and down</li>
+					<li>[<img class="instructions-img" src="./extras/eye.svg"/>] to toggle ui </li>
+					
+					<li>gltf exports <span class="bold">DO NOT</span> retain shader effects</li>
+					<li>
+						gltf exports <span class="bold">DO</span> retain animation data, but they don't import properly into blender (other apps untested)
+					</li>
+					<li>
+						download and run <a href="https://github.com/vincentmckelvie/geo.ink-attach-animations">this python script</a> to attach the animations to the objects. 
+					</li>
+					<li>most models by <a href="https://www.davidoreilly.com/">David Oreilly's</a> <a href="https://www.davidoreilly.com/library"> Everything Library</a></li>
+					<li>site by <a class="normal-link" href="https://twitter.com/strugggggs"> Vince Mckelvie</a> </li>
+
+				</ul>
+				<div id="got-it-btn-holder">
+					<button class="btn" id="got-it-mobile-btn">got it.</button>
+				</div>
+			</div>
 		</div>
+
+		
 		
 	
 		<div class="holders" id="tools-holder">
