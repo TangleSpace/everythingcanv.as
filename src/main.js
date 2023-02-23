@@ -1133,6 +1133,10 @@ function onMouseMove(e){
             });
         }
     }
+
+    if ( event.touches.length > 1 ) {
+        return;
+    }
     
     if(mouse.down){
         
