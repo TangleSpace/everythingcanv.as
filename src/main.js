@@ -376,6 +376,7 @@ function init(){
     }
     
     if(isMobile){
+        controls.enableZoom = false;
         document.getElementById("mobile-controls").style.display = "block";
         
         document.getElementById("mobile-rotate").addEventListener("pointerdown", mobileRotateDown)
@@ -390,7 +391,10 @@ function init(){
         document.getElementById("mobile-eye").addEventListener("pointerdown", mobileEyeDown)
         const arr = document.getElementsByClassName('mobile-icons');
         for(let i = 0; i<arr.length; i++){
+            console.log(arr[i])
             arr[i].setAttribute('draggable', false);
+            arr[i].ondragstart = function() { return false; };
+
         }
         
     }

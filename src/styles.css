@@ -18,7 +18,7 @@ body{
     left: 50%;
     margin-left:-150px;
     z-index: 200000;
-    padding-top: 10px;
+    padding-top: 15px;
     background-color: black;
     text-align: center;
     display: none;
@@ -29,7 +29,9 @@ body{
 }
 
 .mobile-icons{
-    height: 50px;
+    height: 40px;
+    user-select: none; 
+    -webkit-user-select: none;
 }
 
 
