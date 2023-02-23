@@ -388,6 +388,10 @@ function init(){
         document.getElementById("mobile-zoom").addEventListener("pointerup", mobileZoomUp)
 
         document.getElementById("mobile-eye").addEventListener("pointerdown", mobileEyeDown)
+        const arr = document.getElementsByClassName('mobile-icons');
+        for(let i = 0; i<arr.length; i++){
+            arr[i].setAttribute('draggable', false);
+        }
         
     }
 
@@ -536,31 +540,37 @@ function init(){
 	animate();
 }
 
-function mobileEyeDown(){
+function mobileEyeDown(e){
     toggleUI();
 }
 
-function mobileRotateDown(){
+function mobileRotateDown(e){
+    e.preventDefault();
     if(controls)
         controls.enableRotate = true;
 }
-function mobileRotateUp(){
+function mobileRotateUp(e){
+    e.preventDefault();
     if(controls)
         controls.enableRotate = false;
 }
-function mobilePanDown(){
+function mobilePanDown(e){
+    e.preventDefault();
     if(controls)
         controls.enablePan = true;
 }
-function mobilePanUp(){
+function mobilePanUp(e){
+    e.preventDefault();
     if(controls)
         controls.enablePan = false;
 }
-function mobileZoomDown(){
+function mobileZoomDown(e){
+    e.preventDefault();
     if(controls)
         controls.enableZoom = true;
 }
-function mobileZoomUp(){
+function mobileZoomUp(e){
+    e.preventDefault();
     if(controls)
         controls.enableZoom = false;
 }
