@@ -80,6 +80,7 @@ const loadobjs = [
     {loaded:false, name:"zeometry", url:"./extras/models/everything-geo/", amount:297},
     
 ]
+let currDragImgSrc;
 let drawObject;  
 const toysAmount = 78;
 const toolsAmount = 89;
@@ -184,6 +185,8 @@ function init(){
                         
                         img.src = (url+k)+".png";
                         img.onclick = function(){chooseModel(i,k)};
+                        img.onmousedown = function(e){currDragImgSrc = e.srcElement.currentSrc;};
+                        //img.onmousedown = function(e){currDragImgSrc = e.srcElement.currentSrc;};
                         dImgs.append(img);
                     }
                 }
@@ -206,6 +209,7 @@ function init(){
                         
                 img.src = (url+k)+".png";
                 img.onclick = function(){chooseModel(i,k)};
+                img.onmousedown = function(e){currDragImgSrc = e.srcElement.currentSrc;};
                 dImgs.append(img);
             }
         }
@@ -364,8 +368,6 @@ function init(){
 
     }
 
-    
-
     const dds = [
         "export",
         "draw-object",
@@ -477,7 +479,6 @@ function init(){
     document.getElementById("stroke-rot-offset-z").addEventListener("input", updateRotOffsetZ);
     
     
-
     document.getElementById("size-slider").addEventListener("change", updateMeshSize);
     document.getElementById("size-slider").addEventListener("input", updateMeshSize);
 
@@ -525,7 +526,6 @@ function init(){
     document.getElementById("rainbow-size").addEventListener("input", updateModelParams);
     document.getElementById("rainbow-size").addEventListener("change", updateModelParams);
 
-
     document.getElementById("model-gradient-size").addEventListener("input", updateModelParams);
     document.getElementById("model-gradient-size").addEventListener("change", updateModelParams);
 
@@ -558,9 +558,9 @@ function init(){
     
     document.getElementById("stroke-index-input").addEventListener("input", updateSelectedStroke)
     
-    document.addEventListener( 'dragover', onDocumentDragOver, false );
-    document.addEventListener( 'dragleave', onDocumentLeave, false );
-    document.addEventListener( 'drop', onDocumentDrop, false );
+    canvas.addEventListener( 'dragover', onDocumentDragOver, false );
+    canvas.addEventListener( 'dragleave', onDocumentLeave, false );
+    canvas.addEventListener( 'drop', onDocumentDrop, false );
 
     helper = new BrushHelper({scene:scene, raycaster:raycaster});
     background = new Background({scene:scene});
@@ -690,7 +690,7 @@ function updateModelParams(){
             actionHelper.updateMatParam(currentSelectedStrokeIndex, param);
         }
 
-    }else{
+    }//else{
 
         helper.holder.traverse( function ( child ) {
             if ( child.isMesh ) {
@@ -723,7 +723,7 @@ function updateModelParams(){
         // actionHelper.updateMatParam(ind, param);
 
     
-    }
+    //}
         
 
 } 
@@ -898,9 +898,6 @@ function getHitPointFromMesh(msh, mse){
 
 
 function onKeyDown(e) {
-    //console.log(e.keyCode)
-    //e.preventDefault();
-    //console.log(e.keyCode)
     
     if(e.keyCode == 18){//alt
         if(controls){
@@ -917,13 +914,7 @@ function onKeyDown(e) {
             toggleStrokeSelect();
             canTogglStrokeSelect = false;
         }
-        // strokeSelect = !strokeSelect;
-        // helper.holder.visible = !strokeSelect;
-        // //if(!strokeSelect){
-        //     for(let i = 0; i<meshObjects.length; i++){
-        //         meshObjects[i].unHover();
-        //     }
-        //}
+        
     }
 
 
@@ -1000,7 +991,7 @@ function onWindowResize() {
 
 function onMouseUp(e){
 	
-    if(e.button == 0){
+    if(e.button==0){
         
         mouse.down = false;
     	holding = false;
@@ -1038,6 +1029,7 @@ function onMouseUp(e){
 
 let currentSelectedStrokeIndex = 100000;
 function strokeSelectHelper(down){
+
     raycaster.setFromCamera( mouse.normal, camera );
   
     const intersects = raycaster.intersectObjects( strokeHolder.children );
@@ -1050,7 +1042,7 @@ function strokeSelectHelper(down){
         
         if(down){
             
-            if(ind!=currentSelectedStrokeIndex){
+            if(ind != currentSelectedStrokeIndex){
 
                 strokeSelectStrokes = [];
                 currentSelectedStrokeIndex = ind;
@@ -1094,6 +1086,14 @@ function strokeSelectHelper(down){
 
 function onMouseDown(e){
     
+    if(e.touches!=null){//if not mobile just set mouse.nomral in mouse move event  
+        var touch = e.touches[0];
+        const x = touch.pageX;
+        const y = touch.pageY;
+        mouse.normal.x =    ( x / window.innerWidth ) * 2 - 1;
+        mouse.normal.y =  - ( y / window.innerHeight ) * 2 + 1;
+    }
+
     if(strokeSelect){
         strokeSelectHelper(true);
         return;
@@ -1145,9 +1145,11 @@ function onMouseDown(e){
 function onMouseMove(e){
 
     //window.focus();
-    if(strokeSelect){
-        strokeSelectHelper(false);
-        //return;
+    if(e.touches==null){
+        if(strokeSelect){
+            strokeSelectHelper(false);
+            //return;
+        }
     }
 
     let x = 0;
@@ -1323,13 +1325,16 @@ function buildGeo(){
 
 
 function onFocus(){
-    
+     if(controls){
+        controls.enableRotate=false;
+        controls.enablePan = false;
+    }
 }
 function onBlur(){
-    // if(controls){
-    //     controls.enableRotate=false;
-    //     controls.enablePan = false;
-    // }
+    if(controls){
+        controls.enableRotate=false;
+        controls.enablePan = false;
+    }
 }
 
 function saveGeoInkFile(){
@@ -1681,11 +1686,16 @@ function onDocumentLeave( event ) {
 }
 
 
-function replaceDrawObject(src){
+function replaceDrawObject(src,scl){
+    
+    let s = scl!=null ? scl : 1;
+    
     const loader = new GLTFLoader();
     loader.load( src, function ( gltf ) {
         killObject(drawObject);
-       
+        
+        currentDrawObjectIndex = 100000;
+        
         gltf.scene.traverse( function ( child ) {
             if ( child.isMesh ) {
                 child.material.vertexColors = false;
@@ -1693,6 +1703,7 @@ function replaceDrawObject(src){
                // scene.add(drawObject);
             }
         });
+        gltf.scene.scale.set(s,s,s);
         scene.add(gltf.scene)
         drawObject = gltf.scene;
     });
@@ -1702,6 +1713,9 @@ function imgPlaneDrawObject(src){
     killObject(drawObject);
     //const tex = new THREE.Texture()
     const tex = new THREE.TextureLoader().load( src, function(){
+        
+        currentDrawObjectIndex = 100000;
+        
         const w = tex.image.width;
         const h = tex.image.height;
         
@@ -1725,15 +1739,15 @@ function imgPlaneDrawObject(src){
 function onDocumentDrop( event ) {
 
     event.preventDefault();
-
+    
     const file = event.dataTransfer.files[ 0 ];
+    
     if(file != null){
         const ext = file.name.substr(file.name.length - 3).toLowerCase();
-        
+        console.log(file.name);
         if( ext == "glb" || ext == "ltf" ){
             const reader = new FileReader();
             reader.onload = function ( event ) {
-             
                 usingCustomDrawObject = true;
                 replaceDrawObject(event.target.result);
             };
@@ -1860,6 +1874,13 @@ function onDocumentDrop( event ) {
             };
             reader.readAsDataURL( file );
 
+        }
+    }else{
+        if(currDragImgSrc!=null){
+            usingCustomDrawObject = true;
+            const fnl = currDragImgSrc.substr(0,currDragImgSrc.length - 3)+"glb";
+            replaceDrawObject(fnl, 10);
+            currDragImgSrc = null;
         }
     }
 

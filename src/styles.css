@@ -8,6 +8,7 @@ body{
     overflow-y: hidden;
     font-family: arial;
     color: white;
+    user-select: none;
 }
 
 #mobile-rotate{
