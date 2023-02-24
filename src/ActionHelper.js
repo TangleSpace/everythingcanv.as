@@ -12,27 +12,35 @@ class ActionHelper {
         this.currStrokeIndex = 0;
         this.actionsArr = []; 
     }
+    
     addStrokesArray(OBJ){
         this.actionsArr[this.currStrokeIndex] = OBJ.array;
         this.currStrokeIndex ++;
     }
+    
     undo(){
         //this.actionsArr[this.currStrokeIndex] = OBJ.array;
         this.currStrokeIndex --;
     }
+
     redo(){
         //this.actionsArr[this.currStrokeIndex] = OBJ.array;
         this.currStrokeIndex ++;
     }
+
+    updateTransform(index, val){
+        for(let i = 0; i < this.actionsArr[index].length; i++){
+            this.actionsArr[index][i].all.transformOffset = val;
+        }
+    }
     
     updateMatParam(index, val){
-        for(let i = 0; i < this.actionsArr[index].length; i++){
-            
-            const p = {};
-            for (const property in val) {
-                p[property] = val[property]
-            }
-            this.actionsArr[index][i].all.param = p;
+        for(let i = 0; i < this.actionsArr[index].length; i++){ 
+            // const p = {};
+            // for (const property in val) {
+            //     p[property] = val[property]
+            // }
+            this.actionsArr[index][i].all.param = val;
 
         }
     }

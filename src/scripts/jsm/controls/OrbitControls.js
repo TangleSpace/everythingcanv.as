@@ -88,7 +88,7 @@ class OrbitControls extends EventDispatcher {
 
 		// Touch fingers
 		//this.touches = { ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN };
-		this.touches = { ONE: TOUCH.ROTATE, ONE: TOUCH.DOLLY_PAN };
+		this.touches = { ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN };
 
 		// for reset
 		this.target0 = this.target.clone();
@@ -664,14 +664,15 @@ class OrbitControls extends EventDispatcher {
 
 				panStart.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
 
-			} else {
+			} 
+			// else {
 
-				const x = 0.5 * ( event.touches[ 0 ].pageX + event.touches[ 1 ].pageX );
-				const y = 0.5 * ( event.touches[ 0 ].pageY + event.touches[ 1 ].pageY );
+			// 	const x = 0.5 * ( event.touches[ 0 ].pageX + event.touches[ 1 ].pageX );
+			// 	const y = 0.5 * ( event.touches[ 0 ].pageY + event.touches[ 1 ].pageY );
 
-				panStart.set( x, y );
+			// 	panStart.set( x, y );
 
-			}
+			// }
 
 		}
 
@@ -730,19 +731,20 @@ class OrbitControls extends EventDispatcher {
 		}
 
 		function handleTouchMovePan( event ) {
-
+			console.log("touch pan move")
 			if ( event.touches.length == 1 ) {
 
 				panEnd.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
 
-			} else {
+			} 
+			// else {
 
-				const x = 0.5 * ( event.touches[ 0 ].pageX + event.touches[ 1 ].pageX );
-				const y = 0.5 * ( event.touches[ 0 ].pageY + event.touches[ 1 ].pageY );
+			// 	const x = 0.5 * ( event.touches[ 0 ].pageX + event.touches[ 1 ].pageX );
+			// 	const y = 0.5 * ( event.touches[ 0 ].pageY + event.touches[ 1 ].pageY );
 
-				panEnd.set( x, y );
+			// 	panEnd.set( x, y );
 
-			}
+			// }
 
 			panDelta.subVectors( panEnd, panStart ).multiplyScalar( scope.panSpeed );
 
@@ -1028,7 +1030,9 @@ class OrbitControls extends EventDispatcher {
 		}
 
 		function onTouchStart( event ) {
-
+			
+			console.log("touch start")
+			
 			if ( scope.enabled === false ) return;
 
 			event.preventDefault(); // prevent scrolling
@@ -1037,51 +1041,57 @@ class OrbitControls extends EventDispatcher {
 
 				case 1:
 
-					switch ( scope.touches.ONE ) {
+					//switch ( scope.touches.ONE ) {
 
-						case TOUCH.ROTATE:
+						//case TOUCH.ROTATE:
 
-							if ( scope.enableRotate === false ) return;
+							if ( scope.enableRotate ){
+	
+								handleTouchStartRotate( event );
 
-							handleTouchStartRotate( event );
+								state = STATE.TOUCH_ROTATE;
 
-							state = STATE.TOUCH_ROTATE;
+							}
 
-							break;
+							
+							//break;
 
-						case TOUCH.PAN:
+						//case TOUCH.PAN:
 
-							if ( scope.enablePan === false ) return;
+							else if ( scope.enablePan ){
+								console.log("hii")
+								handleTouchStartPan( event );
 
-							handleTouchStartPan( event );
+								state = STATE.TOUCH_PAN;
 
-							state = STATE.TOUCH_PAN;
+							};
 
-							break;
+							
+						//	break;
 
-						default:
+						//default:
 
-							state = STATE.NONE;
+							//state = STATE.NONE;
 
-					}
+					//}
 
 					break;
 
 				case 2:
 
-					switch ( scope.touches.TWO ) {
+					//switch ( scope.touches.TWO ) {
 
-						case TOUCH.DOLLY_PAN:
+						// case TOUCH.DOLLY_PAN:
 
-							if ( scope.enableZoom === false && scope.enablePan === false ) return;
+						// 	if ( scope.enableZoom === false && scope.enablePan === false ) return;
 
-							handleTouchStartDollyPan( event );
+						// 	handleTouchStartDollyPan( event );
 
-							state = STATE.TOUCH_DOLLY_PAN;
+						// 	state = STATE.TOUCH_DOLLY_PAN;
 
-							break;
+						// 	break;
 
-						case TOUCH.DOLLY_ROTATE:
+						//case TOUCH.DOLLY_ROTATE:
 
 							if ( scope.enableZoom === false && scope.enableRotate === false ) return;
 
@@ -1091,11 +1101,11 @@ class OrbitControls extends EventDispatcher {
 
 							break;
 
-						default:
+						//default:
 
-							state = STATE.NONE;
+							//state = STATE.NONE;
 
-					}
+					//}
 
 					break;
 

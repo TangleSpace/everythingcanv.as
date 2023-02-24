@@ -8,12 +8,38 @@ import {
     QuaternionKeyframeTrack,
     AnimationClip,
     Quaternion,
-    Color
+    Color,
+    Mesh,
+    MeshBasicMaterial,
+    BoxGeometry
 } from './build/three.module.js';
 class Stroke {
     constructor(OBJ){
         const self = this;
-        this.arr = OBJ.pos;
+        this.pos = OBJ.pos;
+        this.arr = [];//OBJ.pos;
+        const aHolder = []
+        this.avgPos = new Vector3();
+        
+        const len = OBJ.pos.length;
+        for(let i = 0; i<len; i++){
+            this.avgPos.add( OBJ.pos[i] );
+            aHolder.push( new Vector3().copy( OBJ.pos[i] ) )
+        }
+        
+        this.avgPos.divide(new Vector3(len,len,len));//.multiply(OBJ.all.scene.scale);
+        
+        for(let k = 0; k<len; k++){
+            this.arr.push( new Vector3().subVectors (aHolder[k], this.avgPos) );
+        }
+        
+        this.scn = new Object3D();
+        this.scn.position.copy(this.avgPos);
+        this.scn.position.add(OBJ.all.transformOffset.pos);
+        this.scn.rotation.copy(OBJ.all.transformOffset.rot);
+        this.scn.scale.copy(OBJ.all.transformOffset.scl);
+        OBJ.all.scene.add(this.scn);
+        
         this.rots = OBJ.rots;
         this.scales = OBJ.scl;
         this.all = OBJ.all;
@@ -54,7 +80,7 @@ class Stroke {
                 parent:this, 
                 geo:this.tubeGeometry, 
                 start:start, 
-                scene:this.scene, 
+                scene:this.scn, 
                 scale:this.all.meshScale, 
                 total:this.total, 
                 index:i, 
@@ -131,6 +157,7 @@ class Stroke {
         // for (const property in param) {
         //     this.param[property] = param[property]
         // }
+
         this.param = param;
         for(var i = 0; i<this.meshes.length; i++){
             this.meshes[i].updateMat(param);
@@ -150,7 +177,7 @@ class Stroke {
     }
     getExportData(){
         return {
-            pos:this.arr,
+            pos:this.pos,
             rots:this.rots,
             scales:this.scales,
             all:{
@@ -169,6 +196,7 @@ class Stroke {
                     colorSpeed:this.param.colorSpeed,
                     shouldLoopGradient:this.param.shouldLoopGradient,  
                 },
+                transformOffset:{pos: new Vector3().subVectors(this.scn.position, this.avgPos), rot:this.scn.rotation, scl:this.scn.scale},
                 sclMult:this.sclMult,
                 rotOffsetX:this.rotOffsetX,
                 rotOffsetY:this.rotOffsetY,

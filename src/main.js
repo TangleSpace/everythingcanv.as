@@ -9,6 +9,7 @@ import { Stroke } from './Stroke.js';
 import { ActionHelper } from './ActionHelper.js';
 import { Background } from './Background.js';
 import { CustomMaterial } from './CustomMaterial.js';
+import { TransformControls } from './scripts/jsm/controls/TransformControls.js';
 //import { TWEEN } from './scripts/jsm/libs/tween.module.min.js';
 
 let camera, mesh, scene, renderer;
@@ -127,8 +128,10 @@ let urlIndex = 0;
 let modelIndex = 0;
 const paintMeshes = [];
 let strokeSelectStrokes = [];
-
+let transformControls;
+let movingTransformControls = false;
 const actionHelper = new ActionHelper();
+let currentSelectedStrokeIndex = -1;
 
 function mobileCheck() {
     //console.log(navigator.userAgent.match())
@@ -354,6 +357,21 @@ function init(){
     
     clock = new THREE.Clock();
 
+    transformControls = new TransformControls( camera, canvas );
+    transformControls.size = .75;
+    
+    transformControls.space = 'world';
+    transformControls.addEventListener( 'mouseDown', () => movingTransformControls = true );
+    transformControls.addEventListener( 'mouseUp', () => movingTransformControls = false );
+    scene.add( transformControls );
+
+    // function killTransform(){
+    //     transformControls.removeEventListener( 'mouseDown', () => orbitControls.enabled = false );
+    //     transformControls.removeEventListener( 'mouseUp', () => orbitControls.enabled = true );
+    // }
+
+
+
     for(let i = 0; i<10; i++){
         
         document.getElementById("draw-object-"+i).addEventListener("click", function(){
@@ -400,9 +418,11 @@ function init(){
         
         document.getElementById("mobile-rotate").addEventListener("pointerdown", mobileRotateDown)
         document.getElementById("mobile-rotate").addEventListener("pointerup", mobileRotateUp)
+        document.getElementById("mobile-rotate").addEventListener('dragleave', mobileRotateUp);
 
         document.getElementById("mobile-pan").addEventListener("pointerdown", mobilePanDown)
         document.getElementById("mobile-pan").addEventListener("pointerup", mobilePanUp)
+        document.getElementById("mobile-pan").addEventListener('dragleave', mobilePanUp);
 
         // document.getElementById("mobile-zoom").addEventListener("pointerdown", mobileZoomDown)
         // document.getElementById("mobile-zoom").addEventListener("pointerup", mobileZoomUp)
@@ -410,7 +430,7 @@ function init(){
         document.getElementById("mobile-eye").addEventListener("pointerdown", mobileEyeDown)
         const arr = document.getElementsByClassName('mobile-icons');
         for(let i = 0; i<arr.length; i++){
-            console.log(arr[i])
+            
             arr[i].setAttribute('draggable', false);
             arr[i].ondragstart = function() { return false; };
 
@@ -568,29 +588,28 @@ function init(){
 	animate();
 }
 
+
+
 function mobileEyeDown(e){
     toggleUI();
 }
 
 function mobileRotateDown(e){
     e.preventDefault();
-    if(controls)
-        controls.enableRotate = true;
+    if(controls)controls.enableRotate = true;
 }
 function mobileRotateUp(e){
     e.preventDefault();
-    if(controls)
-        controls.enableRotate = false;
+    if(controls)controls.enableRotate = false;
 }
 function mobilePanDown(e){
     e.preventDefault();
-    if(controls)
-        controls.enablePan = true;
+    console.log(controls.enablePan)
+    if(controls)controls.enablePan = true;
 }
 function mobilePanUp(e){
     e.preventDefault();
-    if(controls)
-        controls.enablePan = false;
+    if(controls)controls.enablePan = false;
 }
 // function mobileZoomDown(e){
 //     e.preventDefault();
@@ -613,6 +632,7 @@ function toggleStrokeSelect(){
         $("#stroke-select-options").slideDown();
         $("#draw-mode-options").slideUp();
     }else{
+        transformControls.detach();
         $("#draw-mode-options").slideDown();
         $("#stroke-select-options").slideUp();
     }
@@ -928,6 +948,20 @@ function onKeyDown(e) {
             redoClick();
         }
     }
+
+    if(strokeSelect && strokeSelectStrokes.length > 0){
+        switch(e.keyCode){
+            case 87: // W
+                transformControls.setMode( 'translate' );
+                break;
+            case 69: // E
+                transformControls.setMode( 'rotate' );
+                break;
+            case 82: // R
+                transformControls.setMode( 'scale' );
+                break;
+        }
+    }
 }
 
 
@@ -1027,7 +1061,8 @@ function onMouseUp(e){
 
 }
 
-let currentSelectedStrokeIndex = 100000;
+
+
 function strokeSelectHelper(down){
 
     raycaster.setFromCamera( mouse.normal, camera );
@@ -1038,7 +1073,10 @@ function strokeSelectHelper(down){
         
         document.body.style.cursor = "pointer";
         
-        const ind = intersects[ 0 ].object.paintIndex;
+        let ind = intersects[ 0 ].object.paintIndex;
+        
+        // if(ind==null)
+        //     ind = getFirstObjectWithPaintIndex(intersects[ 0 ]);
         
         if(down){
             
@@ -1050,12 +1088,17 @@ function strokeSelectHelper(down){
                 $("#stroke-index-input").val(currentSelectedStrokeIndex)
 
                 for(let i = 0; i<meshObjects.length; i++){
+                    
                     if(meshObjects[i].strokeIndex == ind){
+                        if(meshObjects[i].scene.name == "strokeHolder"){//if it's not the mirrored stroke
+                            transformControls.attach( meshObjects[i].scn );
+                        }
                         strokeSelectStrokes.push( meshObjects[i] );
-                    }    
-                }
+                    }
 
+                }
             }
+
         }
         for(let i = 0; i<meshObjects.length; i++){
             meshObjects[i].unHover();
@@ -1068,15 +1111,23 @@ function strokeSelectHelper(down){
         
     }else{
         
-        if(down){
-            strokeSelectStrokes = [];
-        }
+        // if(down && !){
+        //     strokeSelectStrokes = [];
+        // }
 
         for(let i = 0; i<meshObjects.length; i++){
             meshObjects[i].unHover();
         }
-      
         document.body.style.cursor = "auto";
+
+    }
+}
+
+function getFirstObjectWithPaintIndex(arr){
+    for(let i = 0;i <arr.length; i++){
+        if(arr[i].object.paintIndex!=null){
+            return arr[i];
+        }
     }
 }
 
@@ -1086,7 +1137,7 @@ function strokeSelectHelper(down){
 
 function onMouseDown(e){
     
-    if(e.touches!=null){//if not mobile just set mouse.nomral in mouse move event  
+    if(e.touches != null){//if not mobile just set mouse.nomral in mouse move event  
         var touch = e.touches[0];
         const x = touch.pageX;
         const y = touch.pageY;
@@ -1183,7 +1234,23 @@ function onMouseMove(e){
             });
         }
     }
-    
+    ///console.log(movingTransformControls)
+    if(strokeSelect && movingTransformControls){//update mirrored local transform when moving control
+        
+        const t = getSelectedStrokePosition();
+        
+        for(let i = 0;i <strokeSelectStrokes.length; i++){
+            if(strokeSelectStrokes[i].scene.name != "strokeHolder"){
+                strokeSelectStrokes[i].scn.position.copy(t.pos);//(param)    
+                strokeSelectStrokes[i].scn.rotation.copy(t.rot);
+                strokeSelectStrokes[i].scn.scale.copy(t.scl);
+            }
+        }
+        
+        if(strokeSelectStrokes.length > 0){
+            actionHelper.updateTransform(currentSelectedStrokeIndex, {pos:t.sub, rot:t.rot, scl:t.scl});
+        }
+    }
     
     if ( e.touches != null ) {
         if(e.touches.length > 1)
@@ -1221,6 +1288,21 @@ function onMouseMove(e){
         
     // }
 }
+
+function getSelectedStrokePosition(){
+    for(let i = 0;i <strokeSelectStrokes.length; i++){
+        if(strokeSelectStrokes[i].scene.name == "strokeHolder"){
+            return {
+                pos:strokeSelectStrokes[i].scn.position, 
+                rot:strokeSelectStrokes[i].scn.rotation, 
+                scl:strokeSelectStrokes[i].scn.scale,
+                sub:new THREE.Vector3().subVectors(strokeSelectStrokes[i].scn.position, strokeSelectStrokes[i].avgPos)
+            };
+        }
+    }
+
+}
+
 
 function toggleInstructions(){
   
@@ -1285,6 +1367,7 @@ function buildGeo(){
             rotOffsetX:0,
             rotOffsetY:0,
             rotOffsetZ:0,
+            transformOffset:{pos:new THREE.Vector3(), rot:new THREE.Euler(), scl:new THREE.Vector3(1,1,1)}
         }
         
         meshObjects.push(new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all } ));
@@ -1375,12 +1458,20 @@ function createBlobFromData (data) {
 function undoClick(){
     if(actionHelper.currStrokeIndex > 0){
         
+        transformControls.detach();
         strokeSelectStrokes = [];
-        
+        currentSelectedStrokeIndex = -1;
+
+        const arr = [];
         for(let i = 0; i<meshObjects.length; i++){
             if(meshObjects[i].strokeIndex == actionHelper.currStrokeIndex - 1){
                 meshObjects[i].killStroke();
+                arr.push(i);
             }   
+        }
+
+        for(let k = 0; k<arr.length; k++){
+            meshObjects.splice(arr[k], 1);
         }
         actionHelper.undo();
     }
@@ -1744,7 +1835,7 @@ function onDocumentDrop( event ) {
     
     if(file != null){
         const ext = file.name.substr(file.name.length - 3).toLowerCase();
-        console.log(file.name);
+        //console.log(file.name);
         if( ext == "glb" || ext == "ltf" ){
             const reader = new FileReader();
             reader.onload = function ( event ) {
@@ -1831,6 +1922,14 @@ function onDocumentDrop( event ) {
                         const rotOffsetX = a.rotOffsetX == null ? 0. : a.rotOffsetX;
                         const rotOffsetY = a.rotOffsetY == null ? 0. : a.rotOffsetY;
                         const rotOffsetZ = a.rotOffsetZ == null ? 0. : a.rotOffsetZ;
+                        //console.log(a.transformOffset)
+                        const transformOffset = a.transformOffset == null 
+                        ? {pos:new THREE.Vector3(), rot:new Euler(), scl:new Vector3(1,1,1)} 
+                        : {
+                            pos:new THREE.Vector3( a.transformOffset.pos.x, a.transformOffset.pos.y, a.transformOffset.pos.z),
+                            rot:new THREE.Euler( a.transformOffset.rot._x, a.transformOffset.rot._y, a.transformOffset.rot._z),
+                            scl:new THREE.Vector3( a.transformOffset.scl.x, a.transformOffset.scl.y, a.transformOffset.scl.z)
+                        };
                         
                         const ss = scene.getObjectByName(a.scene);
                         
@@ -1845,6 +1944,7 @@ function onDocumentDrop( event ) {
                             rotOffsetX:rotOffsetX,
                             rotOffsetY:rotOffsetY,
                             rotOffsetZ:rotOffsetZ,
+                            transformOffset:transformOffset,
                             globalShouldAnimateSize:a.globalShouldAnimateSize,
                             param:param
                         }

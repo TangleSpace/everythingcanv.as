@@ -1154,6 +1154,96 @@ class OrbitControls extends EventDispatcher {
 		}
 
 		function onTouchStart( event ) {
+						
+			trackPointer( event );
+
+			switch ( pointers.length ) {
+
+				case 1:
+
+					//switch ( scope.touches.ONE ) {
+
+						//case TOUCH.ROTATE:
+
+							if ( scope.enableRotate ) {
+
+								handleTouchStartRotate();
+
+								state = STATE.TOUCH_ROTATE;
+
+							}else if ( scope.enablePan){
+
+								handleTouchStartPan();
+
+								state = STATE.TOUCH_PAN;
+
+							}else{
+
+								state = STATE.NONE;
+								
+							}
+							
+
+
+					//}
+
+					break;
+
+				case 2:
+
+					//switch ( scope.touches.TWO ) {
+
+						// case TOUCH.DOLLY_PAN:
+
+						// 	if ( scope.enableZoom === false && scope.enablePan === false ) return;
+
+						// 	handleTouchStartDollyPan();
+
+						// 	state = STATE.TOUCH_DOLLY_PAN;
+
+						// 	break;
+
+					//	case TOUCH.DOLLY_ROTATE:
+
+						if ( scope.enableZoom ) {
+
+							handleTouchStartDollyRotate();
+
+							state = STATE.TOUCH_DOLLY_ROTATE;
+
+						}else{
+
+							state = STATE.NONE;							
+
+						}
+
+							//break;
+
+					//	default:
+
+					//		state = STATE.NONE;
+
+					//}
+
+					break;
+
+				default:
+
+					state = STATE.NONE;
+
+			}
+
+			if ( state !== STATE.NONE ) {
+
+				scope.dispatchEvent( _startEvent );
+
+			}
+
+		}
+
+		/*
+
+		function onTouchStart( event ) {
 
 			trackPointer( event );
 
@@ -1236,7 +1326,7 @@ class OrbitControls extends EventDispatcher {
 			}
 
 		}
-
+		*/
 		function onTouchMove( event ) {
 
 			trackPointer( event );
