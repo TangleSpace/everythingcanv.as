@@ -578,6 +578,11 @@ function init(){
     
     document.getElementById("stroke-index-input").addEventListener("input", updateSelectedStroke)
     
+    document.getElementById("stroke-move").addEventListener("click", toggleMoveGizmo)
+    document.getElementById("stroke-rotate").addEventListener("click", toggleRotateGizmo)
+    document.getElementById("stroke-scale").addEventListener("click", toggleScaleGizmo)
+    
+
     canvas.addEventListener( 'dragover', onDocumentDragOver, false );
     canvas.addEventListener( 'dragleave', onDocumentLeave, false );
     canvas.addEventListener( 'drop', onDocumentDrop, false );
@@ -589,6 +594,15 @@ function init(){
 }
 
 
+function toggleMoveGizmo(){
+    transformControls.setMode( 'translate' );
+}
+function toggleRotateGizmo(){
+    transformControls.setMode( 'rotate' );
+}
+function toggleScaleGizmo(){
+    transformControls.setMode( 'scale' );
+}
 
 function mobileEyeDown(e){
     toggleUI();
@@ -1071,6 +1085,7 @@ function strokeSelectHelper(down){
     const intersects = raycaster.intersectObjects( strokeHolder.children );
     // Toggle rotation bool for meshes that we clicked
     if ( intersects.length > 0 ) {
+        
         if(!movingTransformControls)document.body.style.cursor = "pointer";
         
         let ind = intersects[ 0 ].object.paintIndex;
@@ -2012,7 +2027,7 @@ function onDocumentDrop( event ) {
                       
                         chooseModel(ui, mi, param, function(sn){
                            
-                            const meshClone = sn.clone();
+                            const meshClone = sn;//.clone();
                             all.meshClone = meshClone;
 
                             meshObjects.push(new Stroke( { scl:scls, pos:pos, rots:rots, all:all } ));

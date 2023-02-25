@@ -96,6 +96,13 @@
 				<div id="stroke-select-options" style="display:none;">
 					
 					<div id="stroke-index-text" style="margin-top: 20px; margin-bottom: 0px; font-size: 12px;">selected stroke index <input id="stroke-index-input" style="width:30px" value="0" type="text" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" /> </div>
+						
+					<div class="slider-holder">
+						<span class="slider-info">gizmo</span>
+						<button class="btn inline-btns" id="stroke-move"> move </button>
+						<button class="btn inline-btns" id="stroke-rotate"> rotate </button>
+						<button class="btn inline-btns" id="stroke-scale"> scale </button>
+					</div>
 					<div class="slider-holder">
 						<span class="slider-info">stroke scale offset</span>
 						<form class="control-slider-holder">
