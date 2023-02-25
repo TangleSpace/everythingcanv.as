@@ -132,7 +132,7 @@ let transformControls;
 let movingTransformControls = false;
 const actionHelper = new ActionHelper();
 let currentSelectedStrokeIndex = -1;
-
+let selectedThumbDiv;
 function mobileCheck() {
     //console.log(navigator.userAgent.match())
     //return navigator.userAgent.match(/Android/i) || navigator.userAgent.match(/iPhone|iPad|iPod/i) || navigator.userAgent.match(/Opera Mini/i) || navigator.userAgent.match(/IEMobile/i);
@@ -180,17 +180,24 @@ function init(){
                     const a = lo.amount;
                     for(let k = 0; k<a; k++){
                         const url = lo.url;
-                        let img = document.createElement("img");
+                        const div = document.createElement("div");
+                        const img = document.createElement("img");
                         img.className="brush-thumb";
-                        
+                        div.className="thumb-holder"
                         if(isMobile)
                             img.classList.add("mobile-brush-thumb");
                         
                         img.src = (url+k)+".png";
-                        img.onclick = function(){chooseModel(i,k)};
-                        img.onmousedown = function(e){currDragImgSrc = e.srcElement.currentSrc;};
+                        div.onclick = function(){
+                            selectedThumbDiv.classList.remove("selected-thumb")
+                            div.classList.add("selected-thumb");
+                            selectedThumbDiv = div;
+                            chooseModel(i,k)
+                        };
+                        div.onmousedown = function(e){currDragImgSrc = e.srcElement.currentSrc;};
                         //img.onmousedown = function(e){currDragImgSrc = e.srcElement.currentSrc;};
-                        dImgs.append(img);
+                        div.append(img);
+                        dImgs.append(div);
                     }
                 }
                 $( dImgs ).slideDown();
@@ -205,15 +212,29 @@ function init(){
             loadobjs[i].loaded = true;
             for(let k = 0; k<amt; k++){
                 const url = loadobjs[i].url;
+                const div = document.createElement("div");
                 let img = document.createElement("img")
                 img.className="brush-thumb";
+                div.className="thumb-holder";
+                
+                if(k==0){
+                    div.classList.add("selected-thumb");
+                    selectedThumbDiv = div;
+                }
+
                 if(isMobile)
-                    img.classList.add("mobile-brush-thumb");
-                        
+                    img.classList.add("mobile-brush-thumb");                    
+                
                 img.src = (url+k)+".png";
-                img.onclick = function(){chooseModel(i,k)};
-                img.onmousedown = function(e){currDragImgSrc = e.srcElement.currentSrc;};
-                dImgs.append(img);
+                div.onclick = function(){
+                    selectedThumbDiv.classList.remove("selected-thumb");
+                    div.classList.add("selected-thumb");
+                    selectedThumbDiv = div;
+                    chooseModel(i,k)
+                };
+                div.onmousedown = function(e){currDragImgSrc = e.srcElement.currentSrc;};
+                div.append(img);
+                dImgs.append(div);
             }
         }
     }

@@ -16,6 +16,13 @@ body{
     -ms-user-select:none;
     user-select:none;
 }
+.thumb-holder{
+    display: inline-block;
+    background-color: rgba(0,0,0,0) !important;
+}
+.selected-thumb{
+    background-color: rgba(255,255,255,.5) !important;
+}
 
 #mobile-rotate{
     background-image: url("./extras/rotate.svg");
@@ -62,8 +69,12 @@ body{
 }
 
 .brush-thumb{
-
+  display: inline-block;
+  width: 6vw;
+  height: 6vw;
+  cursor: pointer;
 }
+
 
 .drop-down-holder{
     /*margin-top: 20px;*/
@@ -81,12 +92,6 @@ body{
 }
 */
 
-.drop-down-content img{
-  display: inline-block;
-  width: 6vw;
-  height: 6vw;
-  cursor: pointer;
-}
 
 .mobile-brush-thumb{
     width: 15vw !important;
