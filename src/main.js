@@ -79,6 +79,7 @@ const loadobjs = [
     {loaded:false, name:"vehicles", url:"./extras/models/everything-vehicles/", amount:83},
     {loaded:false, name:"buildings", url:"./extras/models/everything-buildings/", amount:213},
     {loaded:false, name:"zeometry", url:"./extras/models/everything-geo/", amount:297},
+    {loaded:false, name:"space", url:"./extras/models/everything-space/", amount:265},
     
 ]
 let currDragImgSrc;
