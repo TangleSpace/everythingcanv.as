@@ -345,7 +345,7 @@ function init(){
     
     controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
     controls.dampingFactor = 0.05;
-
+    controls.zoomSpeed = .2
     //controls.screenSpacePanning = false;
 
     controls.minDistance = .5;
@@ -361,8 +361,8 @@ function init(){
     transformControls.size = .75;
     
     transformControls.space = 'world';
-    transformControls.addEventListener( 'mouseDown', () => movingTransformControls = true );
-    transformControls.addEventListener( 'mouseUp', () => movingTransformControls = false );
+    transformControls.addEventListener( 'mouseDown', () => {movingTransformControls = true; controls.enabled = false;});
+    transformControls.addEventListener( 'mouseUp', () => {movingTransformControls = false; controls.enabled = true;} );
     scene.add( transformControls );
 
     // function killTransform(){
@@ -632,6 +632,7 @@ function toggleStrokeSelect(){
         $("#stroke-select-options").slideDown();
         $("#draw-mode-options").slideUp();
     }else{
+        currentSelectedStrokeIndex = -1;
         transformControls.detach();
         $("#draw-mode-options").slideDown();
         $("#stroke-select-options").slideUp();
@@ -795,11 +796,12 @@ function animate(){
 
 
     const selectMult = strokeSelect?0:1;
-    const delta = clock.getDelta()*globalAnimationSpeed*selectMult ;
+    const d = clock.getDelta();
+    const delta = d*globalAnimationSpeed*selectMult ;
     for(var i = 0; i<meshObjects.length; i++){
         meshObjects[i].update({delta:delta});
     }
-    matHandler.update({delta:delta})
+    matHandler.update({delta:d*globalAnimationSpeed})
     //composer.render();
     renderer.render(scene,camera);
 	
@@ -1069,15 +1071,14 @@ function strokeSelectHelper(down){
     const intersects = raycaster.intersectObjects( strokeHolder.children );
     // Toggle rotation bool for meshes that we clicked
     if ( intersects.length > 0 ) {
-        
-        document.body.style.cursor = "pointer";
+        if(!movingTransformControls)document.body.style.cursor = "pointer";
         
         let ind = intersects[ 0 ].object.paintIndex;
         
         // if(ind==null)
         //     ind = getFirstObjectWithPaintIndex(intersects[ 0 ]);
         
-        if(down){
+        if(down && !movingTransformControls){
             
             if(ind != currentSelectedStrokeIndex){
 
@@ -1093,6 +1094,9 @@ function strokeSelectHelper(down){
                             transformControls.attach( meshObjects[i].scn );
                         }
                         strokeSelectStrokes.push( meshObjects[i] );
+                        updateStrokeSelectSlidersFromObject(meshObjects[i])
+
+
                     }
 
                 }
@@ -1103,7 +1107,7 @@ function strokeSelectHelper(down){
             meshObjects[i].unHover();
         }
         for(let i = 0; i<meshObjects.length; i++){
-            if(meshObjects[i].strokeIndex == ind){
+            if(meshObjects[i].strokeIndex == ind && !movingTransformControls && ind != currentSelectedStrokeIndex){
                 meshObjects[i].hover();
             }    
         }
@@ -1120,6 +1124,39 @@ function strokeSelectHelper(down){
         document.body.style.cursor = "auto";
 
     }
+}
+
+function updateStrokeSelectSlidersFromObject(obj){
+    /*
+    this.sclMult = OBJ.all.sclMult;
+    this.rotOffsetX = OBJ.all.rotOffsetX;
+    this.rotOffsetY = OBJ.all.rotOffsetY;
+    this.rotOffsetZ = OBJ.all.rotOffsetZ;
+    this.param
+    */
+    //console.log(obj);
+    $("#stroke-scale-offset").val(obj.sclMult/.01);
+    
+    $("#stroke-rot-offset-x").val(obj.rotOffsetX*57.296);
+    $("#stroke-rot-offset-y").val(obj.rotOffsetY*57.296);
+    $("#stroke-rot-offset-z").val(obj.rotOffsetZ*57.296);
+    
+    const loop = obj.param.shouldLoopGradient == 1 ? true : false;
+    
+    $("#twist-deform").val(obj.param.twistAmt/.03);
+    $("#noise-size").val(obj.param.noiseSize/.04); 
+    $("#twist-size").val(obj.param.twistSize/.04);
+    $("#noise-deform").val(obj.param.noiseAmt/.01);
+    $("#rainbow-tint-amount").val(obj.param.rainbowAmt/.01);
+    $("#model-gradient-size").val(obj.param.gradientSize/.09);
+    $("#rainbow-size").val(obj.param.rainbowGradientSize/.08);
+    $("#model-gradient-offset").val(obj.param.gradientOffset/.3);
+    $("#model-color-top").val("#"+obj.param.topColor.getHexString());
+    $("#model-color-bottom").val("#"+obj.param.bottomColor.getHexString())
+    $("#deform-speed").val(obj.param.deformSpeed/.03);
+    $("#color-speed").val(obj.param.colorSpeed/.03);
+    $("#loop-gradient").prop( "checked", loop );
+
 }
 
 function getFirstObjectWithPaintIndex(arr){
