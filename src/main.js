@@ -856,7 +856,6 @@ function chooseModel(i,k, customParams, callback){
             for(let i = 0; i<strokeSelectStrokes.length; i++){
                 strokeSelectStrokes[i].updateModel( { mesh:gltf.scene, modelInfo : modelInfo } );
             }
-            
             if(strokeSelectStrokes.length > 0){
                 actionHelper.updateModelInfo(currentSelectedStrokeIndex, modelInfo);
             }
@@ -1351,8 +1350,10 @@ function buildGeo(){
     const strokeFinal = [];
     
     if(mouse.smoothAvgs.length>0 ){
+        actionHelper.startNewPath();//if you undo remove items in the undo array after the currStrokeIndex
         
-        const meshClone = helper.holder.clone();
+        //const meshClone = helper.holder.clone();
+        const meshClone = helper.holder;//.clone();
 
         const all = {
             modelInfo:{modelIndex:modelIndex,urlIndex:urlIndex}, 
@@ -1480,9 +1481,13 @@ function undoClick(){
 function redoClick(){
     
     if(actionHelper.currStrokeIndex < actionHelper.actionsArr.length){
+        
         const ind = actionHelper.currStrokeIndex;
+
         const mi = actionHelper.actionsArr[ind][0].all.modelInfo.modelIndex;
         const ui = actionHelper.actionsArr[ind][0].all.modelInfo.urlIndex;
+        console.log("model = "+mi)
+        console.log("ui = "+ui)
         const model = getModelByIndex(ui, mi);
       
         for(let i = 0; i<actionHelper.actionsArr[ind].length; i++){
@@ -1494,7 +1499,7 @@ function redoClick(){
             
             all.scene = actionHelper.actionsArr[ind][i].scene;
             
-            all.meshClone = model;//.clone();       
+            all.meshClone = model;       
             //console.log(all.meshClone)     
             all.meshClone.traverse(function(child){
                 if(child.isMesh){
@@ -1831,8 +1836,9 @@ function onDocumentDrop( event ) {
 
     event.preventDefault();
     
+    console.log(event.dataTransfer)
     const file = event.dataTransfer.files[ 0 ];
-    
+    //event.origin
     if(file != null){
         const ext = file.name.substr(file.name.length - 3).toLowerCase();
         //console.log(file.name);
@@ -1844,14 +1850,31 @@ function onDocumentDrop( event ) {
             };
             reader.readAsDataURL( file );
         }else if(ext=="peg" || ext=="jpg" || ext=="png" ){
+            
+            var imageUrl = event.dataTransfer.getData('text/html');
+            if(imageUrl!=null){
 
-            const reader = new FileReader();
-            reader.onload = function ( event ) {
-                usingCustomDrawObject = true;
-                imgPlaneDrawObject(event.target.result);
-                //replaceDrawObject(event.target.result);
-            };
-            reader.readAsDataURL( file );
+                const url = $(imageUrl).attr("src");
+                if(url!=null){
+                    const split = url.split("/");
+                    const fileName = split[split.length-1].substr(0,split[split.length-1].length-3)+"glb";
+                    const modelUrl = "./extras/models/"+split[split.length-2]+"/"+fileName;
+                    usingCustomDrawObject = true;
+                    replaceDrawObject(modelUrl, 10);
+                    currDragImgSrc = null;
+                }
+                
+            }else{
+                
+                const reader = new FileReader();
+                reader.onload = function ( event ) {
+                    usingCustomDrawObject = true;
+                    imgPlaneDrawObject(event.target.result);
+                    //replaceDrawObject(event.target.result);
+                };
+                reader.readAsDataURL( file );
+
+            }
         
         }else if(ext == "txt"){
             

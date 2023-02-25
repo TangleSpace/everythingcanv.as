@@ -33,6 +33,15 @@ class ActionHelper {
             this.actionsArr[index][i].all.transformOffset = val;
         }
     }
+
+    startNewPath(){
+        if(this.currStrokeIndex<this.actionsArr.length){
+            const len = this.actionsArr.length - this.currStrokeIndex;
+            for(let i = 0; i<len; i++){
+                this.actionsArr.pop()
+            }
+        }
+    }
     
     updateMatParam(index, val){
         for(let i = 0; i < this.actionsArr[index].length; i++){ 
@@ -47,8 +56,8 @@ class ActionHelper {
 
     updateModelInfo(index, val){
         for(let i = 0; i < this.actionsArr[index].length; i++){
-            this.actionsArr[index][i].all.modelInfo.urlIndex = val.urlIndex;
-            this.actionsArr[index][i].all.modelInfo.modelIndex = val.modelIndex;
+            this.actionsArr[index][i].all.modelInfo = val;
+            //this.actionsArr[index][i].all.modelInfo.modelIndex = val.modelIndex;
         }
     }
 
