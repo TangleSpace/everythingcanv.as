@@ -124,6 +124,14 @@ class Stroke {
         }
     }
 
+    updatePaintIndex(){
+        this.strokeIndex--;
+        console.log(this.strokeIndex)
+        for(var i = 0; i<this.meshes.length; i++){
+            this.meshes[i].updatePaintIndex(this.strokeIndex);
+        }
+    }
+
     updateScale (OBJ) {
         this.sclMult = OBJ.scale;
         for(var i = 0; i<this.meshes.length; i++){
@@ -174,6 +182,7 @@ class Stroke {
         for(var i = 0; i<this.meshes.length; i++){
             this.meshes[i].kill();
         }
+        this.scene.remove(this.scn);
     }
     getExportData(){
         return {
@@ -283,6 +292,16 @@ class PaintMesh {
             //fnl = (start + ( t * (( 1/total )/speed) ) )%1.0
             //constraint.offset_factor = fnl
             //constraint.keyframe_insert(data_path="offset_factor")
+    }
+
+    updatePaintIndex(val){
+        this.strokeIndex = val;
+        this.mesh.traverse( function ( child ) {
+            if ( child.isMesh ) {
+                child.paintIndex = val;
+                console.log(child.paintIndex)
+            }
+        });
     }
 
     hover(){

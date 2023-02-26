@@ -12,6 +12,24 @@ class ActionHelper {
         this.currStrokeIndex = 0;
         this.actionsArr = []; 
     }
+
+    deleteStrokeHelper(index){
+        let ind = 0;
+        for(let i = 0; i<this.actionsArr.length; i++){
+            if(this.actionsArr[i].index == index){
+                ind = i;
+            }
+        }
+        
+        this.actionsArr.splice(ind,1);
+        
+        for(let t = 0; t<this.actionsArr.length; t++){
+            if(this.actionsArr[t].index > index){
+                this.actionsArr[t].index--;
+            }
+        }
+        this.currStrokeIndex --;
+    }
     
     addStrokesArray(OBJ){
         this.actionsArr[this.currStrokeIndex] = OBJ.array;

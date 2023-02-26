@@ -604,6 +604,8 @@ function init(){
     document.getElementById("stroke-rotate").addEventListener("click", toggleRotateGizmo)
     document.getElementById("stroke-scale").addEventListener("click", toggleScaleGizmo)
     
+    document.getElementById("stroke-delete").addEventListener("click", deleteStroke)
+    
 
     canvas.addEventListener( 'dragover', onDocumentDragOver, false );
     canvas.addEventListener( 'dragleave', onDocumentLeave, false );
@@ -615,6 +617,45 @@ function init(){
 	animate();
 }
 
+function deleteStroke(){
+    if(strokeSelectStrokes.length>0){
+        transformControls.detach();
+        
+        let indexes = [];    
+        for(let i = 0; i<meshObjects.length; i++){
+            if(meshObjects[i].strokeIndex == currentSelectedStrokeIndex){
+                meshObjects[i].killStroke();
+                indexes.push(i);
+                
+            }
+        }
+        for(let k = indexes.length-1; k>=0; k--){
+            meshObjects.splice(indexes[k], 1);
+        }
+        
+        indexes = [];
+        for(let t = 0; t<meshObjects.length; t++){
+            console.log("stroke index =  "+meshObjects[t].strokeIndex)
+            console.log("i = "+t);
+            if(meshObjects[t].strokeIndex > currentSelectedStrokeIndex){
+                indexes.push(t);
+            }
+        }
+        console.log(indexes)
+
+        for(let x = 0; x<indexes.length; x++){
+            meshObjects[ indexes[x] ].updatePaintIndex();
+            
+        }
+
+
+        actionHelper.deleteStrokeHelper(currentSelectedStrokeIndex);
+
+        strokeSelectStrokes = [];
+        currentSelectedStrokeIndex = -1;
+    }
+
+}
 
 function toggleMoveGizmo(){
     transformControls.setMode( 'translate' );
@@ -691,23 +732,30 @@ function updateSelectedStroke(){
     }
 
     strokeSelectStrokes = [];
+    currentSelectedStrokeIndex = -1;
 
-    if(val!="" && val!=null){
-        if(val > actionHelper.currStrokeIndex-1)val = actionHelper.currStrokeIndex-1;
-        if(val<0)val=0
-        $("#stroke-index-input").val(val);
+    if(val=="" || val==null)val=0;
+    
+    //if(val!="" && val!=null){
+    if(val > actionHelper.currStrokeIndex-1)val = actionHelper.currStrokeIndex-1;
+    //if(val<0)val=0
+    $("#stroke-index-input").val(val);
 
-        for(let i = 0; i<meshObjects.length; i++){
-            if(meshObjects[i].strokeIndex == val){
-                strokeSelectStrokes.push(meshObjects[i]);
+    for(let i = 0; i<meshObjects.length; i++){
+        if(meshObjects[i].strokeIndex == val){
+            if(meshObjects[i].scene.name == "strokeHolder"){//if it's not the mirrored stroke
+                transformControls.attach( meshObjects[i].scn );
             }
+            strokeSelectStrokes.push(meshObjects[i]);
         }
-
-        hoverStrokes();
-        hoverTimeout = setTimeout( function(){
-            unHoverStrokes();
-        },300)
     }
+
+    currentSelectedStrokeIndex = val;
+    hoverStrokes();
+    hoverTimeout = setTimeout( function(){
+        unHoverStrokes();
+    },300)
+    //}
 
 }
 
@@ -1224,6 +1272,7 @@ function onMouseDown(e){
     }
 
     strokeSelectStrokes = [];
+    currentSelectedStrokeIndex = -1;
 
     if(controls){
 
