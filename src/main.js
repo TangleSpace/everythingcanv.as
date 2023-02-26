@@ -933,10 +933,12 @@ function chooseModel(i,k, customParams, callback){
             paintMeshes.push({urlIndex:ui, modelIndex:mi, model:gltf.scene.clone()});
         }
 
-        if(!strokeSelect){
-            helper.updateVisual({mesh:gltf.scene});
-        }else{
-
+        helper.updateVisual({mesh:gltf.scene});
+        //if(!strokeSelect){
+            
+        //}else{
+        if(strokeSelect){
+            helper.holder.visible = false;
             const modelInfo = { modelIndex : mi, urlIndex : ui};
             
             for(let i = 0; i<strokeSelectStrokes.length; i++){
