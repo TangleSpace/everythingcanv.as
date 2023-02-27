@@ -50,6 +50,7 @@ body{
   pointer-events: none;
 }
 
+
 .tooltip:hover .tooltiptext {
   visibility: visible;
 }
