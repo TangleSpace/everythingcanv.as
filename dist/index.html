@@ -78,18 +78,41 @@
 					<div class="geo-ink-title">
 						geo.ink
 					</div>
-					
-					<button class="btn inline-btns" id="show-instructions"> show instructions </button> <br/>
-					
-					<button class="btn inline-btns" id="reset-cam"> reset cam </button> <br/>
-					<button class="btn inline-btns" id="toggle-draw-on-view"> draw on view </button> <br/>
-					<button class="btn inline-btns" id="toggle-draw-object"> toggle draw object </button> <br/>				
-					<button class="btn inline-btns" id="stroke-select-toggle">stroke select </button> <br/>
+					<div class="tooltip">					
+						<button class="btn inline-btns" id="show-instructions"> show instructions </button> 
+					</div>
+					<div class="tooltip">
+						<button class="btn inline-btns" id="fullscreen">fullscreen</button> 
+						<span class="tooltiptext">[f]</span>
+					</div>
+					<div class="tooltip">
+						<button class="btn inline-btns" id="reset-cam"> reset cam </button> 
+						<span class="tooltiptext">[c]</span>
+					</div>
+					<div class="tooltip">
+						<button class="btn inline-btns" id="toggle-draw-on-view"> draw on view </button> 
+						<span class="tooltiptext">[v]</span>
+					</div>
+					<div class="tooltip">
+						<button class="btn inline-btns" id="toggle-draw-object"> hide draw object </button>
+						<span class="tooltiptext">[b]</span>
+					</div>
+					<div class="tooltip">
+						<button class="btn inline-btns" id="stroke-select-toggle">stroke select </button> 
+						<span class="tooltiptext" style="width: 35px;">[shift]</span>
+					</div>
 					
 				
-					
-					<button class="btn inline-btns" id="undo"> undo </button>
-					<button class="btn inline-btns" id="redo"> redo </button>
+					<div>
+						<div class="tooltip inline-tooltip">
+							<button class="btn inline-btns" id="undo"> undo </button>
+							<span class="tooltiptext" style="width: 35px;">[ctrl z]</span>
+						</div>
+						<div class="tooltip inline-tooltip" >
+							<button class="btn inline-btns" id="redo"> redo </button>
+							<span class="tooltiptext" style="width: 35px;">[ctrl y]</span>
+						</div>
+					</div>
 					
 				</div>
 
@@ -99,9 +122,21 @@
 						
 					<div class="slider-holder">
 						<span class="slider-info">gizmo</span>
-						<button class="btn inline-btns" id="stroke-move"> move </button>
-						<button class="btn inline-btns" id="stroke-rotate"> rotate </button>
-						<button class="btn inline-btns" id="stroke-scale"> scale </button>
+						<div class="tooltip inline-tooltip">
+							<span class="tooltiptext">[w]</span>
+							<button class="btn inline-btns" id="stroke-move"> move </button>
+							
+						</div>
+						<div class="tooltip inline-tooltip">
+							<span class="tooltiptext">[e]</span>
+							<button class="btn inline-btns" id="stroke-rotate"> rotate </button>
+							
+						</div>
+						<div class="tooltip inline-tooltip">
+							<span class="tooltiptext">[r]</span>
+							<button class="btn inline-btns" id="stroke-scale"> scale </button>
+							
+						</div>
 					</div>
 					
 					<div class="slider-holder">
@@ -160,6 +195,17 @@
 							essentials
 						</div>
 						<div class="drop-down-content" id="essentials-content">
+							
+							<div class="slider-holder">
+								<div class="tooltip inline-tooltip" style="width:70px">
+									<span class="tooltiptext" style="margin-top:-15px; margin-left: 30px; width:30px;">[-][+]</span>
+									<span class="slider-info">size</span>
+								</div>
+								
+								<input id="size-slider" class="control-slider" type="range" min="0" max="100" value="10" >
+								
+							</div>
+
 							<div class="check-holder">
 								<span class="slider-info">rotation by normals</span>
 								<input class="control control-checkbox" type="checkbox" id="rotation-follows-normal" checked>
@@ -167,17 +213,11 @@
 
 							<div class="slider-holder">
 								<span class="slider-info">animation speed</span>
-								<form class="control-slider-holder">
-									<input id="animation-speed-slider" class="control-slider" type="range" min="0" max="100" value="10" >
-								</form>
+								<input id="animation-speed-slider" class="control-slider" type="range" min="0" max="100" value="10" >
+								
 							</div>
 							
-							<div class="slider-holder">
-								<span class="slider-info">size</span>
-								<form class="control-slider-holder">
-									<input id="size-slider" class="control-slider" type="range" min="0" max="100" value="10" >
-								</form>
-							</div>
+
 							<div class="check-holder">
 								<span class="slider-info">animate size in and out</span>
 								<input class="control control-checkbox" type="checkbox" id="should-size-ease-in-out" checked>
@@ -185,22 +225,20 @@
 							<div class="slider-holder">
 								
 								<span class="slider-info">smooth amount</span>
-								<form class="control-slider-holder">
-									<input id="smooth-amount" class="control-slider" type="range" name="infoSize" min="10" max="100" value="100" >
-								</form>
+								
+								<input id="smooth-amount" class="control-slider" type="range" name="infoSize" min="10" max="100" value="90" >
+								
 							</div>
 
 							<div class="slider-holder">
 								<span class="slider-info">normal offset</span>
-								<form class="control-slider-holder">
-									<input id="normal-offset-amount" class="control-slider" type="range" min="-100" max="100" value="5" >
-								</form>
+								<input id="normal-offset-amount" class="control-slider" type="range" min="-100" max="100" value="5" >
+							
 							</div>
 							<div class="slider-holder">
 								<span class="slider-info">mesh density</span>
-								<form class="control-slider-holder">
-									<input id="density-amount" class="control-slider" type="range" min="0" max="100" value="20" >
-								</form>
+								<input id="density-amount" class="control-slider" type="range" min="0" max="100" value="20" >
+							
 							</div>
 
 						</div>
@@ -236,27 +274,23 @@
 						<div class="drop-down-content" id="rotation-content">
 							<div class="slider-holder">
 								<span class="slider-info">rotate x</span>
-								<form class="control-slider-holder">
-									<input id="rotate-slider-x" class="control-slider" type="range" min="0" max="628" value="0" >
-								</form>
+								<input id="rotate-slider-x" class="control-slider" type="range" min="0" max="628" value="0" >
+							
 							</div>
 							<div class="slider-holder">
 								<span class="slider-info">rotate y</span>
-								<form class="control-slider-holder">
-									<input id="rotate-slider-y" class="control-slider" type="range" min="0" max="360" value="0" >
-								</form>
+								<input id="rotate-slider-y" class="control-slider" type="range" min="0" max="360" value="0" >
+							
 							</div>
 							<div class="slider-holder">
 								<span class="slider-info">rotate z</span>
-								<form class="control-slider-holder">
-									<input id="rotate-slider-z" class="control-slider" type="range" min="0" max="360" value="0" >
-								</form>
+								<input id="rotate-slider-z" class="control-slider" type="range" min="0" max="360" value="0" >
+							
 							</div>
 							<div class="slider-holder">
 								<span class="slider-info">additive rotation speed</span>
-								<form class="control-slider-holder">
-									<input id="additive-rotation-slider" class="control-slider" type="range" min="0" max="100" value="0" >
-								</form>
+								<input id="additive-rotation-slider" class="control-slider" type="range" min="0" max="100" value="0" >
+							
 							</div>
 							<div class="slider-holder">
 								<span class="slider-info">additive rotation x</span>
@@ -286,16 +320,13 @@
 						<div class="slider-holder">
 							<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
 							<span class="slider-info">background gradient size</span>
-							<form class="control-slider-holder">
-								<input id="background-gradient-size" class="control-slider" type="range" min="0" max="900" value="90" >
-							</form>
+							<input id="background-gradient-size" class="control-slider" type="range" min="0" max="900" value="90" >
+						
 						</div>
 						<div class="slider-holder">
 							<!--<img class="i-large" src="assets/svg/paint_grey.svg">-->
 							<span class="slider-info">background gradient offset</span>
-							<form class="control-slider-holder">
-								<input id="background-gradient-offset" class="control-slider" type="range" min="-500" max="500" value="0" >
-							</form>
+							<input id="background-gradient-offset" class="control-slider" type="range" min="-500" max="500" value="0" >
 						</div>
 
 						<div class="slider-holder">

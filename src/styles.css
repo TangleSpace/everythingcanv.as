@@ -20,6 +20,40 @@ body{
     display: inline-block;
     background-color: rgba(0,0,0,0) !important;
 }
+
+
+.tooltip {
+  position: relative;
+  display: block;
+  
+}
+
+.inline-tooltip{
+    display: inline-block !important;
+}
+
+/* Tooltip text */
+.tooltiptext {
+  visibility: hidden;
+  width: auto;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  font-size: 12px;
+  padding: 2px 8px;
+  color: white;
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  margin-top:0px;
+  margin-left:-20px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
+
 .selected-thumb{
     background-color: rgba(255,255,255,.5) !important;
 }

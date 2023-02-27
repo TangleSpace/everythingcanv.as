@@ -114,7 +114,7 @@ let mirrorZ = false;
 let mirrorMeshX;
 let mirrorMeshY;
 let mirrorMeshZ;
-
+let showedStrokeSelectError = false;
 let currentDrawObjectIndex = 0;
 
 let strokeHolder = new THREE.Object3D();
@@ -133,7 +133,10 @@ let transformControls;
 let movingTransformControls = false;
 const actionHelper = new ActionHelper();
 let currentSelectedStrokeIndex = -1;
+let isFullscreen = false;
 let selectedThumbDiv;
+
+
 function mobileCheck() {
     //console.log(navigator.userAgent.match())
     //return navigator.userAgent.match(/Android/i) || navigator.userAgent.match(/iPhone|iPad|iPod/i) || navigator.userAgent.match(/Opera Mini/i) || navigator.userAgent.match(/IEMobile/i);
@@ -603,6 +606,7 @@ function init(){
     document.getElementById("stroke-move").addEventListener("click", toggleMoveGizmo)
     document.getElementById("stroke-rotate").addEventListener("click", toggleRotateGizmo)
     document.getElementById("stroke-scale").addEventListener("click", toggleScaleGizmo)
+    document.getElementById("fullscreen").addEventListener("click", toggleFullscreen)
     
     document.getElementById("stroke-delete").addEventListener("click", deleteStroke)
     
@@ -635,13 +639,11 @@ function deleteStroke(){
         
         indexes = [];
         for(let t = 0; t<meshObjects.length; t++){
-            console.log("stroke index =  "+meshObjects[t].strokeIndex)
-            console.log("i = "+t);
             if(meshObjects[t].strokeIndex > currentSelectedStrokeIndex){
                 indexes.push(t);
             }
         }
-        console.log(indexes)
+        
 
         for(let x = 0; x<indexes.length; x++){
             meshObjects[ indexes[x] ].updatePaintIndex();
@@ -681,7 +683,6 @@ function mobileRotateUp(e){
 }
 function mobilePanDown(e){
     e.preventDefault();
-    console.log(controls.enablePan)
     if(controls)controls.enablePan = true;
 }
 function mobilePanUp(e){
@@ -700,7 +701,14 @@ function mobilePanUp(e){
 // }
 
 function toggleStrokeSelect(){
+
     strokeSelect = !strokeSelect;   
+    if(strokeSelect && meshObjects.length==0 && !showedStrokeSelectError){
+        alert("draw some strokes, then enter stroke select mode to select and edit them.");
+        strokeSelect = false;
+        showedStrokeSelectError = true;
+    }
+
     const val = strokeSelect ? "draw mode":"stroke select";
     $("#stroke-select-toggle").html(val);
     helper.holder.visible = !strokeSelect;
@@ -1003,9 +1011,77 @@ function getHitPointFromMesh(msh, mse){
 	return false;
 }
 
+function closeFullscreen(){
+    document.exitFullscreen();
+    isFullscreen = false;
+    document.getElementById("fullscreen").innerHTML="fullscreen";
+}
+
+function openFullscreen(elem) {
+  if (elem.requestFullscreen) {
+    elem.requestFullscreen();
+    isFullscreen = true;
+    document.getElementById("fullscreen").innerHTML="exit fullscreen"
+  } else if (elem.webkitRequestFullscreen) { /* Safari */
+    elem.webkitRequestFullscreen();
+    isFullscreen = true;
+    document.getElementById("fullscreen").innerHTML="exit fullscreen"
+  } else if (elem.msRequestFullscreen) { /* IE11 */
+    elem.msRequestFullscreen();
+    isFullscreen = true;
+    document.getElementById("fullscreen").innerHTML="exit fullscreen"
+  }
+}
+
+function toggleFullscreen(){
+    if(!isFullscreen)
+        openFullscreen(document.body);
+    else
+        closeFullscreen();
+}
 
 function onKeyDown(e) {
     
+
+    console.log(e.keyCode)
+    if(e.keyCode==67){
+        resetCam();
+    }
+    if(e.keyCode==66){
+        toggleDrawObject();
+    }
+    if(e.keyCode == 86){//v
+        updateDrawState();
+    }   
+
+    if(e.keyCode == 187){//+    
+        
+        if(meshScale>2.)
+            meshScale += .25;
+        else if(meshScale>1.)
+            meshScale += .15;
+        else
+            meshScale += .05;
+        if(meshScale<0)meshScale=0;
+        if(meshScale>8)meshScale=8;
+
+    }
+    
+    if(e.keyCode == 189){//-
+        if(meshScale>2.)
+            meshScale -= .25;
+        else if(meshScale>1.)
+            meshScale -= .15;
+        else
+            meshScale -= .05;
+
+        if(meshScale<0)meshScale=0;
+        if(meshScale>8)meshScale=8;
+    }
+
+    if(e.keyCode == 70){//f
+       toggleFullscreen();
+    }
     if(e.keyCode == 18){//alt
         if(controls){
             controls.enableRotate = true;
@@ -1021,7 +1097,6 @@ function onKeyDown(e) {
             toggleStrokeSelect();
             canTogglStrokeSelect = false;
         }
-        
     }
 
 
@@ -1296,6 +1371,7 @@ function onMouseDown(e){
         if(e.button==0)
             canDraw = true;
     }
+
     if(e.touches != null){
         if(e.touches.length == 1)
             canDraw = true;
@@ -1303,14 +1379,16 @@ function onMouseDown(e){
 
 
     if(canDraw ){
-            
+        
+        mouse.down = true;
+
         if(e.pointerType == "pen" && shouldDoPenPressure){
             penSense = e.pressure;
         }else{
             penSense = 1;
         } 
 
-        mouse.down = true;
+        handleDrawGeo();
 
     }
     
@@ -1384,12 +1462,12 @@ function onMouseMove(e){
     if(mouse.down){
         
         if(mouse.previous.x != 0 || mouse.previous.y != 0){
-            handleDrawGeo();
             if(e.pointerType  == "pen" && shouldDoPenPressure){
                 penSense = e.pressure;
             }else{
                 penSense = 1;
             }
+            handleDrawGeo();
         }
         
     }
@@ -1611,8 +1689,6 @@ function redoClick(){
 
         const mi = actionHelper.actionsArr[ind][0].all.modelInfo.modelIndex;
         const ui = actionHelper.actionsArr[ind][0].all.modelInfo.urlIndex;
-        console.log("model = "+mi)
-        console.log("ui = "+ui)
         const model = getModelByIndex(ui, mi);
       
         for(let i = 0; i<actionHelper.actionsArr[ind].length; i++){
@@ -1820,7 +1896,12 @@ function updateAniSpeed(){
 }
 
 function toggleDrawObject(){
-    drawObject.visible = !drawObject.visible
+    drawObject.visible = !drawObject.visible;
+    if(drawObject.visible){
+        document.getElementById("toggle-draw-object").innerHTML="hide draw object";
+    }else{
+        document.getElementById("toggle-draw-object").innerHTML="show draw object";
+    }
 }
 
 function toggleMirrorX(){
