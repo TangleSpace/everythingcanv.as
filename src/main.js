@@ -1641,7 +1641,7 @@ function saveGeoInkFile(){
 
 
 function download (geoink){
-  const hash = "geo-ink-file";
+  const hash = "paint-everything";
   const blob = createBlobFromData({
     geoink,
   });
@@ -1723,14 +1723,14 @@ function redoClick(){
 function updateDrawState(){
     if(drawObject){
         if(drawState == "object"){
-            drawObject.visible = false;
+            //drawObject.visible = false;
             //showingDrawObject = false;
             bgMesh.visible = true;
             drawState = "view";
             document.getElementById("toggle-draw-on-view").innerHTML = "draw on object";
         }else{
             //drawObject.material.visible = true;
-            drawObject.visible = true;
+            //drawObject.visible = true;
             drawState = "object";
             bgMesh.visible = false;
             document.getElementById("toggle-draw-on-view").innerHTML = "draw on view";
