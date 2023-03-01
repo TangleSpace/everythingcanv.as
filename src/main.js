@@ -82,6 +82,7 @@ const loadobjs = [
     {loaded:false, name:"space", url:"./extras/models/everything-space/", amount:265},
     
 ]
+//let colorAniSpeed = 
 let currDragImgSrc;
 let drawObject;  
 const toysAmount = 78;
@@ -355,7 +356,7 @@ function init(){
     scene.add(dlight)
     
 	renderer = new THREE.WebGLRenderer({antialias:true});
-	renderer.shadowMap.enabled = true;
+	//renderer.shadowMap.enabled = true;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
 	renderer.toneMappingExposure = .5;  
 	renderer.setPixelRatio( window.devicePixelRatio );
@@ -364,8 +365,8 @@ function init(){
     renderer.domElement.className = "customThree";
     
     const pmremGenerator = new THREE.PMREMGenerator( renderer );
-    scene.environment = pmremGenerator.fromScene( new RoomEnvironment(), 0.04 ).texture;
-   
+    scene.environment = pmremGenerator.fromScene( new RoomEnvironment(), 0.14 ).texture;
+
     controls = new OrbitControls( camera, canvas);
     
     controls.enableDamping = false; // an animation loop is required when either damping or auto-rotation are enabled
@@ -930,14 +931,13 @@ function animate(){
     bgHolder.position.copy(camera.position);
     bgHolder.rotation.copy(camera.rotation);
 
-
     const selectMult = strokeSelect?0:1;
     const d = clock.getDelta();
     const delta = d*globalAnimationSpeed*selectMult ;
     for(var i = 0; i<meshObjects.length; i++){
         meshObjects[i].update({delta:delta});
     }
-    matHandler.update({delta:d*globalAnimationSpeed})
+    matHandler.update({delta:d})
     //composer.render();
     renderer.render(scene,camera);
 	
@@ -1643,8 +1643,9 @@ function buildGeo(){
 
     //meshObjects.push(new MeshObject());
     const strokeFinal = [];
-    
+    console.log(mouse.smoothAvgs.length)
     if(mouse.smoothAvgs.length>0 ){
+
         actionHelper.startNewPath();//if you undo remove items in the undo array after the currStrokeIndex
         
         //const meshClone = helper.holder.clone();

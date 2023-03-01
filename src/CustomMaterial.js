@@ -148,7 +148,7 @@ class CustomMaterial {
                     float gradientMix = max( pow( max( h, 0.0 ), gradientSize ), 0.0 );
                     //float gradientMix = clamp( (h+.5) * gradientSize, 0., 1. ) ;
                     if(shouldLoopGradient>.5){
-                        gradientMix = .5+sin(vPos.y*gradientSize)*.5;
+                        gradientMix = .5+sin((vPos.y*gradientSize)+(time*colorSpeed))*.5;
                     }
                     vec3 gradient = ogColor.xyz * mix( vec4(bottomColor.xyz, 1.), vec4(topColor.xyz,1.),  gradientMix ).xyz;
                     
