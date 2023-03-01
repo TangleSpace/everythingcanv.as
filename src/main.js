@@ -340,9 +340,9 @@ function init(){
     m.blending = THREE.AdditiveBlending;
 	bgMesh = new THREE.Mesh( g, m);
     bgMesh.visible = true;
-    scene.add(bgMesh);
-    bgHolder.attach(bgMesh);
+    bgHolder.add(bgMesh);
     bgHolder.position.set(camera.position.z,0,0);
+    bgMesh.position.z = -camera.position.z;
    
 	// lights
     const light = new THREE.AmbientLight( 0x242424 ); // soft white light
@@ -609,7 +609,10 @@ function init(){
     
     document.getElementById("draw-object-opacity").addEventListener("input", updateDrawObjectOpacity);
     document.getElementById("draw-object-opacity").addEventListener("change", updateDrawObjectOpacity);
-    
+
+    document.getElementById("view-draw-distance").addEventListener("input", updateDrawViewDistanceSlider);
+    document.getElementById("view-draw-distance").addEventListener("change", updateDrawViewDistanceSlider);
+
 
     document.getElementById("stroke-index-input").addEventListener("input", updateSelectedStroke)
     
@@ -617,7 +620,8 @@ function init(){
     document.getElementById("stroke-rotate").addEventListener("click", toggleRotateGizmo)
     document.getElementById("stroke-scale").addEventListener("click", toggleScaleGizmo)
     document.getElementById("fullscreen").addEventListener("click", toggleFullscreen)
-    
+    document.getElementById("tools-holder").addEventListener("mousemove", onToolsHover)
+    document.getElementById("select").addEventListener("mousemove", onToolsHover)
     document.getElementById("stroke-delete").addEventListener("click", deleteStroke)
     
     canvas.addEventListener( 'dragover', onDocumentDragOver, false );
@@ -629,6 +633,29 @@ function init(){
     matHandler = new CustomMaterial();
 	animate();
 }
+
+function onToolsHover(e){
+    //console.log(e)
+    if(drawObject!=null && e.target.id!="normal-offset-amount"){
+        handleUiUpdating();
+    }
+}
+
+function updateDrawViewDistanceSlider(){
+    console.log($("#view-draw-distance").val())
+    updateDrawViewDistance( $("#view-draw-distance").val() );
+}
+
+function updateDrawViewDistance(val){
+    
+    let v = Math.abs(val); 
+    if(v<2)v=2;
+    if(v>80)v=80;
+    bgMesh.position.z = -v; 
+}
+
+
+
 function updateDrawObjectOpacity(){
     const o = $("#draw-object-opacity").val()*.01;
     console.log(o)
@@ -1060,7 +1087,7 @@ function toggleFullscreen(){
 function onKeyDown(e) {
     
 
-    console.log(e.keyCode)
+    //console.log(e.keyCode)
     if(e.keyCode==67){
         resetCam();
     }
@@ -1084,6 +1111,7 @@ function onKeyDown(e) {
 
     }
     
+    
     if(e.keyCode == 189){//-
         if(meshScale>2.)
             meshScale -= .25;
@@ -1095,6 +1123,13 @@ function onKeyDown(e) {
         if(meshScale<0)meshScale=0;
         if(meshScale>8)meshScale=8;
     }
+
+    if(e.keyCode == 219){//+    
+       updateDrawViewDistance(bgMesh.position.z - .1);
+    }
+    if(e.keyCode == 221){//+    
+        updateDrawViewDistance(bgMesh.position.z + .1);
+     }
 
     if(e.keyCode == 70){//f
        toggleFullscreen();
@@ -1245,19 +1280,20 @@ function onMouseUp(e){
 function strokeSelectHelper(down){
 
     raycaster.setFromCamera( mouse.normal, camera );
-  
+    
     const intersects = raycaster.intersectObjects( strokeHolder.children );
     // Toggle rotation bool for meshes that we clicked
     if ( intersects.length > 0 ) {
         
-        if(!movingTransformControls)document.body.style.cursor = "pointer";
-        
         let ind = intersects[ 0 ].object.paintIndex;
+        
+        const canHover = (!movingTransformControls && ind != currentSelectedStrokeIndex && !controls.enableRotate && !controls.enablePan);
+        if(canHover)document.body.style.cursor = "pointer";
         
         // if(ind==null)
         //     ind = getFirstObjectWithPaintIndex(intersects[ 0 ]);
         
-        if(down && !movingTransformControls){
+        if(down && canHover){
             
             if(ind != currentSelectedStrokeIndex){
 
@@ -1286,7 +1322,7 @@ function strokeSelectHelper(down){
             meshObjects[i].unHover();
         }
         for(let i = 0; i<meshObjects.length; i++){
-            if(meshObjects[i].strokeIndex == ind && !movingTransformControls && ind != currentSelectedStrokeIndex){
+            if(meshObjects[i].strokeIndex == ind && canHover){
                 meshObjects[i].hover();
             }    
         }
@@ -1415,6 +1451,7 @@ function onMouseDown(e){
 function onMouseMove(e){
 
     //window.focus();
+    //console.log()
     if(e.touches==null){
         if(strokeSelect){
             strokeSelectHelper(false);
@@ -1441,8 +1478,8 @@ function onMouseMove(e){
 	mouse.normal.y =  - ( y / window.innerHeight ) * 2 + 1;
     
     // See if the ray from the camera into the world hits one of our meshes
-    if(drawObject){
-        if(helper){
+    if(drawObject && helper && e.target.className=="customCanvas"){
+        //if(helper && ){
             helper.doMouseInteraction({
                 mouse:mouse, 
                 camera:camera, 
@@ -1451,19 +1488,21 @@ function onMouseMove(e){
                 drawState:drawState,
                 globalNormalOffsetAmount:globalNormalOffsetAmount
             });
-        }
+        //}
     }
     ///console.log(movingTransformControls)
-    if(strokeSelect && movingTransformControls){//update mirrored local transform when moving control
-        
+    //if(strokeSelect && movingTransformControls){//update mirrored local transform when moving control
+    if(movingTransformControls){  
         const t = getSelectedStrokePosition();
-        
-        for(let i = 0;i <strokeSelectStrokes.length; i++){
-            if(strokeSelectStrokes[i].scene.name != "strokeHolder"){
-                strokeSelectStrokes[i].scn.position.copy(t.pos);//(param)    
-                strokeSelectStrokes[i].scn.rotation.copy(t.rot);
-                strokeSelectStrokes[i].scn.scale.copy(t.scl);
+      
+        for(let i = 0; i<meshObjects.length; i++){
+            
+            if(meshObjects[i].strokeIndex == currentSelectedStrokeIndex){
+                meshObjects[i].scn.position.copy(t.pos);//(param)    
+                meshObjects[i].scn.rotation.copy(t.rot);
+                meshObjects[i].scn.scale.copy(t.scl);
             }
+
         }
         
         if(strokeSelectStrokes.length > 0){
@@ -1509,18 +1548,51 @@ function onMouseMove(e){
 }
 
 function getSelectedStrokePosition(){
-    for(let i = 0;i <strokeSelectStrokes.length; i++){
-        if(strokeSelectStrokes[i].scene.name == "strokeHolder"){
-            return {
-                pos:strokeSelectStrokes[i].scn.position, 
-                rot:strokeSelectStrokes[i].scn.rotation, 
-                scl:strokeSelectStrokes[i].scn.scale,
-                sub:new THREE.Vector3().subVectors(strokeSelectStrokes[i].scn.position, strokeSelectStrokes[i].avgPos)
-            };
+    for(let i = 0; i<meshObjects.length; i++){
+            
+        if(meshObjects[i].strokeIndex == currentSelectedStrokeIndex){
+            if(meshObjects[i].scene.name == "strokeHolder"){
+                return {
+                    pos:meshObjects[i].scn.position, 
+                    rot:meshObjects[i].scn.rotation, 
+                    scl:meshObjects[i].scn.scale,
+                    sub:new THREE.Vector3().subVectors(meshObjects[i].scn.position, meshObjects[i].avgPos)
+                };
+            }
         }
+
     }
+    // for(let i = 0;i <strokeSelectStrokes.length; i++){
+    //     //console.log(strokeSelectStrokes[i].scene.name);
+    //     if(strokeSelectStrokes[i].scene.name == "strokeHolder"){
+    //         return {
+    //             pos:strokeSelectStrokes[i].scn.position, 
+    //             rot:strokeSelectStrokes[i].scn.rotation, 
+    //             scl:strokeSelectStrokes[i].scn.scale,
+    //             sub:new THREE.Vector3().subVectors(strokeSelectStrokes[i].scn.position, strokeSelectStrokes[i].avgPos)
+    //         };
+    //     }
+    // }
 
 }
+
+
+
+// function getSelectedStrokePosition(){
+    
+//     for(let i = 0;i <strokeSelectStrokes.length; i++){
+//         console.log(strokeSelectStrokes[i].scene.name);
+//         if(strokeSelectStrokes[i].scene.name == "strokeHolder"){
+//             return {
+//                 pos:strokeSelectStrokes[i].scn.position, 
+//                 rot:strokeSelectStrokes[i].scn.rotation, 
+//                 scl:strokeSelectStrokes[i].scn.scale,
+//                 sub:new THREE.Vector3().subVectors(strokeSelectStrokes[i].scn.position, strokeSelectStrokes[i].avgPos)
+//             };
+//         }
+//     }
+
+// }
 
 
 function toggleInstructions(){
@@ -1804,7 +1876,7 @@ function updateScaleOffset(){
 }
 
 function updateMeshSize(){
-    handleUiUpdating();
+    //handleUiUpdating();
     const s = $("#size-slider").val()*.08;
     meshScale = s;
    
@@ -1812,15 +1884,12 @@ function updateMeshSize(){
 
 function rotateBrushX(){
     globalOffsetRotation.x = $("#rotate-slider-x").val()*0.01745329251;
-    handleUiUpdating();
 }
 function rotateBrushY(){
     globalOffsetRotation.y = $("#rotate-slider-y").val()*0.01745329251;
-    handleUiUpdating();
 }
 function rotateBrushZ(){
     globalOffsetRotation.z = $("#rotate-slider-z").val()*0.01745329251;
-    handleUiUpdating();
 }
 function updateSmoothAmount(){
     globalSmoothAmount = 1-($("#smooth-amount").val()*.01);
@@ -1828,13 +1897,8 @@ function updateSmoothAmount(){
 function updateNormalOffsetAmount(){
    
     globalNormalOffsetAmount = $("#normal-offset-amount").val()*.01;
-    // if(globalNormalOffsetAmount<0){
-    //     UpdateDrawObjectOpacity(.2)
-    // }else{
-    //     UpdateDrawObjectOpacity(1)
-    // }
-
-    handleUiUpdating();
+  
+    handleUiUpdating(globalNormalOffsetAmount);
 
 }
 
@@ -1863,7 +1927,8 @@ function toggleSizeEasing(){
     globalShouldAnimateSize = !globalShouldAnimateSize;
 }
 
-function handleUiUpdating(){
+function handleUiUpdating(nrml){
+    
     mouse.normal.x = 0;
     mouse.normal.y = 0;
 
@@ -1873,7 +1938,7 @@ function handleUiUpdating(){
         bgMesh:bgMesh, 
         drawObject:drawObject,
         drawState:drawState,
-        globalNormalOffsetAmount:globalNormalOffsetAmount
+        globalNormalOffsetAmount: nrml==null ? 3 : nrml
     });
 }
 

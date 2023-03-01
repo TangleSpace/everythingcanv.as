@@ -126,7 +126,6 @@ class Stroke {
 
     updatePaintIndex(){
         this.strokeIndex--;
-        console.log(this.strokeIndex)
         for(var i = 0; i<this.meshes.length; i++){
             this.meshes[i].updatePaintIndex(this.strokeIndex);
         }
@@ -299,7 +298,6 @@ class PaintMesh {
         this.mesh.traverse( function ( child ) {
             if ( child.isMesh ) {
                 child.paintIndex = val;
-                console.log(child.paintIndex)
             }
         });
     }

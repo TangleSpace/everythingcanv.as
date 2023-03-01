@@ -55,6 +55,7 @@ class BrushHelper {
     }
 
     doMouseInteraction (OBJ) {
+        //console.log(OBJ.mouse.normal)
         this.raycaster.setFromCamera( OBJ.mouse.normal, OBJ.camera );
         let arr = [OBJ.bgMesh];
         if(OBJ.drawState=="object"){
@@ -77,6 +78,9 @@ class BrushHelper {
             this.mesh.position.copy( intersects[ 0 ].point.add(intersects[ 0 ].face.normal.multiplyScalar(OBJ.globalNormalOffsetAmount) ) );
         }
     }
+
+    
+
     updateVisual(OBJ){
         if(this.holder){
             this.killObject(this.holder);
