@@ -56,16 +56,18 @@ class BrushHelper {
 
     doMouseInteraction (OBJ) {
         this.raycaster.setFromCamera( OBJ.mouse.normal, OBJ.camera );
-        let mesh = OBJ.bgMesh;
+        let arr = [OBJ.bgMesh];
         if(OBJ.drawState=="object"){
-            mesh = OBJ.drawObject;
+            arr = [OBJ.drawObject];
+        }else if(OBJ.drawState=="both"){
+            arr=[OBJ.bgMesh, OBJ.drawObject]
         }
-        const intersects = this.raycaster.intersectObject( mesh );
+        const intersects = this.raycaster.intersectObjects( arr );
         // Toggle rotation bool for meshes that we clicked
         if ( intersects.length > 0 ) {
             
             var n = intersects[ 0 ].face.normal.clone();
-            n.transformDirection( OBJ.drawObject.matrixWorld );
+            n.transformDirection( intersects[ 0 ].object.matrixWorld );
             n.multiplyScalar( 10 );
             n.add( intersects[ 0 ].point );
 

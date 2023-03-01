@@ -87,7 +87,7 @@ let drawObject;
 const toysAmount = 78;
 const toolsAmount = 89;
 const flowersAmount = 73;
-let drawState = "object" 
+let drawState = "both" 
 let showingSideBar = true;
 let movingCamera = false;
 
@@ -339,7 +339,7 @@ function init(){
     const m = new THREE.MeshBasicMaterial( { color: 0xff0000, transparent:true, side:THREE.DoubleSide, opacity:0.5 } );
     m.blending = THREE.AdditiveBlending;
 	bgMesh = new THREE.Mesh( g, m);
-    bgMesh.visible = false;
+    bgMesh.visible = true;
     scene.add(bgMesh);
     bgHolder.attach(bgMesh);
     bgHolder.position.set(camera.position.z,0,0);
@@ -368,9 +368,12 @@ function init(){
    
     controls = new OrbitControls( camera, canvas);
     
-    controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+    controls.enableDamping = false; // an animation loop is required when either damping or auto-rotation are enabled
     controls.dampingFactor = 0.05;
     controls.zoomSpeed = .2
+    controls.rotateSpeed = .6;
+    controls.panSpeed = .6;
+    
     //controls.screenSpacePanning = false;
 
     controls.minDistance = .5;
@@ -601,6 +604,13 @@ function init(){
     document.getElementById("color-speed").addEventListener("input", updateModelParams);
     document.getElementById("color-speed").addEventListener("change", updateModelParams);
     
+    document.getElementById("view-draw-color").addEventListener("input", updateViewColor);
+    document.getElementById("view-draw-color").addEventListener("change", updateViewColor);
+    
+    document.getElementById("draw-object-opacity").addEventListener("input", updateDrawObjectOpacity);
+    document.getElementById("draw-object-opacity").addEventListener("change", updateDrawObjectOpacity);
+    
+
     document.getElementById("stroke-index-input").addEventListener("input", updateSelectedStroke)
     
     document.getElementById("stroke-move").addEventListener("click", toggleMoveGizmo)
@@ -610,7 +620,6 @@ function init(){
     
     document.getElementById("stroke-delete").addEventListener("click", deleteStroke)
     
-
     canvas.addEventListener( 'dragover', onDocumentDragOver, false );
     canvas.addEventListener( 'dragleave', onDocumentLeave, false );
     canvas.addEventListener( 'drop', onDocumentDrop, false );
@@ -619,6 +628,14 @@ function init(){
     background = new Background({scene:scene});
     matHandler = new CustomMaterial();
 	animate();
+}
+function updateDrawObjectOpacity(){
+    const o = $("#draw-object-opacity").val()*.01;
+    console.log(o)
+    UpdateDrawObjectOpacity(o);
+}
+function updateViewColor(){
+    bgMesh.material.color = new THREE.Color( $("#view-draw-color").val() )
 }
 
 function deleteStroke(){
@@ -1002,7 +1019,7 @@ function getHitPointFromMesh(msh, mse){
 
 	raycaster.setFromCamera(  mse, camera );
 	
-	var intersects = raycaster.intersectObject( msh );
+	var intersects = raycaster.intersectObjects( msh );
 
 	if ( intersects.length > 0 ) {
 		return { point:intersects[ 0 ].point, normal:intersects[ 0 ].face.normal};
@@ -1532,14 +1549,17 @@ function handleDrawGeo(){
     ctx.moveTo(mouse.previous.x, mouse.previous.y);
     ctx.lineTo(mouse.position.x, mouse.position.y);
     ctx.stroke();
-    let drawMesh = bgMesh;
+    let arr = [bgMesh];
     if(drawState == "object"){
-        drawMesh = drawObject;
+        arr = [drawObject];
+    }else if(drawState=="both"){
+        arr = [drawObject, bgMesh];
     }
-    const point = getHitPointFromMesh(drawMesh, mouse.normal).point;
-    const normal = getHitPointFromMesh(drawMesh, mouse.normal).normal;
+    const obj = getHitPointFromMesh(arr, mouse.normal);
+    const point = obj.point;
+    const normal = obj.normal;
     if(point){
-        currentDrawHitPoint = getHitPointFromMesh(drawMesh, mouse.normal).point.add(normal.multiplyScalar(globalNormalOffsetAmount));
+        currentDrawHitPoint = obj.point.add(normal.multiplyScalar(globalNormalOffsetAmount));
     }
 
    
@@ -1721,22 +1741,24 @@ function redoClick(){
 }
 
 function updateDrawState(){
-    if(drawObject){
-        if(drawState == "object"){
-            //drawObject.visible = false;
-            //showingDrawObject = false;
+   
+    switch(drawState){
+        case "object"://switch to both
+            bgMesh.visible = true;
+            drawState = "both";
+            document.getElementById("toggle-draw-on-view").innerHTML = "view & object";
+        break;
+        case "both"://siwtch to view
             bgMesh.visible = true;
             drawState = "view";
-            document.getElementById("toggle-draw-on-view").innerHTML = "draw on object";
-        }else{
-            //drawObject.material.visible = true;
-            //drawObject.visible = true;
+            document.getElementById("toggle-draw-on-view").innerHTML = "view";
+        break;
+        case "view": //switch to object
             drawState = "object";
             bgMesh.visible = false;
-            document.getElementById("toggle-draw-on-view").innerHTML = "draw on view";
-
-        }
+            document.getElementById("toggle-draw-on-view").innerHTML = "object";
     }
+    
 }
 
 // function killIntroScene(){
@@ -1806,50 +1828,37 @@ function updateSmoothAmount(){
 function updateNormalOffsetAmount(){
    
     globalNormalOffsetAmount = $("#normal-offset-amount").val()*.01;
-    if(globalNormalOffsetAmount<0){
-        if(drawObject.isMesh){
-            drawObject.material.opacity = .2;
-            drawObject.material.transparent  = true;
-            drawObject.material.blending = THREE.AdditiveBlending
-            drawObject.material.depthWrite = false;
-            drawObject.material.needsUpdate = true;
-        }else{
-            drawObject.traverse(function(obj){
-                if(obj.isMesh){
-                    obj.material.opacity = .2;
-                    obj.material.transparent  = true;
-                    obj.material.blending = THREE.AdditiveBlending
-                    obj.material.depthWrite = false;
-                    obj.material.needsUpdate = true;
-
-                }
-            })
-        }
-        
-    }else{
-
-        if(drawObject.isMesh){
-            drawObject.material.transparent = false;
-            drawObject.material.opacity = 1;
-            drawObject.material.blending = THREE.NormalBlending;
-            drawObject.material.depthWrite = true;
-            drawObject.material.needsUpdate = true;
-        }else{
-            drawObject.traverse(function(obj){
-                if(obj.isMesh){
-                    obj.material.transparent = false;
-                    obj.material.opacity = 1;
-                    obj.material.blending = THREE.NormalBlending;
-                    obj.material.depthWrite = true;
-                    obj.material.needsUpdate = true;
-                }
-            })
-        }
-       
-    }
+    // if(globalNormalOffsetAmount<0){
+    //     UpdateDrawObjectOpacity(.2)
+    // }else{
+    //     UpdateDrawObjectOpacity(1)
+    // }
 
     handleUiUpdating();
 
+}
+
+function UpdateDrawObjectOpacity(o){
+    if(drawObject.isMesh){
+        drawObject.material.transparent = o >= .99 ? false : true;
+        drawObject.material.opacity = o;
+
+        drawObject.material.blending = o >= .99 ? THREE.NormalBlending : THREE.AdditiveBlending;
+        //drawObject.material.blending = THREE.NormalBlending : THREE.AdditiveBlending;
+        drawObject.material.depthWrite = o >= .99 ? true : false;
+        drawObject.material.needsUpdate = true;
+    }else{
+        drawObject.traverse(function(obj){
+            if(obj.isMesh){
+                obj.material.transparent = o >= .99 ? false : true;
+                obj.material.opacity = o;
+                obj.material.blending = o >= .99 ? THREE.NormalBlending : THREE.AdditiveBlending;
+                //obj.material.blending = THREE.NormalBlending;
+                obj.material.depthWrite = o >= .99 ? true : false;
+                obj.material.needsUpdate = true;
+            }
+        })
+    }
 }
 
 function toggleSizeEasing(){
@@ -2058,8 +2067,9 @@ function onDocumentDrop( event ) {
         }else if(ext=="peg" || ext=="jpg" || ext=="png" ){
             
             var imageUrl = event.dataTransfer.getData('text/html');
-            if(imageUrl!=null){
-
+            console.log(imageUrl)
+            if(imageUrl!=null && imageUrl!=""){
+                console.log("hiii")
                 const url = $(imageUrl).attr("src");
                 if(url!=null){
                     const split = url.split("/");

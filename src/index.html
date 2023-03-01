@@ -88,7 +88,7 @@
 						<span class="tooltiptext">[c]</span>
 					</div>
 					<div class="tooltip">
-						<button class="btn inline-btns" id="toggle-draw-on-view"> draw on view </button> 
+						<button class="btn inline-btns" id="toggle-draw-on-view"> view & object </button> 
 						<span class="tooltiptext">[v]</span>
 					</div>
 					<div class="tooltip">
@@ -170,6 +170,15 @@
 								<button id="draw-object-7" class="btn inline-btns" > 7 </button>
 								<button id="draw-object-8" class="btn inline-btns" > 8 </button>
 								<button id="draw-object-9" class="btn inline-btns" > 9 </button>
+								<div class="slider-holder">
+									<span class="slider-info">draw object opacity</span>
+									<input id="draw-object-opacity" class="control-slider" type="range" min="0" max="100" value="100" >
+								</div>
+								<div class="slider-holder">
+									<span class="slider-info">view draw color</span>
+									<input id="view-draw-color" class="color-select" type="color" value="#ff0000" >
+									
+								</div>
 							</div>
 						</div>
 					</div>
@@ -220,6 +229,7 @@
 								<input id="density-amount" class="control-slider" type="range" min="0" max="100" value="20" >
 							
 							</div>
+							
 
 						</div>
 					</div>
