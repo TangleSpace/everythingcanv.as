@@ -61,7 +61,7 @@ const loadobjs = [
     {loaded:false, name:"simple shapes", url:"./extras/models/simple-shapes/", amount:7},
     {loaded:false, name:"animals", url:"./extras/models/everything-animals/", amount:231},
     {loaded:false, name:"consumables", url:"./extras/models/everything-consumables/", amount:107},
-    {loaded:false, name:"furnishings", url:"./extras/models/everything-furnishings/", amount:232},
+    {loaded:false, name:"furnishings", url:"./extras/models/everything-furnishings/", amount:231},
     
     /*
     {loaded:false, name:"flowers", url:"./extras/models/flowers/", amount:19},
