@@ -1840,21 +1840,19 @@ function updateNormalOffsetAmount(){
 
 function UpdateDrawObjectOpacity(o){
     if(drawObject.isMesh){
-        drawObject.material.transparent = o >= .99 ? false : true;
-        drawObject.material.opacity = o;
-
-        drawObject.material.blending = o >= .99 ? THREE.NormalBlending : THREE.AdditiveBlending;
-        //drawObject.material.blending = THREE.NormalBlending : THREE.AdditiveBlending;
-        drawObject.material.depthWrite = o >= .99 ? true : false;
+        drawObject.material.transparent = o >= .59 ? false : true;
+        drawObject.material.opacity = o >= .59 ? 1.0 : o;
+        drawObject.material.blending = o >= .59 ? THREE.NormalBlending : THREE.AdditiveBlending;
+        drawObject.material.depthWrite = o >= .59 ? true : false;
         drawObject.material.needsUpdate = true;
     }else{
         drawObject.traverse(function(obj){
             if(obj.isMesh){
-                obj.material.transparent = o >= .99 ? false : true;
-                obj.material.opacity = o;
-                obj.material.blending = o >= .99 ? THREE.NormalBlending : THREE.AdditiveBlending;
+                obj.material.transparent = o >= .59 ? false : true;
+                obj.material.opacity = o >= .59 ? 1.0 : o;
+                obj.material.blending = o >= .59 ? THREE.NormalBlending : THREE.AdditiveBlending;
                 //obj.material.blending = THREE.NormalBlending;
-                obj.material.depthWrite = o >= .99 ? true : false;
+                obj.material.depthWrite = o >= .59 ? true : false;
                 obj.material.needsUpdate = true;
             }
         })

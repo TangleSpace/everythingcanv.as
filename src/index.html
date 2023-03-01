@@ -19,24 +19,20 @@
 		
 		<div id="instructions-overlay" >
 			<div id="instructions-holder">
-				<h1>Instructions</h1>
+				<h1>Instructions / Credits</h1>
 				<ul class="instruction-list">
+					<li>Tested with chrome and safari mobile</li>
+					<li>Tablets and mobile supported</li>
 					<li>[LMB] to draw</li>
 					<li>[ALT + LMB] to rotate </li>
 					<li>[Scroll / ALT + CTRL + LMB] to zoom in/out</li>
 					<li>[CTRL + LMB] to pan up and down</li>
-					<li>[CTRL Z / CTRL Y] undo and redo </li>
+					<li>[CTRL Z / CTRL Y] undo and redo stroke </li>
 					<li>[SHIFT] toggle stroke select </li>
 					<li>[SPACE] to toggle UI </li>
-					<li>Tablets and mobile supported</li>
-					<li>gltf exports <span class="bold">DO NOT</span> retain shader effects</li>
-					<li>gltf exports <span class="bold">DO</span> retain animation data, but they don't import properly into blender (other apps untested)</li>
-					<li>download and run <a href="https://github.com/vincentmckelvie/geo.ink-attach-animations">this python script</a> to attach the animations to the objects. </li>
-					<li>drag and drop a glb or gltf on the scene to use a custom draw object</li>
-					<li>drag and drop an img to make the draw object an image plane</li>
-					<li>drag and drop a goe.ink txt to reload a saved project</li>
-					<li>most models by <a href="https://www.davidoreilly.com/">David Oreilly's</a> <a href="https://www.davidoreilly.com/library"> Everything Library</a></li>
-					<li>site by <a class="normal-link" href="https://twitter.com/strugggggs"> Vince Mckelvie</a> </li>
+					<li><a href="https://docs.google.com/document/d/1R6eotYhfrLgmEFiWftUPHgll2mr_mccCGWWGxtHagOo/edit?usp=sharing" target="_blank">Full docs here</a></li>
+					<li>Models by <a href="https://www.davidoreilly.com/" target="_blank">David Oreilly</li>
+					<li>Tool by <a class="normal-link" href="https://twitter.com/strugggggs" target="_blank"> Vince Mckelvie</a> </li>
 
 				</ul>
 				<div id="got-it-btn-holder">
@@ -44,23 +40,19 @@
 				</div>
 			</div>
 			<div id="instructions-holder-mobile">
-				<h1>Instructions</h1>
+				<h1>Instructions / Credits</h1>
 				<ul class="instruction-list">
+					<li>Tested with chrome and safari mobile</li>
+					<li>Tablets and mobile supported</li>
 					<li>[PRESS] to draw</li>
 					<li>[PRESS + <img class="instructions-img" src="./extras/rotate.svg"/> ] to rotate </li>
-					<li>[PINCH + <img class="instructions-img" src="./extras/pan.svg"/> ] to zoom in/out</li>
-					<li>[TWO FINGER PAN + <img class="instructions-img" src="./extras/pan.svg"/> ] to pan up and down</li>
+					<li>[PINCH] to zoom in/out</li>
+					<li>[PESS + <img class="instructions-img" src="./extras/pan.svg"/> ] to pan up and down</li>
 					<li>[<img class="instructions-img" src="./extras/eye.svg"/>] to toggle ui </li>
+					<li><a href="https://docs.google.com/document/d/1R6eotYhfrLgmEFiWftUPHgll2mr_mccCGWWGxtHagOo/edit?usp=sharing" target="_blank">Full docs here</a></li>
 					
-					<li>gltf exports <span class="bold">DO NOT</span> retain shader effects</li>
-					<li>
-						gltf exports <span class="bold">DO</span> retain animation data, but they don't import properly into blender (other apps untested)
-					</li>
-					<li>
-						download and run <a href="https://github.com/vincentmckelvie/geo.ink-attach-animations">this python script</a> to attach the animations to the objects. 
-					</li>
-					<li>most models by <a href="https://www.davidoreilly.com/">David Oreilly's</a> <a href="https://www.davidoreilly.com/library"> Everything Library</a></li>
-					<li>site by <a class="normal-link" href="https://twitter.com/strugggggs"> Vince Mckelvie</a> </li>
+					<li>Models by <a href="https://www.davidoreilly.com/" target="_blank">David Oreilly</a></li>
+					<li>Tool by <a class="normal-link" href="https://twitter.com/strugggggs" target="_blank"> Vince Mckelvie</a> </li>
 
 				</ul>
 				<div id="got-it-btn-holder">
@@ -73,12 +65,10 @@
 		<div class="holders" id="tools-holder">
 			<div class="sub-holders">
 				<div id="main-btns-holder">
-					<div class="geo-ink-title">
+					<div class="geo-ink-title" id="show-instructions">
 						paint everything
 					</div>
-					<div class="tooltip">					
-						<button class="btn inline-btns" id="show-instructions"> show instructions </button> 
-					</div>
+					
 					<div class="tooltip">
 						<button class="btn inline-btns" id="fullscreen">fullscreen</button> 
 						<span class="tooltiptext">[f]</span>
@@ -88,6 +78,7 @@
 						<span class="tooltiptext">[c]</span>
 					</div>
 					<div class="tooltip">
+						<div class="slider-info" style="margin-top: 10px; font-size: 12px; margin-bottom: -7px;">draw mode</div>
 						<button class="btn inline-btns" id="toggle-draw-on-view"> view & object </button> 
 						<span class="tooltiptext">[v]</span>
 					</div>
@@ -172,7 +163,7 @@
 								<button id="draw-object-9" class="btn inline-btns" > 9 </button>
 								<div class="slider-holder">
 									<span class="slider-info">draw object opacity</span>
-									<input id="draw-object-opacity" class="control-slider" type="range" min="0" max="100" value="100" >
+									<input id="draw-object-opacity" class="control-slider" type="range" min="0" max="60" value="60" >
 								</div>
 								<div class="slider-holder">
 									<span class="slider-info">view draw color</span>
