@@ -98,6 +98,7 @@ let shouldDoPenPressure = true;
 let currentDrawHitPoint;
 let globalOffsetRotation = new THREE.Euler( 0, 0, 0, 'XYZ' );
 let globalLerpAmount = 1;
+
 let globalDensityAmount = .1;
 let globalSmoothAmount = .1;
 let globalNormalOffsetAmount = .05;
@@ -337,7 +338,7 @@ function init(){
 
     
 	const g = new THREE.PlaneGeometry( 10000, 10000, 1, 1);
-    const m = new THREE.MeshBasicMaterial( { color: 0xff0000, transparent:true, side:THREE.DoubleSide, opacity:0.5 } );
+    const m = new THREE.MeshBasicMaterial( { color: 0x2d69a9, transparent:true, side:THREE.DoubleSide, opacity:0.5 } );
     m.blending = THREE.AdditiveBlending;
 	bgMesh = new THREE.Mesh( g, m);
     bgMesh.visible = true;
@@ -1035,7 +1036,7 @@ function resetCam(){
     
     camera.position.set(0,0,20);
     camera.rotation.set(0,0,0);
-    
+    bgMesh.position.z=-camera.position.z;
     if(controls)
         controls.reset();
 }
