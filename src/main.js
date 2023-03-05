@@ -1137,42 +1137,46 @@ function onKeyDown(e) {
         $("#select").animate({ scrollTop: top }, 700);
     }
     if(e.keyCode==52){//4
+        const top = $("#title-furnishings").position().top;
+        $("#select").animate({ scrollTop: top }, 700);
+    }
+    if(e.keyCode==53){//5
         const top = $("#title-microscopic").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
-    if(e.keyCode==534){//5
+    if(e.keyCode==54){//6
         const top = $("#title-plants").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
-    if(e.keyCode==54){//6
+    if(e.keyCode==55){//7
         const top = $("#title-underwater").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
-    if(e.keyCode==55){//7
+    if(e.keyCode==56){//8
         const top = $("#title-trees").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
-    if(e.keyCode==56){//8
+    if(e.keyCode==57){//9
         const top = $("#title-rocks").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
-    if(e.keyCode==57){//9
+    if(e.keyCode==48){//0
         const top = $("#title-human").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
-    if(e.keyCode==48){//0
+    if(e.keyCode==81){//q
         const top = $("#title-vehicles").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
-    if(e.keyCode==81){//q
+    if(e.keyCode==87){//w
         const top = $("#title-buildings").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
-    if(e.keyCode==87){//w
+    if(e.keyCode==69){//e
         const top = $("#title-zeometry").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
-    if(e.keyCode==69){//e
+    if(e.keyCode==82){//r
         const top = $("#title-space").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
