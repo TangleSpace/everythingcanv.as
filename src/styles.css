@@ -122,6 +122,9 @@ body{
 .drop-down-holder{
     /*margin-top: 20px;*/
 }
+.drop-down-holder-brush:last-child{
+  padding-bottom: 200px;
+}
 
 /*
 #models img{

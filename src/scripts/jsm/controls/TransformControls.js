@@ -706,7 +706,7 @@ function onPointerDown( event ) {
 function onPointerMove( event ) {
 
 	if ( ! this.enabled ) return;
-
+	console.log("hiii")
 	this.pointerMove( this._getPointer( event ) );
 
 }

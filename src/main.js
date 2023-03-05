@@ -26,6 +26,7 @@ let mouse = {
     rots:[],
     scales:[]
 };
+let loadedObject, strokesLoopHelper=0;
 let canTogglStrokeSelect = true;
 let hoverTimeout;
 let strokeSelect = false;
@@ -130,7 +131,7 @@ let matHandler;
 let urlIndex = 0;
 let modelIndex = 0;
 const paintMeshes = [];
-let strokeSelectStrokes = [];
+//let strokeSelectStrokes = [];
 let transformControls;
 let movingTransformControls = false;
 const actionHelper = new ActionHelper();
@@ -171,7 +172,9 @@ function init(){
         const dImgs = document.createElement("div");
         
         document.getElementById("models").append(dHolder);
-        dHolder.className="drop-down-holder";
+        dHolder.className="drop-down-holder-brushes";
+        dHolder.id = "title-"+ loadobjs[i].name.replace(/\s/g, '-');
+        //if(dHolder.id)
         dTitle.className="drop-down-title";
         dImgs.className="drop-down-content";
         dTitle.innerHTML = loadobjs[i].name;
@@ -249,16 +252,15 @@ function init(){
     chooseModel(0,0);
 
     const loader = new GLTFLoader().setPath("./extras/draw/" );
-    loader.load( 0+'.glb', function ( gltf ) {
+    currentDrawObjectIndex=Math.floor(Math.random()*10);
+    loader.load( currentDrawObjectIndex+'.glb', function ( gltf ) {
         gltf.scene.traverse( function ( child ) {
             if ( child.isMesh ) {
                 child.material.vertexColors = false;
-                
             }
         });
         drawObject = gltf.scene;
         scene.add(gltf.scene)
-        //drawObject = gltf.scene;
         
         
     });
@@ -409,6 +411,7 @@ function init(){
             if(i!=currentDrawObjectIndex){
                 usingCustomDrawObject = false;
                 currentDrawObjectIndex = i;
+                //console.log(currentDrawObjectIndex);
                 replaceDrawObject("./extras/draw/"+i+".glb");
             }
             
@@ -644,7 +647,7 @@ function onToolsHover(e){
 }
 
 function updateDrawViewDistanceSlider(){
-    console.log($("#view-draw-distance").val())
+    //console.log($("#view-draw-distance").val())
     updateDrawViewDistance( $("#view-draw-distance").val() );
 }
 
@@ -660,7 +663,7 @@ function updateDrawViewDistance(val){
 
 function updateDrawObjectOpacity(){
     const o = $("#draw-object-opacity").val()*.01;
-    console.log(o)
+    //console.log(o)
     UpdateDrawObjectOpacity(o);
 }
 function updateViewColor(){
@@ -668,7 +671,7 @@ function updateViewColor(){
 }
 
 function deleteStroke(){
-    if(strokeSelectStrokes.length>0){
+    if(currentSelectedStrokeIndex != -1){
         transformControls.detach();
         
         let indexes = [];    
@@ -679,6 +682,7 @@ function deleteStroke(){
                 
             }
         }
+
         for(let k = indexes.length-1; k>=0; k--){
             meshObjects.splice(indexes[k], 1);
         }
@@ -689,17 +693,19 @@ function deleteStroke(){
                 indexes.push(t);
             }
         }
-        
 
         for(let x = 0; x<indexes.length; x++){
             meshObjects[ indexes[x] ].updatePaintIndex();
             
         }
+        for(let z = 0; z<meshObjects.length; z++){
+            console.log(meshObjects[z].strokeIndex)
+        }
 
 
         actionHelper.deleteStrokeHelper(currentSelectedStrokeIndex);
 
-        strokeSelectStrokes = [];
+        //strokeSelectStrokes = [];
         currentSelectedStrokeIndex = -1;
     }
 
@@ -781,11 +787,11 @@ function updateSelectedStroke(){
     
     clearTimeout(hoverTimeout);
 
-    if(strokeSelectStrokes.length>0){
+    if(currentSelectedStrokeIndex != -1){
         unHoverStrokes();
     }
 
-    strokeSelectStrokes = [];
+    //strokeSelectStrokes = [];
     currentSelectedStrokeIndex = -1;
 
     if(val=="" || val==null)val=0;
@@ -798,9 +804,10 @@ function updateSelectedStroke(){
     for(let i = 0; i<meshObjects.length; i++){
         if(meshObjects[i].strokeIndex == val){
             if(meshObjects[i].scene.name == "strokeHolder"){//if it's not the mirrored stroke
+                transformControls.detach();
                 transformControls.attach( meshObjects[i].scn );
             }
-            strokeSelectStrokes.push(meshObjects[i]);
+            //strokeSelectStrokes.push(meshObjects[i]);
         }
     }
 
@@ -815,15 +822,23 @@ function updateSelectedStroke(){
 
 
 function hoverStrokes(){
-    for(let i = 0; i < strokeSelectStrokes.length;i++){
-        strokeSelectStrokes[i].hover();
+    // for(let i = 0; i < strokeSelectStrokes.length;i++){
+    //     strokeSelectStrokes[i].hover();
+    // }
+    for(let i = 0;i<meshObjects.length; i++){
+        if(meshObjects[i].strokeIndex==currentSelectedStrokeIndex)
+            meshObjects[i].hover();
     }
 }
 
 function unHoverStrokes(){
-    for(let i = 0; i < strokeSelectStrokes.length;i++){
-        strokeSelectStrokes[i].unHover();
+    for(let i = 0;i<meshObjects.length; i++){
+        //if(meshObjects[i].strokeIndex==currentSelectedStrokeIndex)
+        meshObjects[i].unHover();
     }
+    // for(let i = 0; i < strokeSelectStrokes.length;i++){
+    //     strokeSelectStrokes[i].unHover();
+    // }
 }
 
 function updateBackgroundParms(){
@@ -841,11 +856,15 @@ function updateModelParams(){
     const param = getMatParam();
     
     if(strokeSelect){
-    
-        for(let i = 0;i <strokeSelectStrokes.length; i++){
-            strokeSelectStrokes[i].updateParam(param)
+        for(let i = 0; i<meshObjects.length; i++){
+            if(meshObjects[i].strokeIndex==currentSelectedStrokeIndex)
+                meshObjects[i].updateParam(param);
         }
-        if(strokeSelectStrokes.length > 0){
+
+        // for(let i = 0;i <strokeSelectStrokes.length; i++){
+        //     strokeSelectStrokes[i].updateParam(param)
+        // }
+        if(currentSelectedStrokeIndex != -1){
             actionHelper.updateMatParam(currentSelectedStrokeIndex, param);
         }
 
@@ -954,7 +973,7 @@ function getMatParam(){
         twistSize:$("#twist-size").val()*.04,
         noiseAmt:$("#noise-deform").val()*.01,
         rainbowAmt:$("#rainbow-tint-amount").val()*.01,
-        gradientSize:.1+$("#model-gradient-size").val()*.09,
+        gradientSize:.1+$("#model-gradient-size").val()*.01,
         rainbowGradientSize:$("#rainbow-size").val()*.08,
         gradientOffset:+$("#model-gradient-offset").val()*.3,
         topColor:new THREE.Color( $("#model-color-top").val() ),
@@ -968,54 +987,69 @@ function getMatParam(){
 function chooseModel(i,k, customParams, callback){
     urlIndex = i;
     modelIndex = k;
-    const ui = urlIndex;
-    const mi = modelIndex;
     
-    const loader = new GLTFLoader().setPath( loadobjs[i].url );
-    loader.load( k+'.glb', function ( gltf ) {
-
-        const param = customParams == null ? getMatParam() : customParams;
-
-        gltf.scene.traverse( function ( child ) {
-            if ( child.isMesh ) {
-                child.material = matHandler.getCustomMaterial(child.material, param);
-            }
+   const ui = urlIndex;
+   const mi = modelIndex;
+    if(!hasLoadedMeshAlready()){
+        const loader = new GLTFLoader().setPath( loadobjs[i].url );
+        loader.load( k+'.glb', function ( gltf ) {
+            paintMeshes.push({urlIndex:ui, modelIndex:mi, model:gltf.scene});
+            handleMeshLoad(gltf.scene, customParams, callback)
         });
+    }else{
+        const scene = getMeshFromIndex(urlIndex, modelIndex);
+        handleMeshLoad(scene, customParams, callback)
+    }
 
-        if(checkShouldAddToPaintMeshes()){
-            paintMeshes.push({urlIndex:ui, modelIndex:mi, model:gltf.scene.clone()});
-        }
-
-        helper.updateVisual({mesh:gltf.scene});
-        //if(!strokeSelect){
-            
-        //}else{
-        if(strokeSelect){
-            helper.holder.visible = false;
-            const modelInfo = { modelIndex : mi, urlIndex : ui};
-            
-            for(let i = 0; i<strokeSelectStrokes.length; i++){
-                strokeSelectStrokes[i].updateModel( { mesh:gltf.scene, modelInfo : modelInfo } );
-            }
-            if(strokeSelectStrokes.length > 0){
-                actionHelper.updateModelInfo(currentSelectedStrokeIndex, modelInfo);
-            }
-        }
-
-        if(callback !=null ){
-            callback(gltf.scene);
-        }
-
-    });
 }
 
-function checkShouldAddToPaintMeshes(){
+function getMeshFromIndex(ui, mi){
+    for(let i = 0; i<paintMeshes.length; i++){
+        if(ui == paintMeshes[i].urlIndex && mi == paintMeshes[i].modelIndex)
+            return paintMeshes[i].model;
+    }
+}
+
+function hasLoadedMeshAlready(){
     for(let i = 0; i<paintMeshes.length; i++){
         if(urlIndex == paintMeshes[i].urlIndex && modelIndex == paintMeshes[i].modelIndex)
-            return false;
+            return true;
     }
-    return true;
+    return false;
 }
+
+function handleMeshLoad(scene, customParams, callback){
+    const param = customParams == null ? getMatParam() : customParams;
+
+    scene.traverse( function ( child ) {
+        if ( child.isMesh ) {
+            child.material = matHandler.getCustomMaterial(child.material, param);
+        }
+    });
+
+    helper.updateVisual({mesh:scene});
+    
+    if(strokeSelect){
+        helper.holder.visible = false;
+        const modelInfo = { modelIndex : modelIndex, urlIndex : urlIndex};
+        
+        for(let i = 0 ;i<meshObjects.length; i++){
+            if(meshObjects[i].strokeIndex == currentSelectedStrokeIndex){
+                meshObjects[i].updateModel( { mesh:gltf.scene, modelInfo : modelInfo } );
+            }
+        }
+
+        if(currentSelectedStrokeIndex != -1){
+            actionHelper.updateModelInfo(currentSelectedStrokeIndex, modelInfo);
+        }
+    }
+
+    if(callback !=null ){
+        callback(scene);
+    }
+}
+
+
 
 function getModelByIndex(ui,mi){
     for(let i = 0; i<paintMeshes.length; i++){
@@ -1087,8 +1121,64 @@ function toggleFullscreen(){
 
 function onKeyDown(e) {
     
-
+    
     //console.log(e.keyCode)
+    if(e.keyCode==49){//1
+        //console.log($("#title-simple-shapes").top);
+        const top = $("#title-simple-shapes").position().top;
+        $("#select").animate({ scrollTop: top }, 700);
+    }
+    if(e.keyCode==50){//2
+        const top = $("#title-animals").position().top;
+        $("#select").animate({ scrollTop: top }, 700);
+    }
+    if(e.keyCode==51){//3
+        const top = $("#title-consumables").position().top;
+        $("#select").animate({ scrollTop: top }, 700);
+    }
+    if(e.keyCode==52){//4
+        const top = $("#title-microscopic").position().top;
+        $("#select").animate({ scrollTop: top }, 700);
+    }
+    if(e.keyCode==534){//5
+        const top = $("#title-plants").position().top;
+        $("#select").animate({ scrollTop: top }, 700);
+    }
+    if(e.keyCode==54){//6
+        const top = $("#title-underwater").position().top;
+        $("#select").animate({ scrollTop: top }, 700);
+    }
+    if(e.keyCode==55){//7
+        const top = $("#title-trees").position().top;
+        $("#select").animate({ scrollTop: top }, 700);
+    }
+    if(e.keyCode==56){//8
+        const top = $("#title-rocks").position().top;
+        $("#select").animate({ scrollTop: top }, 700);
+    }
+    if(e.keyCode==57){//9
+        const top = $("#title-human").position().top;
+        $("#select").animate({ scrollTop: top }, 700);
+    }
+    if(e.keyCode==48){//0
+        const top = $("#title-vehicles").position().top;
+        $("#select").animate({ scrollTop: top }, 700);
+    }
+    if(e.keyCode==81){//q
+        const top = $("#title-buildings").position().top;
+        $("#select").animate({ scrollTop: top }, 700);
+    }
+    if(e.keyCode==87){//w
+        const top = $("#title-zeometry").position().top;
+        $("#select").animate({ scrollTop: top }, 700);
+    }
+    if(e.keyCode==69){//e
+        const top = $("#title-space").position().top;
+        $("#select").animate({ scrollTop: top }, 700);
+    }
+
+
+
     if(e.keyCode==67){
         resetCam();
     }
@@ -1164,7 +1254,7 @@ function onKeyDown(e) {
         }
     }
 
-    if(strokeSelect && strokeSelectStrokes.length > 0){
+    if(strokeSelect && currentSelectedStrokeIndex != -1){
         switch(e.keyCode){
             case 87: // W
                 transformControls.setMode( 'translate' );
@@ -1298,7 +1388,7 @@ function strokeSelectHelper(down){
             
             if(ind != currentSelectedStrokeIndex){
 
-                strokeSelectStrokes = [];
+                //strokeSelectStrokes = [];
                 currentSelectedStrokeIndex = ind;
                 
                 $("#stroke-index-input").val(currentSelectedStrokeIndex)
@@ -1307,9 +1397,11 @@ function strokeSelectHelper(down){
                     
                     if(meshObjects[i].strokeIndex == ind){
                         if(meshObjects[i].scene.name == "strokeHolder"){//if it's not the mirrored stroke
+                            //console.log(meshObjects[i].scn);
+                            transformControls.detach();
                             transformControls.attach( meshObjects[i].scn );
                         }
-                        strokeSelectStrokes.push( meshObjects[i] );
+                        //strokeSelectStrokes.push( meshObjects[i] );
                         updateStrokeSelectSlidersFromObject(meshObjects[i])
 
 
@@ -1353,9 +1445,9 @@ function updateStrokeSelectSlidersFromObject(obj){
     //console.log(obj);
     $("#stroke-scale-offset").val(obj.sclMult/.01);
     
-    $("#stroke-rot-offset-x").val(obj.rotOffsetX*57.296);
-    $("#stroke-rot-offset-y").val(obj.rotOffsetY*57.296);
-    $("#stroke-rot-offset-z").val(obj.rotOffsetZ*57.296);
+    $("#stroke-rot-offset-x").val(obj.rotOffsetX*(57.296*.5));
+    $("#stroke-rot-offset-y").val(obj.rotOffsetY*(57.296*.5));
+    $("#stroke-rot-offset-z").val(obj.rotOffsetZ*(57.296*.5));
     
     const loop = obj.param.shouldLoopGradient == 1 ? true : false;
     
@@ -1364,8 +1456,8 @@ function updateStrokeSelectSlidersFromObject(obj){
     $("#twist-size").val(obj.param.twistSize/.04);
     $("#noise-deform").val(obj.param.noiseAmt/.01);
     $("#rainbow-tint-amount").val(obj.param.rainbowAmt/.01);
-    $("#model-gradient-size").val(obj.param.gradientSize/.09);
-    $("#rainbow-size").val(obj.param.rainbowGradientSize/.08);
+    $("#model-gradient-size").val( (obj.param.gradientSize - .1) / .01);
+    $("#rainbow-size").val(obj.param.rainbowGradientSize /.08);
     $("#model-gradient-offset").val(obj.param.gradientOffset/.3);
     $("#model-color-top").val("#"+obj.param.topColor.getHexString());
     $("#model-color-bottom").val("#"+obj.param.bottomColor.getHexString())
@@ -1402,7 +1494,7 @@ function onMouseDown(e){
         return;
     }
 
-    strokeSelectStrokes = [];
+    //strokeSelectStrokes = [];
     currentSelectedStrokeIndex = -1;
 
     if(controls){
@@ -1493,7 +1585,8 @@ function onMouseMove(e){
     }
     ///console.log(movingTransformControls)
     //if(strokeSelect && movingTransformControls){//update mirrored local transform when moving control
-    if(movingTransformControls){  
+    if(movingTransformControls){
+        //console.log("moving transform controls  ")  
         const t = getSelectedStrokePosition();
       
         for(let i = 0; i<meshObjects.length; i++){
@@ -1506,7 +1599,7 @@ function onMouseMove(e){
 
         }
         
-        if(strokeSelectStrokes.length > 0){
+        if(currentSelectedStrokeIndex != -1){
             actionHelper.updateTransform(currentSelectedStrokeIndex, {pos:t.sub, rot:t.rot, scl:t.scl});
         }
     }
@@ -1644,7 +1737,7 @@ function buildGeo(){
 
     //meshObjects.push(new MeshObject());
     const strokeFinal = [];
-    console.log(mouse.smoothAvgs.length)
+    //console.log(mouse.smoothAvgs.length)
     if(mouse.smoothAvgs.length>0 ){
 
         actionHelper.startNewPath();//if you undo remove items in the undo array after the currStrokeIndex
@@ -1730,6 +1823,7 @@ function saveGeoInkFile(){
     if(!usingCustomDrawObject){
         drawObj = currentDrawObjectIndex;
     }
+    //console.log(drawObj)
     download( {strokes:arr, background: background.getExportData(), drawObj:drawObj});
 }
 
@@ -1757,7 +1851,7 @@ function undoClick(){
     if(actionHelper.currStrokeIndex > 0){
         
         transformControls.detach();
-        strokeSelectStrokes = [];
+        //strokeSelectStrokes = [];
         currentSelectedStrokeIndex = -1;
 
         const arr = [];
@@ -1840,39 +1934,54 @@ function updateDrawState(){
 // }
 
 function updateRotOffsetX(){
-    const rx = $("#stroke-rot-offset-x").val() * Math.PI/180;
-    for(let i = 0; i<strokeSelectStrokes.length; i++){
-        strokeSelectStrokes[i].updateRotX( rx );
+    const rx = $("#stroke-rot-offset-x").val() * Math.PI/(180/2);
+
+    for(let i = 0; i<meshObjects.length; i++){
+        if(meshObjects[i].strokeIndex==currentSelectedStrokeIndex)
+            meshObjects[i].updateRotX( rx );
     }
-    if(strokeSelectStrokes.length > 0){
+    if(currentSelectedStrokeIndex != -1){
         actionHelper.updateRotOffsetX(currentSelectedStrokeIndex, rx)
     }
 }
 function updateRotOffsetY(){
-    const ry = $("#stroke-rot-offset-y").val() * Math.PI/180;
-    for(let i = 0; i<strokeSelectStrokes.length; i++){
-        strokeSelectStrokes[i].updateRotY( ry );
+    const ry = $("#stroke-rot-offset-y").val() * Math.PI/(180/2);
+    // for(let i = 0; i<strokeSelectStrokes.length; i++){
+    //     strokeSelectStrokes[i].updateRotY( ry );
+    // }
+    for(let i = 0; i<meshObjects.length; i++){
+        if(meshObjects[i].strokeIndex==currentSelectedStrokeIndex)
+            meshObjects[i].updateRotY( ry );
     }
-    if(strokeSelectStrokes.length > 0){
+    if(currentSelectedStrokeIndex != -1){
         actionHelper.updateRotOffsetY(currentSelectedStrokeIndex, ry)
     }
 }
 function updateRotOffsetZ(){
-    const rz = $("#stroke-rot-offset-z").val() * Math.PI/180;
-    for(let i = 0; i<strokeSelectStrokes.length; i++){
-        strokeSelectStrokes[i].updateRotZ( rz );
+    const rz = $("#stroke-rot-offset-z").val() * Math.PI/(180/2);
+    // for(let i = 0; i<strokeSelectStrokes.length; i++){
+    //     strokeSelectStrokes[i].updateRotZ( rz );
+    // }
+    for(let i = 0; i<meshObjects.length; i++){
+        if(meshObjects[i].strokeIndex==currentSelectedStrokeIndex)
+            meshObjects[i].updateRotZ( rz );
     }
-    if(strokeSelectStrokes.length > 0){
+    
+    if(currentSelectedStrokeIndex != -1){
         actionHelper.updateRotOffsetZ(currentSelectedStrokeIndex, rz)
     }
 }
 
 function updateScaleOffset(){
     const s = $("#stroke-scale-offset").val()*.01;
-    for(let i = 0; i<strokeSelectStrokes.length; i++){
-        strokeSelectStrokes[i].updateScale( {scale:s} );
+    // for(let i = 0; i<strokeSelectStrokes.length; i++){
+    //     strokeSelectStrokes[i].updateScale( {scale:s} );
+    // }
+    for(let i = 0; i<meshObjects.length; i++){
+        if(meshObjects[i].strokeIndex==currentSelectedStrokeIndex)
+            meshObjects[i].updateScale( {scale:s} );
     }
-    if(strokeSelectStrokes.length > 0){
+    if(currentSelectedStrokeIndex != -1){
         actionHelper.updateScaleOffset(currentSelectedStrokeIndex, s)
     }
 }
@@ -2031,7 +2140,8 @@ function exportGLTF(  ) {
         },
         function ( error ) {
 
-            console.log( 'An error happened during parsing', error );
+            //console.log( 'An error happened during parsing', error );
+            alert("shoot, there was an error exporter :/")
 
         },
         options
@@ -2070,7 +2180,7 @@ function replaceDrawObject(src,scl){
     loader.load( src, function ( gltf ) {
         killObject(drawObject);
         
-        currentDrawObjectIndex = 100000;
+        //currentDrawObjectIndex = 100000;
         
         gltf.scene.traverse( function ( child ) {
             if ( child.isMesh ) {
@@ -2116,7 +2226,7 @@ function onDocumentDrop( event ) {
 
     event.preventDefault();
     
-    console.log(event.dataTransfer)
+    //console.log(event.dataTransfer)
     const file = event.dataTransfer.files[ 0 ];
     //event.origin
     if(file != null){
@@ -2125,23 +2235,22 @@ function onDocumentDrop( event ) {
         if( ext == "glb" || ext == "ltf" ){
             const reader = new FileReader();
             reader.onload = function ( event ) {
-                usingCustomDrawObject = true;
                 replaceDrawObject(event.target.result);
             };
             reader.readAsDataURL( file );
         }else if(ext=="peg" || ext=="jpg" || ext=="png" ){
             
             var imageUrl = event.dataTransfer.getData('text/html');
-            console.log(imageUrl)
             if(imageUrl!=null && imageUrl!=""){
-                console.log("hiii")
                 const url = $(imageUrl).attr("src");
                 if(url!=null){
+                    
                     const split = url.split("/");
                     const fileName = split[split.length-1].substr(0,split[split.length-1].length-3)+"glb";
                     const modelUrl = "./extras/models/"+split[split.length-2]+"/"+fileName;
                     usingCustomDrawObject = true;
                     replaceDrawObject(modelUrl, 10);
+                    
                     currDragImgSrc = null;
                 }
                 
@@ -2169,110 +2278,18 @@ function onDocumentDrop( event ) {
                 readTextFile( event.target.result,  function(text){
                     //const urlFinal = "final-json-info.json"
                     //{ obj:JSON.parse(text), hash:hash }
-                    const obj = JSON.parse(text);
+                    loadedObject = JSON.parse(text);
+                    strokesLoopHelper = 0;
 
-                    const bg = obj.geoink.background;
+                    const bg = loadedObject.geoink.background;
                     bg.top = new THREE.Color("#"+bg.top);
                     bg.bottom = new THREE.Color("#"+bg.bottom);
                     background.update(bg);
-                    
-                    if(obj.geoink.drawObj!=currentDrawObjectIndex){
-                        replaceDrawObject("./extras/draw/"+obj.geoink.drawObj+".glb");
+                    if(loadedObject.geoink.drawObj != currentDrawObjectIndex){
+                        replaceDrawObject("./extras/draw/"+loadedObject.geoink.drawObj+".glb");
                     }
-
-                    const strokes = obj.geoink.strokes;
-                    const addedStrokeArray = [];
-                    //while(i < strokes.length ){
-                    for(let i = 0; i<strokes.length; i++){
-
-                        const a = strokes[i].all; 
-                        
-                        const mi = a.modelInfo.modelIndex;
-                        const ui = a.modelInfo.urlIndex;
-                        const p =  a.param;
-                        const param = {
-                            twistAmt:p.twistAmt,
-                            noiseSize:p.noiseSize,
-                            twistSize:p.twistSize,
-                            noiseAmt:p.noiseAmt,
-                            rainbowAmt:p.rainbowAmt,
-                            gradientSize:p.gradientSize,
-                            rainbowGradientSize:p.rainbowGradientSize,
-                            gradientOffset:p.gradientOffset,
-                            topColor:new THREE.Color("#"+p.topColor),
-                            bottomColor:new THREE.Color("#"+p.bottomColor),
-                            deformSpeed:p.deformSpeed,
-                            colorSpeed:p.colorSpeed,
-                            shouldLoopGradient:p.shouldLoopGradient
-                        }
-
-                        const rots = [];
-                        const pos = [];
-                        const scls = [];
-                        
-                        for(let k = 0; k<strokes[i].rots.length; k++){
-                            
-                            const r = strokes[i].rots[k];
-                            const p = strokes[i].pos[k];
-                            const s = strokes[i].scales == null ? a.meshScale : strokes[i].scales[k];
-                            
-                            rots.push(new THREE.Quaternion(r._x, r._y, r._z, r._w))
-                            pos.push(new THREE.Vector3(p.x, p.y, p.z));
-                            scls.push(s);
-
-                        }
-
-                        const sclMult = a.sclMult == null ? 1. : a.sclMult;
-                        const rotOffsetX = a.rotOffsetX == null ? 0. : a.rotOffsetX;
-                        const rotOffsetY = a.rotOffsetY == null ? 0. : a.rotOffsetY;
-                        const rotOffsetZ = a.rotOffsetZ == null ? 0. : a.rotOffsetZ;
-                        //console.log(a.transformOffset)
-                        const transformOffset = a.transformOffset == null 
-                        ? {pos:new THREE.Vector3(), rot:new Euler(), scl:new Vector3(1,1,1)} 
-                        : {
-                            pos:new THREE.Vector3( a.transformOffset.pos.x, a.transformOffset.pos.y, a.transformOffset.pos.z),
-                            rot:new THREE.Euler( a.transformOffset.rot._x, a.transformOffset.rot._y, a.transformOffset.rot._z),
-                            scl:new THREE.Vector3( a.transformOffset.scl.x, a.transformOffset.scl.y, a.transformOffset.scl.z)
-                        };
-                        
-                        const ss = scene.getObjectByName(a.scene);
-                        
-                        const all = {
-                            modelInfo:{modelIndex:mi,urlIndex:ui}, 
-                            meshClone:null, 
-                            index:a.index, 
-                            scene:ss, 
-                            globalDensityAmount:a.globalDensityAmount, 
-                            meshScale:a.meshScale,
-                            sclMult:sclMult,
-                            rotOffsetX:rotOffsetX,
-                            rotOffsetY:rotOffsetY,
-                            rotOffsetZ:rotOffsetZ,
-                            transformOffset:transformOffset,
-                            globalShouldAnimateSize:a.globalShouldAnimateSize,
-                            param:param
-                        }
-
-                      
-                        chooseModel(ui, mi, param, function(sn){
-                           
-                            const meshClone = sn;//.clone();
-                            all.meshClone = meshClone;
-
-                            meshObjects.push(new Stroke( { scl:scls, pos:pos, rots:rots, all:all } ));
-                            
-                            if(meshObjects.length == strokes.length){
-                                for(let f = 0; f < meshObjects.length; f++){
-                                    const ind = meshObjects[f].strokeIndex;
-                                    if( !hasAddedStrokeIndex(addedStrokeArray, ind) ){
-                                        const arr = getAllMeshObjectsWithSameIndex(ind);
-                                        actionHelper.addStrokesArray({array:arr});
-                                        addedStrokeArray.push(ind);
-                                    }
-                                }
-                            }
-                        });
-                    }
+                    loadLoop();
+                   
                 });
 
             };
@@ -2288,6 +2305,110 @@ function onDocumentDrop( event ) {
         }
     }
 
+}
+
+function loadLoop(){
+    const i = strokesLoopHelper;
+    const strokes = loadedObject.geoink.strokes;
+    const addedStrokeArray = [];
+    
+    //for(let i = 0; i<strokes.length; i++){
+
+    const a = strokes[i].all; 
+    
+    const mi = a.modelInfo.modelIndex;
+    const ui = a.modelInfo.urlIndex;
+    const p =  a.param;
+    const param = {
+        twistAmt:p.twistAmt,
+        noiseSize:p.noiseSize,
+        twistSize:p.twistSize,
+        noiseAmt:p.noiseAmt,
+        rainbowAmt:p.rainbowAmt,
+        gradientSize:p.gradientSize,
+        rainbowGradientSize:p.rainbowGradientSize,
+        gradientOffset:p.gradientOffset,
+        topColor:new THREE.Color("#"+p.topColor),
+        bottomColor:new THREE.Color("#"+p.bottomColor),
+        deformSpeed:p.deformSpeed,
+        colorSpeed:p.colorSpeed,
+        shouldLoopGradient:p.shouldLoopGradient
+    }
+
+    const rots = [];
+    const pos = [];
+    const scls = [];
+    
+    for(let k = 0; k<strokes[i].rots.length; k++){
+        
+        const r = strokes[i].rots[k];
+        const p = strokes[i].pos[k];
+        const s = strokes[i].scales == null ? a.meshScale : strokes[i].scales[k];
+        
+        rots.push(new THREE.Quaternion(r._x, r._y, r._z, r._w))
+        pos.push(new THREE.Vector3(p.x, p.y, p.z));
+        scls.push(s);
+
+    }
+
+    const sclMult = a.sclMult == null ? 1. : a.sclMult;
+    const rotOffsetX = a.rotOffsetX == null ? 0. : a.rotOffsetX;
+    const rotOffsetY = a.rotOffsetY == null ? 0. : a.rotOffsetY;
+    const rotOffsetZ = a.rotOffsetZ == null ? 0. : a.rotOffsetZ;
+    //console.log(a.transformOffset)
+    const transformOffset = a.transformOffset == null 
+    ? {pos:new THREE.Vector3(), rot:new THREE.Euler(), scl:new THREE.Vector3(1,1,1)} 
+    : {
+        pos:new THREE.Vector3( a.transformOffset.pos.x, a.transformOffset.pos.y, a.transformOffset.pos.z),
+        rot:new THREE.Euler( a.transformOffset.rot._x, a.transformOffset.rot._y, a.transformOffset.rot._z),
+        scl:new THREE.Vector3( a.transformOffset.scl.x, a.transformOffset.scl.y, a.transformOffset.scl.z)
+    };
+    
+    const ss = scene.getObjectByName(a.scene);
+    
+    const all = {
+        modelInfo:{modelIndex:mi,urlIndex:ui}, 
+        meshClone:null, 
+        index:a.index, 
+        scene:ss, 
+        globalDensityAmount:a.globalDensityAmount, 
+        meshScale:a.meshScale,
+        sclMult:sclMult,
+        rotOffsetX:rotOffsetX,
+        rotOffsetY:rotOffsetY,
+        rotOffsetZ:rotOffsetZ,
+        transformOffset:transformOffset,
+        globalShouldAnimateSize:a.globalShouldAnimateSize,
+        param:param
+    }
+
+    
+    chooseModel(ui, mi, param, function(sn){
+        
+        //const meshClone = sn;//.clone();
+        all.meshClone = sn;
+
+        meshObjects.push(new Stroke( { scl:scls, pos:pos, rots:rots, all:all } ));
+        
+        if(meshObjects.length == strokes.length){
+            for(let f = 0; f < meshObjects.length; f++){
+                const ind = meshObjects[f].strokeIndex;
+                if( !hasAddedStrokeIndex(addedStrokeArray, ind) ){
+                    const arr = getAllMeshObjectsWithSameIndex(ind);
+                    actionHelper.addStrokesArray({array:arr});
+                    addedStrokeArray.push(ind);
+                }
+            }
+        }
+        strokesLoopHelper++;
+        if(strokesLoopHelper<strokes.length)
+            loadHelper();
+
+    });
+    //}
+}
+function loadHelper(){
+    loadLoop();
 }
 
 
