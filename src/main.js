@@ -53,8 +53,8 @@ let shouldRotateAdditiveX = true;
 let shouldRotateAdditiveY = true;
 let shouldRotateAdditiveZ = true;
 let globalAdditiveRotationSpeed = 0;
-const geometry = new THREE.BoxGeometry( 5, 5, 5 );
-const material = new THREE.MeshStandardMaterial();
+//const geometry = new THREE.BoxGeometry( 5, 5, 5 );
+//const material = new THREE.MeshStandardMaterial();
 
 let globalShouldAnimateSize = true;
 const loadobjs = [
@@ -126,6 +126,9 @@ let reflectObjectY = new THREE.Object3D();
 let reflectObjectZ = new THREE.Object3D();
 let reflectObjectXY = new THREE.Object3D();
 let reflectObjectXZ = new THREE.Object3D();
+let reflectObjectYZ = new THREE.Object3D();
+let reflectObjectXYZ = new THREE.Object3D();
+
 let background;
 let matHandler;
 let urlIndex = 0;
@@ -291,12 +294,22 @@ function init(){
     reflectObjectXZ.scale.z =-1;
     reflectObjectXZ.scale.x =-1;
 
+    //reflectObjectYZ.scale.x =-1;
+    reflectObjectYZ.scale.y =-1;
+    reflectObjectYZ.scale.z =-1;
+
+    reflectObjectXYZ.scale.x =-1;
+    reflectObjectXYZ.scale.y =-1;
+    reflectObjectXYZ.scale.z =-1;
+
     strokeHolder.name = "strokeHolder";
     reflectObjectX.name = "reflectObjectX";
     reflectObjectY.name = "reflectObjectY";
     reflectObjectZ.name = "reflectObjectZ";
     reflectObjectXY.name = "reflectObjectXY";
     reflectObjectXZ.name = "reflectObjectXZ";
+    reflectObjectYZ.name = "reflectObjectYZ";
+    reflectObjectXYZ.name = "reflectObjectXYZ";
     
     scene.add(strokeHolder)
     strokeHolder.add(
@@ -304,7 +317,9 @@ function init(){
         reflectObjectY,
         reflectObjectZ,
         reflectObjectXY,
-        reflectObjectXZ
+        reflectObjectXZ,
+        reflectObjectYZ,
+        reflectObjectXYZ,
     );
     // scene.add(reflectObjectY);
     // scene.add(reflectObjectZ);
@@ -1035,7 +1050,7 @@ function handleMeshLoad(scene, customParams, callback){
         
         for(let i = 0 ;i<meshObjects.length; i++){
             if(meshObjects[i].strokeIndex == currentSelectedStrokeIndex){
-                meshObjects[i].updateModel( { mesh:gltf.scene, modelInfo : modelInfo } );
+                meshObjects[i].updateModel( { mesh:scene, modelInfo : modelInfo } );
             }
         }
 
@@ -1122,7 +1137,7 @@ function toggleFullscreen(){
 function onKeyDown(e) {
     
     
-    //console.log(e.keyCode)
+    console.log(e.keyCode)
     if(e.keyCode==49){//1
         //console.log($("#title-simple-shapes").top);
         const top = $("#title-simple-shapes").position().top;
@@ -1164,19 +1179,22 @@ function onKeyDown(e) {
         const top = $("#title-human").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
-    if(e.keyCode==81){//q
+    //if(e.keyCode==81){//t
+    if(e.keyCode==84){//a
         const top = $("#title-vehicles").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
-    if(e.keyCode==87){//w
+    //if(e.keyCode==87){//y
+    if(e.keyCode==89){//w
         const top = $("#title-buildings").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
-    if(e.keyCode==69){//e
+    //if(e.keyCode==69){//u
+    if(e.keyCode==85){//e
         const top = $("#title-zeometry").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
-    if(e.keyCode==82){//r
+    if(e.keyCode==73){//i
         const top = $("#title-space").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
@@ -1782,6 +1800,7 @@ function buildGeo(){
                 meshObjects.push(new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
                 strokeFinal.push({scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
             }
+            
         }
 
         if(mirrorZ){
@@ -1793,6 +1812,18 @@ function buildGeo(){
                 meshObjects.push(new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
                 strokeFinal.push({scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
             }
+            if(mirrorY){
+                all.scene = reflectObjectYZ;
+                meshObjects.push(new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
+                strokeFinal.push({scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
+            }
+        }
+
+        if(mirrorX && mirrorY && mirrorZ){
+            all.scene = reflectObjectXYZ;
+            meshObjects.push(new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
+            strokeFinal.push({scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
+        
         }
 
         actionHelper.addStrokesArray({array:strokeFinal});
