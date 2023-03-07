@@ -2,22 +2,22 @@
 <html>
 	<head>
 		<!-- Primary Meta Tags -->
-		<title>paint everything</title>
+		<title>Everything Canvas</title>
 		<meta name="title" content="painteverything.online">
-		<meta name="description" content="paint with the Everything game 3d mesh library.  ">
+		<meta name="description" content="Paint with the Everything game 3d mesh library.  ">
 
 		<!-- Open Graph / Facebook -->
 		<meta property="og:type" content="website">
-		<meta property="og:url" content="https://www.painteverything.online/">
-		<meta property="og:title" content="painteverything.online">
-		<meta property="og:description" content="paint with the Everything game 3d mesh library.  ">
+		<meta property="og:url" content="https://www.everythingcanv.as/">
+		<meta property="og:title" content="Everything Canvas">
+		<meta property="og:description" content="Paint with the Everything game 3d mesh library.  ">
 		<meta property="og:image" content="https://www.painteverything.online/extras/meta.jpg">
 
 		<!-- Twitter -->
 		<meta property="twitter:card" content="summary_large_image">
-		<meta property="twitter:url" content="https://www.painteverything.online/">
-		<meta property="twitter:title" content="painteverything.online">
-		<meta property="twitter:description" content="paint with the Everything game 3d mesh library.  ">
+		<meta property="twitter:url" content="https://www.everythingcanv.as/">
+		<meta property="twitter:title" content="Everything Canvas">
+		<meta property="twitter:description" content="Paint with the Everything game 3d mesh library.">
 		<meta property="og:image" content="https://www.painteverything.online/extras/meta.jpg">		
 		<meta charset="utf-8">
 
@@ -27,6 +27,22 @@
 	</head>
 
 	<body>
+		
+		<div id="contextMenu" class="context-menu"> 
+			<ul class="menu"> 
+				<li id="download-glb"> download .glb  </li>  
+			</ul> 
+		</div> 
+
+		<div id="drag-drop">
+			<div id="drag-drop-text">
+				<div class="drag-drop-list">.txt : to load everything canvas file</div>
+				<div class="drag-drop-list">.glb / .gltf : to replace the current draw object with another model</div>
+				<div class="drag-drop-list">.png / .jpg : replace the draw object with an image plane</div>
+				<div class="drag-drop-list">thumbnail : replace the draw object with the thumbnail model</div>
+			</div>
+		</div>
+
 		<div id="mobile-controls">
 			<div class="mobile-icons-holder" id="mobile-rotate"></div>
 			<div class="mobile-icons-holder" id="mobile-pan"></div>
@@ -82,7 +98,7 @@
 			<div class="sub-holders">
 				<div id="main-btns-holder">
 					<div class="geo-ink-title" id="show-instructions">
-						paint everything
+						Everything Canvas
 					</div>
 					
 					<div class="tooltip">
@@ -162,7 +178,7 @@
 				</div>
 				<div class="drop-down-holder">
 					<div class="drop-down-title" id="draw-object-title" >
-						draw object
+						Draw Object
 					</div>
 					<div class="drop-down-content" id="draw-object-content">
 						<div id="c-size" class="draw-objects-holder" >
@@ -201,7 +217,7 @@
 
 					<div class="drop-down-holder">
 						<div class="drop-down-title" id="essentials-title">
-							essentials
+							Essentials
 						</div>
 						<div class="drop-down-content" id="essentials-content">
 							
@@ -250,7 +266,7 @@
 
 					<div class="drop-down-holder">
 						<div class="drop-down-title" id="mirror-title">
-							mirror
+							Mirror
 						</div>
 						<div class="drop-down-content" id="mirror-content">
 							<div class="check-holder">
@@ -273,7 +289,7 @@
 					
 					<div class="drop-down-holder">
 						<div class="drop-down-title" id="rotation-title" >
-							rotation
+							Rotation
 						</div>
 						<div class="drop-down-content" id="rotation-content">
 							<div class="slider-holder">
@@ -318,7 +334,7 @@
 				</div>
 				<div class="drop-down-holder">
 					<div class="drop-down-title" id="background-title">
-						background
+						Background
 					</div>
 					<div class="drop-down-content" id="background-content">
 						<div class="slider-holder">
@@ -346,7 +362,7 @@
 				</div>
 				<div class="drop-down-holder" >
 					<div class="drop-down-title" id="shader-effects-title" >
-						shader effects
+						Shader Effects
 					</div>
 					<div class="drop-down-content" id="shader-effects-content">
 
@@ -411,11 +427,11 @@
 				</div>
 				<div class="drop-down-holder" style="padding-bottom: 200px;">
 					<div class="drop-down-title" id="export-title">
-						export
+						Export
 					</div>
 					<div class="drop-down-content" id="export-content">
 						<button class="btn inline-btns" id="export-gltf"> save gltf </button> <br/>
-						<button class="btn inline-btns" id="save-geo-ink-file"> save paint everything file </button> <br/>
+						<button class="btn inline-btns" id="save-geo-ink-file"> save everything canvas </button> <br/>
 					</div>
 				</div>
 				

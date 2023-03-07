@@ -244,7 +244,7 @@ class TransformControls extends Object3D {
 		if ( this.object === undefined || this.dragging === true || pointer.button !== 0 ) return;
 
 		if ( this.axis !== null ) {
-
+			//console.log("sdfdf")
 			_raycaster.setFromCamera( pointer, this.camera );
 
 			const planeIntersect = intersectObjectWithRay( this._plane, _raycaster, true );
@@ -706,7 +706,7 @@ function onPointerDown( event ) {
 function onPointerMove( event ) {
 
 	if ( ! this.enabled ) return;
-	console.log("hiii")
+	
 	this.pointerMove( this._getPointer( event ) );
 
 }

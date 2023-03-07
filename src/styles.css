@@ -61,6 +61,7 @@ body{
 
 .selected-thumb{
     background-color: rgba(255,255,255,.75) !important;
+    cursor: pointer;
 }
 
 .selected-thumb:hover{
@@ -115,7 +116,7 @@ body{
   display: inline-block;
   width: 6vw;
   height: 6vw;
-  cursor: pointer;
+  /*pointer-events: none;*/
 }
 
 
@@ -243,17 +244,20 @@ body{
     height: 100%;
 }
 
+.select-black-bg{
+  width:100% !important;
+  background: rgba(0,0,0,1.0) !important;
+}   
+
 #btns button{
     margin-left: 10px;
     margin-top: 10px;
 }
-.holders-mobile{
-    background-color: rgba(0,0,0,.3) !important;
-}
+
 .holders{
     position: absolute;
     /*background-color: #000;*/
-    background-color: rgba(0,0,0,.3) !important;
+    background: rgba(0,0,0,.3) ;
     pointer-events: auto;
     overflow-y: auto;
     height:100vh;
@@ -391,6 +395,52 @@ input[type=range]::-webkit-slider-thumb:hover {
     text-align: center;
 }
 
+#contextMenu { 
+  position: absolute;
+  z-index: 10000; 
+  display: none;
+} 
+
+.menu {
+  list-style-type: none;
+  display: flex;
+  flex-direction: column;
+  background-color: #000000;
+  padding: 10px 15px 10px 15px;
+  cursor: pointer;
+  
+}
+
+
+
+#drag-drop{
+  display: none;
+  pointer-events: none;
+  position: fixed;
+  z-index: 20000;
+
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,.5);
+}
+#drag-drop-text{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 500px;
+  transform: translate(0, -50%);
+  margin-left: -350px;
+  text-align: left;
+  padding: 20px;
+
+}
+.drag-drop-list{
+  color: #fff;
+  font-size:24px;
+  margin-bottom: 20px;
+}
 
 
 

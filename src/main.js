@@ -47,48 +47,39 @@ let light;
 let composer;
 let controls;
 let bgHolder;
-let btns={space:true};
+let btns={space:true, fullThumbs:false};
 let sceneMesh;
 let shouldRotateAdditiveX = true;
 let shouldRotateAdditiveY = true;
 let shouldRotateAdditiveZ = true;
 let globalAdditiveRotationSpeed = 0;
+let mouseOverSelect = false;
 //const geometry = new THREE.BoxGeometry( 5, 5, 5 );
 //const material = new THREE.MeshStandardMaterial();
 
 let globalShouldAnimateSize = true;
 const loadobjs = [
     //{name:"draw objects", url:"./extras/draw/",           amount:2},
-    {loaded:false, name:"simple shapes", url:"./extras/models/simple-shapes/", amount:7},
-    {loaded:false, name:"animals", url:"./extras/models/everything-animals/", amount:231},
-    {loaded:false, name:"consumables", url:"./extras/models/everything-consumables/", amount:107},
-    {loaded:false, name:"furnishings", url:"./extras/models/everything-furnishings/", amount:231},
+    {loaded:false, name:"Simple Shapes", url:"./extras/models/simple-shapes/", amount:7},
+    {loaded:false, name:"Animals", url:"./extras/models/everything-animals/", amount:231},
+    {loaded:false, name:"Consumables", url:"./extras/models/everything-consumables/", amount:107},
+    {loaded:false, name:"Furnishings", url:"./extras/models/everything-furnishings/", amount:231},
     
-    /*
-    {loaded:false, name:"flowers", url:"./extras/models/flowers/", amount:19},
-    {loaded:false, name:"rocks", url:"./extras/models/rocks/",   amount:6},
-    {loaded:false, name:"tools", url:"./extras/models/tools/",   amount:90},
-    {loaded:false, name:"toys", url:"./extras/models/toys/",    amount:79},
-    */
-
-    {loaded:false, name:"microscopic", url:"./extras/models/everything-microscopic/", amount:226},
-    {loaded:false, name:"plants", url:"./extras/models/everything-plants/", amount:496},
-    {loaded:false, name:"underwater", url:"./extras/models/everything-underwater/", amount:107},
-    {loaded:false, name:"trees", url:"./extras/models/everything-trees/", amount:273},
-    {loaded:false, name:"rocks", url:"./extras/models/everything-rocks/", amount:465},
-    {loaded:false, name:"human", url:"./extras/models/everything-human/", amount:332},
-    {loaded:false, name:"vehicles", url:"./extras/models/everything-vehicles/", amount:83},
-    {loaded:false, name:"buildings", url:"./extras/models/everything-buildings/", amount:213},
-    {loaded:false, name:"zeometry", url:"./extras/models/everything-geo/", amount:297},
-    {loaded:false, name:"space", url:"./extras/models/everything-space/", amount:265},
+    {loaded:false, name:"Microscopic", url:"./extras/models/everything-microscopic/", amount:226},
+    {loaded:false, name:"Plants", url:"./extras/models/everything-plants/", amount:496},
+    {loaded:false, name:"Underwater", url:"./extras/models/everything-underwater/", amount:107},
+    {loaded:false, name:"Trees", url:"./extras/models/everything-trees/", amount:273},
+    {loaded:false, name:"Rocks", url:"./extras/models/everything-rocks/", amount:465},
+    {loaded:false, name:"Human", url:"./extras/models/everything-human/", amount:332},
+    {loaded:false, name:"Vehicles", url:"./extras/models/everything-vehicles/", amount:83},
+    {loaded:false, name:"Buildings", url:"./extras/models/everything-buildings/", amount:213},
+    {loaded:false, name:"Zeometry", url:"./extras/models/everything-geo/", amount:297},
+    {loaded:false, name:"Space", url:"./extras/models/everything-space/", amount:265},
     
 ]
 //let colorAniSpeed = 
 let currDragImgSrc;
 let drawObject;  
-const toysAmount = 78;
-const toolsAmount = 89;
-const flowersAmount = 73;
 let drawState = "both" 
 let showingSideBar = true;
 let movingCamera = false;
@@ -141,7 +132,9 @@ const actionHelper = new ActionHelper();
 let currentSelectedStrokeIndex = -1;
 let isFullscreen = false;
 let selectedThumbDiv;
-
+let downloadModelIndex = 0;
+let downloadUrlIndex = 0;
+let showingContext = false;
 
 function mobileCheck() {
     //console.log(navigator.userAgent.match())
@@ -156,10 +149,7 @@ function mobileCheck() {
     
 };
 
-
 const isMobile = mobileCheck();
-
-
 const link = document.createElement( 'a' );
 link.style.display = 'none';
 document.body.appendChild( link );
@@ -196,6 +186,7 @@ function init(){
                         const img = document.createElement("img");
                         img.className="brush-thumb";
                         div.className="thumb-holder"
+                        
                         if(isMobile)
                             img.classList.add("mobile-brush-thumb");
                         
@@ -206,7 +197,19 @@ function init(){
                             selectedThumbDiv = div;
                             chooseModel(i,k)
                         };
-                        div.onmousedown = function(e){currDragImgSrc = e.srcElement.currentSrc;};
+                        
+                        div.onmousedown = function(e){ currDragImgSrc = e.srcElement.currentSrc; };
+                        img.oncontextmenu = function(e){
+                            e.preventDefault();
+                            downloadUrlIndex = i;
+                            downloadModelIndex = k;
+                            showingContext = true;
+
+                            $("#contextMenu").slideDown();
+                            $("#contextMenu").css("top", e.clientY+"px")
+                            $("#contextMenu").css("left", e.clientX+"px")
+                        }
+
                         //img.onmousedown = function(e){currDragImgSrc = e.srcElement.currentSrc;};
                         div.append(img);
                         dImgs.append(div);
@@ -244,7 +247,17 @@ function init(){
                     selectedThumbDiv = div;
                     chooseModel(i,k)
                 };
-                div.onmousedown = function(e){currDragImgSrc = e.srcElement.currentSrc;};
+                div.onmousedown = function(e){ currDragImgSrc = e.srcElement.currentSrc; };
+                img.oncontextmenu = function(e){
+                    e.preventDefault();
+                    downloadUrlIndex = i;
+                    downloadModelIndex = k;
+                    showingContext = true;
+                    $("#contextMenu").slideDown();
+                    $("#contextMenu").css("top", e.clientY+"px")
+                    $("#contextMenu").css("left", e.clientX+"px")
+                                 
+                }
                 div.append(img);
                 dImgs.append(div);
             }
@@ -271,6 +284,7 @@ function init(){
     canvas = document.createElement("canvas");
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    canvas.id="draw-canvas"
     document.body.appendChild(canvas);
     ctx = canvas.getContext('2d');
     canvas.className = "customCanvas";
@@ -335,16 +349,16 @@ function init(){
     //camera.add(bgHolder);
     bgHolder.position.copy(camera.position);
     bgHolder.rotation.copy(camera.rotation);
-
-    mirrorMeshX = new THREE.Mesh(new THREE.BoxGeometry(.1, 2000, .1), new THREE.MeshBasicMaterial({depthTest :true, color:0xff0000}))
+    const mirrorMeshSze = .03;
+    mirrorMeshX = new THREE.Mesh(new THREE.BoxGeometry(mirrorMeshSze, 2000, mirrorMeshSze), new THREE.MeshBasicMaterial({depthTest :true, color:0xff0000}))
     mirrorMeshX.visible = mirrorX;
     scene.add(mirrorMeshX)
 
-    mirrorMeshY = new THREE.Mesh(new THREE.BoxGeometry(2000, .1, .1), new THREE.MeshBasicMaterial({depthTest :true, color:0x00ff00}))
+    mirrorMeshY = new THREE.Mesh(new THREE.BoxGeometry(2000, mirrorMeshSze, mirrorMeshSze), new THREE.MeshBasicMaterial({depthTest :true, color:0x00ff00}))
     mirrorMeshY.visible = mirrorY;
     scene.add(mirrorMeshY)
 
-    mirrorMeshZ = new THREE.Mesh(new THREE.BoxGeometry(.1, .1, 2000), new THREE.MeshBasicMaterial({depthTest :true, color:0x0000ff}))
+    mirrorMeshZ = new THREE.Mesh(new THREE.BoxGeometry(mirrorMeshSze, mirrorMeshSze, 2000), new THREE.MeshBasicMaterial({depthTest :true, color:0x0000ff}))
     mirrorMeshZ.visible = mirrorZ;
     scene.add(mirrorMeshZ)
     // sceneMesh = new THREE.Mesh(
@@ -352,17 +366,19 @@ function init(){
     //     new THREE.MeshNormalMaterial( {color: 0xffff00} )
     // )
     // scene.add(sceneMesh);
-
     
 	const g = new THREE.PlaneGeometry( 10000, 10000, 1, 1);
-    const m = new THREE.MeshBasicMaterial( { color: 0x2d69a9, transparent:true, side:THREE.DoubleSide, opacity:0.5 } );
+    const t = new THREE.TextureLoader().load( './extras/grid.png' );
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat = new THREE.Vector2(10000,10000);
+    const m = new THREE.MeshBasicMaterial( { color: 0x2d69a9, transparent:true, alphaMap:t, side:THREE.DoubleSide, opacity:0.5 } );
     m.blending = THREE.AdditiveBlending;
 	bgMesh = new THREE.Mesh( g, m);
     bgMesh.visible = true;
     bgHolder.add(bgMesh);
     bgHolder.position.set(camera.position.z,0,0);
     bgMesh.position.z = -camera.position.z;
-   
+    
 	// lights
     const light = new THREE.AmbientLight( 0x242424 ); // soft white light
     scene.add( light );
@@ -484,8 +500,8 @@ function init(){
 
         }
         //$("#show-instructions").remove();   
-        document.getElementById("tools-holder").classList.add("holders-mobile");
-        document.getElementById("select").classList.add("holders-mobile");
+        //document.getElementById("tools-holder").classList.add("holders-mobile");
+        //document.getElementById("select").classList.add("holders-mobile");
          
         
     }
@@ -536,6 +552,8 @@ function init(){
     document.getElementById("animation-speed-slider").addEventListener("change", updateAniSpeed);
     //updateScaleOffset
 
+    document.getElementById("download-glb").addEventListener("click", downloadThumbGLB);
+    
     document.getElementById("stroke-scale-offset").addEventListener("change", updateScaleOffset);
     document.getElementById("stroke-scale-offset").addEventListener("input", updateScaleOffset);
 
@@ -641,7 +659,9 @@ function init(){
     document.getElementById("stroke-scale").addEventListener("click", toggleScaleGizmo)
     document.getElementById("fullscreen").addEventListener("click", toggleFullscreen)
     document.getElementById("tools-holder").addEventListener("mousemove", onToolsHover)
-    document.getElementById("select").addEventListener("mousemove", onToolsHover)
+    //document.getElementById("select").addEventListener("mousemove", onToolsHover)
+    document.getElementById("select").addEventListener("mousemove", onThumbsHover)
+    
     document.getElementById("stroke-delete").addEventListener("click", deleteStroke)
     
     canvas.addEventListener( 'dragover', onDocumentDragOver, false );
@@ -654,8 +674,30 @@ function init(){
 	animate();
 }
 
+function killContext(){
+    if(showingContext){
+        $("#contextMenu").slideUp();
+        showingContext = false;
+    }
+}
+
+function downloadThumbGLB(){
+    const ui = downloadUrlIndex;
+    const mi = downloadModelIndex;
+    const link = document.createElement('a');
+    link.download = loadobjs[ui].name+"-"+mi+".glb";
+    link.href = loadobjs[ui].url+""+mi+".glb";
+    link.click();
+    killContext();
+     
+}
+function onThumbsHover(e){   
+    mouseOverSelect = true;
+    onToolsHover(e);
+}
 function onToolsHover(e){
-    //console.log(e)
+    
+    killContext();
     if(drawObject!=null && e.target.id!="normal-offset-amount"){
         handleUiUpdating();
     }
@@ -713,9 +755,9 @@ function deleteStroke(){
             meshObjects[ indexes[x] ].updatePaintIndex();
             
         }
-        for(let z = 0; z<meshObjects.length; z++){
-            console.log(meshObjects[z].strokeIndex)
-        }
+        // for(let z = 0; z<meshObjects.length; z++){
+        //     console.log(meshObjects[z].strokeIndex)
+        // }
 
 
         actionHelper.deleteStrokeHelper(currentSelectedStrokeIndex);
@@ -1000,6 +1042,9 @@ function getMatParam(){
 }
 
 function chooseModel(i,k, customParams, callback){
+    
+    killContext();
+        
     urlIndex = i;
     modelIndex = k;
     
@@ -1137,65 +1182,65 @@ function toggleFullscreen(){
 function onKeyDown(e) {
     
     
-    console.log(e.keyCode)
+    //console.log(e.keyCode)
     if(e.keyCode==49){//1
         //console.log($("#title-simple-shapes").top);
-        const top = $("#title-simple-shapes").position().top;
+        const top = $("#title-Simple-Shapes").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
     if(e.keyCode==50){//2
-        const top = $("#title-animals").position().top;
+        const top = $("#title-Animals").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
     if(e.keyCode==51){//3
-        const top = $("#title-consumables").position().top;
+        const top = $("#title-Consumables").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
     if(e.keyCode==52){//4
-        const top = $("#title-furnishings").position().top;
+        const top = $("#title-Furnishings").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
     if(e.keyCode==53){//5
-        const top = $("#title-microscopic").position().top;
+        const top = $("#title-Microscopic").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
     if(e.keyCode==54){//6
-        const top = $("#title-plants").position().top;
+        const top = $("#title-Plants").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
     if(e.keyCode==55){//7
-        const top = $("#title-underwater").position().top;
+        const top = $("#title-Underwater").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
     if(e.keyCode==56){//8
-        const top = $("#title-trees").position().top;
+        const top = $("#title-Trees").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
     if(e.keyCode==57){//9
-        const top = $("#title-rocks").position().top;
+        const top = $("#title-Rocks").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
     if(e.keyCode==48){//0
-        const top = $("#title-human").position().top;
+        const top = $("#title-Human").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
     //if(e.keyCode==81){//t
     if(e.keyCode==84){//a
-        const top = $("#title-vehicles").position().top;
+        const top = $("#title-Vehicles").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
     //if(e.keyCode==87){//y
     if(e.keyCode==89){//w
-        const top = $("#title-buildings").position().top;
+        const top = $("#title-Buildings").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
     //if(e.keyCode==69){//u
     if(e.keyCode==85){//e
-        const top = $("#title-zeometry").position().top;
+        const top = $("#title-Zeometry").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
     if(e.keyCode==73){//i
-        const top = $("#title-space").position().top;
+        const top = $("#title-Space").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
 
@@ -1317,9 +1362,26 @@ function onKeyUp(e) {
         }
     }
     if(e.keyCode==32){
+        e.preventDefault();
+        if(mouseOverSelect){
+            toggleFullScreenThumbs();
+        }else{
+            toggleUI();
+        }
+        
 
-        toggleUI();
+    }
+}
 
+function toggleFullScreenThumbs(){
+    btns.fullThumbs = !btns.fullThumbs;
+    //$("#select").css( "width", btns.fullThumbs ? "100%" :"22vw" );
+   
+    //$("#select").css( "background-color", btns.fullThumbs ? "rgba(0,0,0,1)" :"rgba(0,0,0,.3)" );
+    if(btns.fullThumbs){
+        $('#select').addClass('select-black-bg');
+    }else{
+        $('#select').removeClass('select-black-bg');
     }
 }
 
@@ -1502,7 +1564,10 @@ function getFirstObjectWithPaintIndex(arr){
 
 
 function onMouseDown(e){
-    
+    if(showingContext){
+        killContext();
+        return;
+    }
     if(e.touches != null){//if not mobile just set mouse.nomral in mouse move event  
         var touch = e.touches[0];
         const x = touch.pageX;
@@ -1573,6 +1638,11 @@ function onMouseMove(e){
             //return;
         }
     }
+    
+    if(e.target.id == "draw-canvas"){
+        mouseOverSelect = false;
+        killContext();
+    }
 
     let x = 0;
     let y = 0;
@@ -1605,6 +1675,8 @@ function onMouseMove(e){
             });
         //}
     }
+    
+  
     ///console.log(movingTransformControls)
     //if(strokeSelect && movingTransformControls){//update mirrored local transform when moving control
     if(movingTransformControls){
@@ -1864,7 +1936,7 @@ function saveGeoInkFile(){
 
 
 function download (geoink){
-  const hash = "paint-everything";
+  const hash = "everything-canvas";
   const blob = createBlobFromData({
     geoink,
   });
@@ -2200,10 +2272,12 @@ function saveString( text, filename ) {
 
 function onDocumentDragOver( event ) {
     event.preventDefault();
+    $("#drag-drop").fadeIn();
 }
 
 function onDocumentLeave( event ) {
     event.preventDefault();
+    $("#drag-drop").fadeOut();
 }
 
 
@@ -2245,7 +2319,7 @@ function imgPlaneDrawObject(src){
         let hF = (w > h) ?  1 * aspect : 1;
 
         const mat = new THREE.MeshBasicMaterial({map:tex})
-        const geo = new THREE.PlaneGeometry(wF*7,hF*7,1,1);
+        const geo = new THREE.PlaneGeometry(wF*20,hF*20,1,1);
         const plane = new THREE.Mesh(geo,mat);
         const obj = new THREE.Object3D();
         obj.add(plane);
@@ -2260,7 +2334,7 @@ function imgPlaneDrawObject(src){
 function onDocumentDrop( event ) {
 
     event.preventDefault();
-    
+    $("#drag-drop").fadeOut();
     //console.log(event.dataTransfer)
     const file = event.dataTransfer.files[ 0 ];
     //event.origin
@@ -2284,7 +2358,7 @@ function onDocumentDrop( event ) {
                     const fileName = split[split.length-1].substr(0,split[split.length-1].length-3)+"glb";
                     const modelUrl = "./extras/models/"+split[split.length-2]+"/"+fileName;
                     usingCustomDrawObject = true;
-                    replaceDrawObject(modelUrl, 10);
+                    replaceDrawObject(modelUrl, 30);
                     
                     currDragImgSrc = null;
                 }
@@ -2295,7 +2369,6 @@ function onDocumentDrop( event ) {
                 reader.onload = function ( event ) {
                     usingCustomDrawObject = true;
                     imgPlaneDrawObject(event.target.result);
-                    //replaceDrawObject(event.target.result);
                 };
                 reader.readAsDataURL( file );
 
@@ -2332,10 +2405,10 @@ function onDocumentDrop( event ) {
 
         }
     }else{
-        if(currDragImgSrc!=null){
+        if( currDragImgSrc != null ){
             usingCustomDrawObject = true;
             const fnl = currDragImgSrc.substr(0,currDragImgSrc.length - 3)+"glb";
-            replaceDrawObject(fnl, 10);
+            replaceDrawObject(fnl, 30);
             currDragImgSrc = null;
         }
     }
