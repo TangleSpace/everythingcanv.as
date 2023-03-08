@@ -205,7 +205,7 @@ function init(){
                             downloadModelIndex = k;
                             showingContext = true;
 
-                            $("#contextMenu").slideDown();
+                            $("#contextMenu").fadeIn("fast");
                             $("#contextMenu").css("top", e.clientY+"px")
                             $("#contextMenu").css("left", e.clientX+"px")
                         }
@@ -253,7 +253,7 @@ function init(){
                     downloadUrlIndex = i;
                     downloadModelIndex = k;
                     showingContext = true;
-                    $("#contextMenu").slideDown();
+                    $("#contextMenu").fadeIn("fast");
                     $("#contextMenu").css("top", e.clientY+"px")
                     $("#contextMenu").css("left", e.clientX+"px")
                                  
@@ -519,9 +519,11 @@ function init(){
     if(!isMobile){
 	   document.addEventListener( 'pointermove', onMouseMove, false );
        canvas.addEventListener( 'pointerdown', onMouseDown, false );
+       $("#instructions-holder").fadeIn();
     }else{
         document.addEventListener( 'touchmove', onMouseMove, false );
         canvas.addEventListener( 'touchstart', onMouseDown, false );
+        $("#instructions-holder-mobile").fadeIn();  
     }
     
     canvas.addEventListener( 'pointerup', onMouseUp, false );
@@ -668,6 +670,10 @@ function init(){
     canvas.addEventListener( 'dragleave', onDocumentLeave, false );
     canvas.addEventListener( 'drop', onDocumentDrop, false );
 
+    document.getElementById("instructions-overlay").addEventListener( 'dragover', onInstructionsDragOver, false );
+    //document.getElementById("instructions-overlay").addEventListener( 'dragleave', onDocumentLeave, false );
+    //document.getElementById("instructions-overlay").addEventListener( 'drop', onDocumentDrop, false );
+
     helper = new BrushHelper({scene:scene, raycaster:raycaster});
     background = new Background({scene:scene});
     matHandler = new CustomMaterial();
@@ -676,7 +682,7 @@ function init(){
 
 function killContext(){
     if(showingContext){
-        $("#contextMenu").slideUp();
+        $("#contextMenu").fadeOut("fast");
         showingContext = false;
     }
 }
@@ -729,6 +735,7 @@ function updateViewColor(){
 
 function deleteStroke(){
     if(currentSelectedStrokeIndex != -1){
+        
         transformControls.detach();
         
         let indexes = [];    
@@ -736,13 +743,13 @@ function deleteStroke(){
             if(meshObjects[i].strokeIndex == currentSelectedStrokeIndex){
                 meshObjects[i].killStroke();
                 indexes.push(i);
-                
             }
         }
 
         for(let k = indexes.length-1; k>=0; k--){
             meshObjects.splice(indexes[k], 1);
         }
+        
         
         indexes = [];
         for(let t = 0; t<meshObjects.length; t++){
@@ -753,13 +760,13 @@ function deleteStroke(){
 
         for(let x = 0; x<indexes.length; x++){
             meshObjects[ indexes[x] ].updatePaintIndex();
-            
         }
-        // for(let z = 0; z<meshObjects.length; z++){
-        //     console.log(meshObjects[z].strokeIndex)
-        // }
 
-
+        console.log("delete index = ");
+        for(let z = 0; z<meshObjects.length; z++){
+            console.log(meshObjects[z].strokeIndex)
+        }
+        
         actionHelper.deleteStrokeHelper(currentSelectedStrokeIndex);
 
         //strokeSelectStrokes = [];
@@ -1224,22 +1231,23 @@ function onKeyDown(e) {
         const top = $("#title-Human").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
+    //console.log(e.keyCode)
     //if(e.keyCode==81){//t
-    if(e.keyCode==84){//a
+    if(e.keyCode==85){//u
         const top = $("#title-Vehicles").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
     //if(e.keyCode==87){//y
-    if(e.keyCode==89){//w
+    if(e.keyCode==73){//i
         const top = $("#title-Buildings").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
     //if(e.keyCode==69){//u
-    if(e.keyCode==85){//e
+    if(e.keyCode==79){//o
         const top = $("#title-Zeometry").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
-    if(e.keyCode==73){//i
+    if(e.keyCode==80){//p
         const top = $("#title-Space").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
@@ -1679,23 +1687,31 @@ function onMouseMove(e){
   
     ///console.log(movingTransformControls)
     //if(strokeSelect && movingTransformControls){//update mirrored local transform when moving control
-    if(movingTransformControls){
+    if(movingTransformControls && currentSelectedStrokeIndex != -1){
+        //if(){
         //console.log("moving transform controls  ")  
+       // console.log("curr selected index = "+currentSelectedStrokeIndex);
+
         const t = getSelectedStrokePosition();
-      
+        //console.log(t)
+        
         for(let i = 0; i<meshObjects.length; i++){
             
             if(meshObjects[i].strokeIndex == currentSelectedStrokeIndex){
-                meshObjects[i].scn.position.copy(t.pos);//(param)    
-                meshObjects[i].scn.rotation.copy(t.rot);
-                meshObjects[i].scn.scale.copy(t.scl);
+                if(meshObjects[i].scene.name != "strokeHolder"){
+                    //console.log("stroke index for loop "+meshObjects[i].strokeIndex)
+                    meshObjects[i].scn.position.copy(t.pos);//(param)    
+                    meshObjects[i].scn.rotation.copy(t.rot);
+                    meshObjects[i].scn.scale.copy(t.scl);
+                    //meshObjects[i].hover();
+                }
             }
 
         }
-        
-        if(currentSelectedStrokeIndex != -1){
-            actionHelper.updateTransform(currentSelectedStrokeIndex, {pos:t.sub, rot:t.rot, scl:t.scl});
-        }
+    
+    
+        actionHelper.updateTransform(currentSelectedStrokeIndex, {pos:t.sub, rot:t.rot, scl:t.scl});
+       // }
     }
     
     if ( e.touches != null ) {
@@ -1750,18 +1766,7 @@ function getSelectedStrokePosition(){
         }
 
     }
-    // for(let i = 0;i <strokeSelectStrokes.length; i++){
-    //     //console.log(strokeSelectStrokes[i].scene.name);
-    //     if(strokeSelectStrokes[i].scene.name == "strokeHolder"){
-    //         return {
-    //             pos:strokeSelectStrokes[i].scn.position, 
-    //             rot:strokeSelectStrokes[i].scn.rotation, 
-    //             scl:strokeSelectStrokes[i].scn.scale,
-    //             sub:new THREE.Vector3().subVectors(strokeSelectStrokes[i].scn.position, strokeSelectStrokes[i].avgPos)
-    //         };
-    //     }
-    // }
-
+   
 }
 
 
@@ -1972,6 +1977,16 @@ function undoClick(){
         for(let k = 0; k<arr.length; k++){
             meshObjects.splice(arr[k], 1);
         }
+        // for(let k = arr.length-1; k>=0; k--){
+        //     meshObjects.splice(arr[k], 1);
+        // }
+        
+        console.log("undo index")
+        for(let z = 0; z<meshObjects.length; z++){
+            console.log(meshObjects[z].strokeIndex)
+        }
+
+        
         actionHelper.undo();
     }
 }
@@ -1994,7 +2009,7 @@ function redoClick(){
             const all = actionHelper.actionsArr[ind][i].all;
             
             all.scene = actionHelper.actionsArr[ind][i].scene;
-            
+            all.index = ind;
             all.meshClone = model;       
             //console.log(all.meshClone)     
             all.meshClone.traverse(function(child){
@@ -2007,7 +2022,11 @@ function redoClick(){
 
             meshObjects.push( new Stroke( {scl:scl, pos:pos, rots:rots, all:all} ) );
 
-        }   
+        }
+        console.log("redo index")
+        for(let z = 0; z<meshObjects.length; z++){
+            console.log(meshObjects[z].strokeIndex)
+        } 
     
         actionHelper.redo();
 
@@ -2102,12 +2121,15 @@ function updateMeshSize(){
 
 function rotateBrushX(){
     globalOffsetRotation.x = $("#rotate-slider-x").val()*0.01745329251;
+    helper.holder.rotation.set(globalOffsetRotation.x,globalOffsetRotation.y,globalOffsetRotation.z);
 }
 function rotateBrushY(){
     globalOffsetRotation.y = $("#rotate-slider-y").val()*0.01745329251;
+    helper.holder.rotation.set(globalOffsetRotation.x,globalOffsetRotation.y,globalOffsetRotation.z);
 }
 function rotateBrushZ(){
     globalOffsetRotation.z = $("#rotate-slider-z").val()*0.01745329251;
+    helper.holder.rotation.set(globalOffsetRotation.x,globalOffsetRotation.y,globalOffsetRotation.z);
 }
 function updateSmoothAmount(){
     globalSmoothAmount = 1-($("#smooth-amount").val()*.01);
@@ -2272,7 +2294,14 @@ function saveString( text, filename ) {
 
 function onDocumentDragOver( event ) {
     event.preventDefault();
-    $("#drag-drop").fadeIn();
+    $("#drag-drop").fadeIn();    
+}
+
+function onInstructionsDragOver(event){
+    event.preventDefault();
+    if ( !$( "#instructions-overlay" ).is( ":hidden" ) ) {
+        $( "#instructions-overlay" ).hide();
+    } 
 }
 
 function onDocumentLeave( event ) {

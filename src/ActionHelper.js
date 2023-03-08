@@ -16,18 +16,30 @@ class ActionHelper {
     deleteStrokeHelper(index){
         let ind = 0;
         for(let i = 0; i<this.actionsArr.length; i++){
-            if(this.actionsArr[i].index == index){
-                ind = i;
+            for(let k = 0; k < this.actionsArr[i].length; k++){
+                if(this.actionsArr[i][k].index == index){
+                    ind = i;
+                }
             }
+            
         }
         
         this.actionsArr.splice(ind,1);
         
         for(let t = 0; t<this.actionsArr.length; t++){
-            if(this.actionsArr[t].index > index){
-                this.actionsArr[t].index--;
+            for(let l = 0; l < this.actionsArr[t].length; l++){
+                if(this.actionsArr[t][l].index > index){
+                    this.actionsArr[t][l].index--;       
+                }
             }
         }
+        
+        for(let z = 0; z<this.actionsArr.length; z++){
+            for(let x = 0; x < this.actionsArr[z].length; x++){
+                console.log(this.actionsArr[z][x].index)
+            }
+        }
+
         this.currStrokeIndex --;
     }
     
@@ -47,17 +59,21 @@ class ActionHelper {
     }
 
     updateTransform(index, val){
+        console.log(index)
         for(let i = 0; i < this.actionsArr[index].length; i++){
             this.actionsArr[index][i].all.transformOffset = val;
         }
     }
 
     startNewPath(){
-        if(this.currStrokeIndex<this.actionsArr.length){
+        //console.log(this.currStrokeIndex<this.actionsArr.length);
+        //console.log("len first= "+this.actionsArr.length)
+        if(this.currStrokeIndex<this.actionsArr.length){//only calls if undo
             const len = this.actionsArr.length - this.currStrokeIndex;
             for(let i = 0; i<len; i++){
                 this.actionsArr.pop()
             }
+            ///console.log("len after = "+this.actionsArr.length)
         }
     }
     

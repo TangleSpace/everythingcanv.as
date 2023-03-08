@@ -477,17 +477,16 @@ class PaintMesh {
 
             if(this.globalShouldAnimateSize){
                 if(this.i == 0){
-                    s = (t / this.keyframelength);// * this.meshScale;
+                    s = this.easeInOutSin(t / this.keyframelength);// * this.meshScale;
                 } 
                 if(this.i == this.total-1){
-                    s = (1.0 - (t / this.keyframelength));// * this.meshScale;
+                    s = this.easeInOutSin(1.0 - (t / this.keyframelength));// * this.meshScale;
                 }
             }
 
             valuesS.push(scl.x*s);
             valuesS.push(scl.y*s);
             valuesS.push(scl.z*s);
-
         }   
       
         this.positionkf = new VectorKeyframeTrack( '' +this.mesh.name+ '.position', keys, valuesP );
@@ -499,6 +498,10 @@ class PaintMesh {
         clipAction.play();
         this.mesh.animations.push(this.clip);
     
+    }
+
+    easeInOutSin(x) {
+        return -(Math.cos(Math.PI * x) - 1) / 2;
     }
 
     update = function(OBJ){

@@ -52,43 +52,50 @@
 		
 		<div id="instructions-overlay" >
 			<div id="instructions-holder">
-				<h1>Instructions / Credits</h1>
-				<ul class="instruction-list">
-					<li>Tested with chrome and safari mobile</li>
-					<li>Tablets and mobile supported</li>
-					<li>[LMB] to draw</li>
-					<li>[ALT + LMB] to rotate </li>
-					<li>[Scroll / ALT + CTRL + LMB] to zoom in/out</li>
-					<li>[CTRL + LMB] to pan up and down</li>
-					<li>[CTRL Z / CTRL Y] undo and redo stroke </li>
-					<li>[SHIFT] toggle stroke select </li>
-					<li>[SPACE] to toggle UI </li>
-					<li><a href="https://docs.google.com/document/d/1R6eotYhfrLgmEFiWftUPHgll2mr_mccCGWWGxtHagOo/edit?usp=sharing" target="_blank">Full docs here</a></li>
-					<li>Models from the <a href="https://www.davidoreilly.com/library" target="_blank">Everything Library</li>
-					<li>Tool by <a class="normal-link" href="https://twitter.com/strugggggs" target="_blank"> Vince Mckelvie</a> </li>
-
-				</ul>
-				<div id="got-it-btn-holder">
-					<button class="btn" id="got-it-btn">got it.</button>
+				<div id="splash-img-holder">
+					<img id="splash" class="splash-img" src="./extras/splash-1.png">
+				</div>
+				<div class="instructions-bg">	
+					<ul class="instruction-list">
+						<li>Tested with chrome and safari mobile</li>
+						<li>Tablets and mobile supported</li>
+						<li>[LMB] to draw</li>
+						<li>[ALT + LMB] to rotate </li>
+						<li>[Scroll / ALT + CTRL + LMB] to zoom in/out</li>
+						<li>[CTRL + LMB] to pan up and down</li>
+						<li>[CTRL Z / CTRL Y] undo and redo stroke </li>
+						<li>[SHIFT] toggle stroke select </li>
+						<li>[SPACE] to toggle UI </li>
+						<li><a href="https://docs.google.com/document/d/1R6eotYhfrLgmEFiWftUPHgll2mr_mccCGWWGxtHagOo/edit?usp=sharing" target="_blank">Full docs here</a></li>
+						<li>Models from the <a href="https://www.davidoreilly.com/library" target="_blank">Everything Library</li>
+						<li>Tool by <a class="normal-link" href="https://twitter.com/strugggggs" target="_blank"> Vince Mckelvie</a> </li>
+					</ul>
+					<div id="got-it-btn-holder">
+						<button class="btn" id="got-it-btn">got it.</button>
+					</div>
 				</div>
 			</div>
 			<div id="instructions-holder-mobile">
-				<h1>Instructions / Credits</h1>
-				<ul class="instruction-list">
-					<li>Tested with chrome and safari mobile</li>
-					<li>Tablets and mobile supported</li>
-					<li>[PRESS] to draw</li>
-					<li>[PRESS + <img class="instructions-img" src="./extras/rotate.svg"/> ] to rotate </li>
-					<li>[PINCH] to zoom in/out</li>
-					<li>[PESS + <img class="instructions-img" src="./extras/pan.svg"/> ] to pan up and down</li>
-					<li>[<img class="instructions-img" src="./extras/eye.svg"/>] to toggle ui </li>
-					<li><a href="https://docs.google.com/document/d/1R6eotYhfrLgmEFiWftUPHgll2mr_mccCGWWGxtHagOo/edit?usp=sharing" target="_blank">Full docs here</a></li>
-					<li>Models from the <a href="https://www.davidoreilly.com/library" target="_blank">Everything Library</li>
-					<li>Tool by <a class="normal-link" href="https://twitter.com/strugggggs" target="_blank"> Vince Mckelvie</a> </li>
+				<div id="splash-img-holder-mobile">
+					<img id="splash-mobile" class="splash-img-mobile" src="./extras/splash-1.png">
+				</div>
+				<div class="instructions-bg">
+					<ul class="instruction-list">
+						<li>Tested with chrome and safari mobile</li>
+						<li>Tablets and mobile supported</li>
+						<li>[PRESS] to draw</li>
+						<li>[PRESS + <img class="instructions-img" src="./extras/rotate.svg"/> ] to rotate </li>
+						<li>[PINCH] to zoom in/out</li>
+						<li>[PESS + <img class="instructions-img" src="./extras/pan.svg"/> ] to pan up and down</li>
+						<li>[<img class="instructions-img" src="./extras/eye.svg"/>] to toggle ui </li>
+						<li><a href="https://docs.google.com/document/d/1R6eotYhfrLgmEFiWftUPHgll2mr_mccCGWWGxtHagOo/edit?usp=sharing" target="_blank">Full docs here</a></li>
+						<li>Models from the <a href="https://www.davidoreilly.com/library" target="_blank">Everything Library</li>
+						<li>Tool by <a class="normal-link" href="https://twitter.com/strugggggs" target="_blank"> Vince Mckelvie</a> </li>
 
-				</ul>
-				<div id="got-it-btn-holder">
-					<button class="btn" id="got-it-mobile-btn">got it.</button>
+					</ul>
+					<div id="got-it-btn-holder">
+						<button class="btn" id="got-it-mobile-btn">got it.</button>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -97,10 +104,12 @@
 		<div class="holders" id="tools-holder">
 			<div class="sub-holders">
 				<div id="main-btns-holder">
-					<div class="geo-ink-title" id="show-instructions">
+					<div class="geo-ink-title">
 						Everything Canvas
 					</div>
-					
+					<div class="tooltip">
+						<button class="btn inline-btns" id="show-instructions">splash screen</button> 
+					</div>
 					<div class="tooltip">
 						<button class="btn inline-btns" id="fullscreen">fullscreen</button> 
 						<span class="tooltiptext">[f]</span>
@@ -230,10 +239,7 @@
 								
 							</div>
 
-							<div class="check-holder">
-								<span class="slider-info">rotation by normals</span>
-								<input class="control control-checkbox" type="checkbox" id="rotation-follows-normal" checked>
-							</div>
+							
 
 							<div class="slider-holder">
 								<span class="slider-info">animation speed</span>
@@ -291,7 +297,12 @@
 						<div class="drop-down-title" id="rotation-title" >
 							Rotation
 						</div>
+						
 						<div class="drop-down-content" id="rotation-content">
+							<div class="check-holder">
+								<span class="slider-info">rotation by normals</span>
+								<input class="control control-checkbox" type="checkbox" id="rotation-follows-normal" checked>
+							</div>
 							<div class="slider-holder">
 								<span class="slider-info">rotate x</span>
 								<input id="rotate-slider-x" class="control-slider" type="range" min="0" max="628" value="0" >
