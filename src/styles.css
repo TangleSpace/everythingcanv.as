@@ -1,5 +1,9 @@
+* {
+  touch-action: manipulation;
+}
 html{
     height: 100%;
+    touch-action: manipulation;
 }
 a{color: white;}
 body{

@@ -54,8 +54,6 @@ let shouldRotateAdditiveY = true;
 let shouldRotateAdditiveZ = true;
 let globalAdditiveRotationSpeed = 0;
 let mouseOverSelect = false;
-//const geometry = new THREE.BoxGeometry( 5, 5, 5 );
-//const material = new THREE.MeshStandardMaterial();
 
 let globalShouldAnimateSize = true;
 const loadobjs = [
@@ -673,6 +671,8 @@ function init(){
     document.getElementById("instructions-overlay").addEventListener( 'dragover', onInstructionsDragOver, false );
     //document.getElementById("instructions-overlay").addEventListener( 'dragleave', onDocumentLeave, false );
     //document.getElementById("instructions-overlay").addEventListener( 'drop', onDocumentDrop, false );
+
+    $("#splash-mobile, #splash").attr("src","./extras/splash-"+Math.floor(Math.random()*2)+".png")
 
     helper = new BrushHelper({scene:scene, raycaster:raycaster});
     background = new Background({scene:scene});
@@ -1582,6 +1582,11 @@ function onMouseDown(e){
         const y = touch.pageY;
         mouse.normal.x =    ( x / window.innerWidth ) * 2 - 1;
         mouse.normal.y =  - ( y / window.innerHeight ) * 2 + 1;
+        mouse.previous.x = x;
+        mouse.previous.y = y;
+        mouse.position.x = x;
+        mouse.position.y = y;
+        
     }
 
     if(strokeSelect){
@@ -1614,8 +1619,10 @@ function onMouseDown(e){
     }
 
     if(e.touches != null){
-        if(e.touches.length == 1)
+        if(e.touches.length == 1){
             canDraw = true;
+        }
+            
     }
 
 
@@ -1708,6 +1715,8 @@ function onMouseMove(e){
             }
 
         }
+
+        
     
     
         actionHelper.updateTransform(currentSelectedStrokeIndex, {pos:t.sub, rot:t.rot, scl:t.scl});
@@ -1727,7 +1736,7 @@ function onMouseMove(e){
             }else{
                 penSense = 1;
             }
-            handleDrawGeo();
+            handleDrawGeo(false);
         }
         
     }
@@ -2136,7 +2145,7 @@ function updateSmoothAmount(){
 }
 function updateNormalOffsetAmount(){
    
-    globalNormalOffsetAmount = $("#normal-offset-amount").val()*.01;
+    globalNormalOffsetAmount = $("#normal-offset-amount").val()*.025;
   
     handleUiUpdating(globalNormalOffsetAmount);
 
