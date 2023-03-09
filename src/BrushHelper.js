@@ -26,8 +26,9 @@ class BrushHelper {
     update(OBJ){
        
         this.visual.position.lerp(this.mesh.position, OBJ.globalSmoothAmount);// , globalSmoothAmount);
-        this.visual.rotation.copy(this.mesh.rotation);
-                
+        //this.visual.rotation.copy(this.mesh.rotation);
+        //this.visual.quaternion.copy(this.mesh.rotation);
+        this.visual.quaternion.slerp( this.mesh.quaternion, 0.1 );        
         if(this.holder){
 
             this.visual.visible = false;

@@ -2,11 +2,12 @@
 
 Paint with the Everything 3d mesh library. 
 
+[Docs](https://docs.google.com/document/d/1R6eotYhfrLgmEFiWftUPHgll2mr_mccCGWWGxtHagOo/edit?usp=sharing)
+
 ### Running Locally  
 `npm install` then `npm start` or you can just use something like mamp for testing. The dist package runs on any basic web server.  
 `npm run build` to output minimized js file. I'm just using VS Codes minify plugin to autogenerate minified html and css files.  
 
-have fun :-]
 
 
 
