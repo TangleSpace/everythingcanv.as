@@ -103,6 +103,18 @@ class Stroke {
     
     }
 
+    undo(){
+        for(var i = 0; i<this.meshes.length; i++){
+            this.meshes[i].hide();
+        }
+    }
+
+    redo(){
+        for(var i = 0; i<this.meshes.length; i++){
+            this.meshes[i].show();
+        }
+    }
+
     hover(){
         for(var i = 0; i<this.meshes.length; i++){
             this.meshes[i].hover();
@@ -285,13 +297,22 @@ class PaintMesh {
             }
         });
         
-        //scene.add(this.lookObj);
-
-     //for t in range(speed):
-            //bpy.context.scene.frame_set(t)
-            //fnl = (start + ( t * (( 1/total )/speed) ) )%1.0
-            //constraint.offset_factor = fnl
-            //constraint.keyframe_insert(data_path="offset_factor")
+    }
+    
+    hide(){
+        this.mesh.traverse( function ( child ) {
+            if ( child.isMesh ) {
+                child.visible = false;
+            }
+        });
+    }
+    
+    show(){
+        this.mesh.traverse( function ( child ) {
+            if ( child.isMesh ) {
+                child.visible = true;
+            }
+        });
     }
 
     updatePaintIndex(val){

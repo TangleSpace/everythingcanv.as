@@ -3,119 +3,192 @@ import {
     MeshBasicMaterial,
     MeshStandardMaterial,
     Euler,
-    Mesh
+    Mesh,
+    Vector3
 } from './build/three.module.js';
 
 class ActionHelper {
     
     constructor(OBJ){
+        this.attachScene;
         this.currStrokeIndex = 0;
         this.actionsArr = []; 
     }
 
-    deleteStrokeHelper(index){
-        let ind = 0;
-        for(let i = 0; i<this.actionsArr.length; i++){
-            for(let k = 0; k < this.actionsArr[i].length; k++){
-                if(this.actionsArr[i][k].index == index){
-                    ind = i;
-                }
+    select(index, tc){
+
+        for(let i = 0; i<this.actionsArr[index].length; i++){
+            if(this.actionsArr[index][i].stroke.scene.name == "strokeHolder"){//if it's not the mirrored stroke
+                tc.detach();
+                this.attachScene = this.actionsArr[index][i].stroke.scn;
+                tc.attach( this.actionsArr[index][i].stroke.scn );
             }
-            
+        }
+
+    }
+
+    unHover(){
+        for(let i = 0; i < this.actionsArr.length; i++){
+            for(let k = 0; k < this.actionsArr[i].length; k++){
+                this.actionsArr[i][k].stroke.unHover();
+            }
+        }
+    }
+
+    hover(index){
+        for(let i = 0; i < this.actionsArr[index].length; i++){
+            this.actionsArr[index][i].stroke.hover();
+        }
+    }
+
+    deleteStrokeHelper(index){
+     
+        for(let i = 0; i < this.actionsArr[index].length; i++){
+            this.actionsArr[index][i].stroke.killStroke();
         }
         
-        this.actionsArr.splice(ind,1);
+        this.actionsArr.splice(index,1);
         
         for(let t = 0; t<this.actionsArr.length; t++){
             for(let l = 0; l < this.actionsArr[t].length; l++){
                 if(this.actionsArr[t][l].index > index){
-                    this.actionsArr[t][l].index--;       
+                    this.actionsArr[t][l].index--;
+                    this.actionsArr[t][l].stroke.updatePaintIndex();
                 }
             }
         }
         
-        for(let z = 0; z<this.actionsArr.length; z++){
-            for(let x = 0; x < this.actionsArr[z].length; x++){
-                console.log(this.actionsArr[z][x].index)
-            }
-        }
-
         this.currStrokeIndex --;
     }
     
     addStrokesArray(OBJ){
-        this.actionsArr[this.currStrokeIndex] = OBJ.array;
+        this.actionsArr.push(OBJ.array);
         this.currStrokeIndex ++;
     }
     
     undo(){
-        //this.actionsArr[this.currStrokeIndex] = OBJ.array;
+        for(let i = 0; i < this.actionsArr[this.currStrokeIndex-1].length; i++){
+            this.actionsArr[this.currStrokeIndex-1][i].stroke.undo();
+        }
         this.currStrokeIndex --;
     }
 
     redo(){
-        //this.actionsArr[this.currStrokeIndex] = OBJ.array;
         this.currStrokeIndex ++;
+        for(let i = 0; i < this.actionsArr[this.currStrokeIndex-1].length; i++){
+            this.actionsArr[this.currStrokeIndex-1][i].stroke.redo();
+        }
     }
 
-    updateTransform(index, val){
-        console.log(index)
+    getMovingTransform(index){
         for(let i = 0; i < this.actionsArr[index].length; i++){
-            this.actionsArr[index][i].all.transformOffset = val;
+            if(this.actionsArr[index][i].stroke.scene.name == "strokeHolder" && this.attachScene == this.actionsArr[index][i].stroke.scn ){
+                return {
+                    pos:this.actionsArr[index][i].stroke.scn.position, 
+                    rot:this.actionsArr[index][i].stroke.scn.rotation, 
+                    scl:this.actionsArr[index][i].stroke.scn.scale,
+                    sub:new Vector3().subVectors(this.actionsArr[index][i].stroke.scn.position, this.actionsArr[index][i].stroke.avgPos)
+                };
+            }
+        }
+    }
+
+    updateTransform(index){
+        const val = this.getMovingTransform(index);
+        for(let i = 0; i < this.actionsArr[index].length; i++){
+            if(this.actionsArr[index][i].stroke.scn.name != this.attachScene){
+                this.actionsArr[index][i].stroke.scn.position.copy(val.pos);//(param)    
+                this.actionsArr[index][i].stroke.scn.rotation.copy(val.rot);
+                this.actionsArr[index][i].stroke.scn.scale.copy(val.scl);
+            }
         }
     }
 
     startNewPath(){
-        //console.log(this.currStrokeIndex<this.actionsArr.length);
-        //console.log("len first= "+this.actionsArr.length)
         if(this.currStrokeIndex<this.actionsArr.length){//only calls if undo
             const len = this.actionsArr.length - this.currStrokeIndex;
+            
             for(let i = 0; i<len; i++){
-                this.actionsArr.pop()
+                const ind = (this.actionsArr.length - 1) - i;
+
+                for(let k = 0; k<this.actionsArr[ind].length; k++){
+                    this.actionsArr[ind][k].stroke.killStroke();
+                } 
+             
             }
-            ///console.log("len after = "+this.actionsArr.length)
+
+            for(let i = 0; i<len; i++){
+                this.actionsArr.pop();
+            }
         }
     }
     
     updateMatParam(index, val){
         for(let i = 0; i < this.actionsArr[index].length; i++){ 
-            // const p = {};
-            // for (const property in val) {
-            //     p[property] = val[property]
-            // }
-            this.actionsArr[index][i].all.param = val;
-
+            this.actionsArr[index][i].stroke.updateParam( val );
         }
     }
 
     updateModelInfo(index, val){
         for(let i = 0; i < this.actionsArr[index].length; i++){
-            this.actionsArr[index][i].all.modelInfo = val;
-            //this.actionsArr[index][i].all.modelInfo.modelIndex = val.modelIndex;
+            this.actionsArr[index][i].stroke.updateModel( { mesh:val.scene, modelInfo : val.modelInfo } );
         }
     }
 
     updateScaleOffset(index, val){
         for(let i = 0; i < this.actionsArr[index].length; i++){
-            this.actionsArr[index][i].all.sclMult = val;
+            this.actionsArr[index][i].stroke.updateScale({scale:val});
         }
     }
     
     updateRotOffsetX(index, val){
         for(let i = 0; i < this.actionsArr[index].length; i++){
-            this.actionsArr[index][i].all.rotOffsetX = val;
+            this.actionsArr[index][i].stroke.updateRotX(val);
         }
     }
 
     updateRotOffsetY(index, val){
         for(let i = 0; i < this.actionsArr[index].length; i++){
-            this.actionsArr[index][i].all.rotOffsetY = val;
+            this.actionsArr[index][i].stroke.updateRotY(val);
         }
     }
 
     updateRotOffsetZ(index, val){
         for(let i = 0; i < this.actionsArr[index].length; i++){
-            this.actionsArr[index][i].all.rotOffsetZ = val;
+            this.actionsArr[index][i].stroke.updateRotZ(val);
+        }
+    }
+    getExportData(){
+        const arr = [];
+        for(let i = 0; i < this.actionsArr.length; i++){
+            if(i<this.currStrokeIndex){
+                for(let k = 0; k < this.actionsArr[i].length; k++){
+                    arr.push(this.actionsArr[i][k].stroke.getExportData());
+                }
+            }
+        }
+        return arr;
+    }
+
+    getAnis(){
+        const arr = [];
+        for(let i = 0; i < this.actionsArr.length; i++){
+            for(let k = 0; k<this.actionsArr[i].length; k++){
+                for(let t = 0; t<this.actionsArr[i][k].stroke.meshes.length; t++){
+                    arr.push( this.actionsArr[i][k].stroke.meshes[t].mesh.animations[0] )
+                }
+            }
+        }
+        return arr;
+    }
+    update(OBJ){
+        //console.log("arr len = "+this.actionsArr.length);
+       // console.log("curr stroke index = "+this.currStrokeIndex);
+        for(let i = 0; i < this.actionsArr.length; i++){
+            for(let k = 0; k < this.actionsArr[i].length; k++){
+              
+                this.actionsArr[i][k].stroke.update({delta:OBJ.delta});
+            }
         }
     }
    

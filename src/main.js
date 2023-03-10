@@ -708,7 +708,7 @@ function deleteStroke(){
     if(currentSelectedStrokeIndex != -1){
         
         transformControls.detach();
-        
+        /*
         let indexes = [];    
         for(let i = 0; i<meshObjects.length; i++){
             if(meshObjects[i].strokeIndex == currentSelectedStrokeIndex){
@@ -737,7 +737,7 @@ function deleteStroke(){
         for(let z = 0; z<meshObjects.length; z++){
             console.log(meshObjects[z].strokeIndex)
         }
-        
+        */
         actionHelper.deleteStrokeHelper(currentSelectedStrokeIndex);
 
         //strokeSelectStrokes = [];
@@ -776,6 +776,7 @@ function mobilePanUp(e){
     e.preventDefault();
     if(controls)controls.enablePan = false;
 }
+
 // function mobileZoomDown(e){
 //     e.preventDefault();
 //     if(controls)
@@ -790,7 +791,7 @@ function mobilePanUp(e){
 function toggleStrokeSelect(){
 
     strokeSelect = !strokeSelect;   
-    if(strokeSelect && meshObjects.length==0 && !showedStrokeSelectError){
+    if(strokeSelect && actionHelper.actionsArr.length==0 && !showedStrokeSelectError){
         alert("draw some strokes, then enter stroke select mode to select and edit them.");
         strokeSelect = false;
         showedStrokeSelectError = true;
@@ -810,9 +811,10 @@ function toggleStrokeSelect(){
         $("#stroke-select-options").slideUp();
     }
     
-    for(let i = 0; i<meshObjects.length; i++){
-        meshObjects[i].unHover();
-    }
+    // for(let i = 0; i<meshObjects.length; i++){
+    //     meshObjects[i].unHover();
+    // }
+    actionHelper.unHover();
     
 }
 
@@ -821,10 +823,6 @@ function updateSelectedStroke(){
     let val = $("#stroke-index-input").val();
     
     clearTimeout(hoverTimeout);
-
-    if(currentSelectedStrokeIndex != -1){
-        unHoverStrokes();
-    }
 
     //strokeSelectStrokes = [];
     currentSelectedStrokeIndex = -1;
@@ -836,44 +834,26 @@ function updateSelectedStroke(){
     //if(val<0)val=0
     $("#stroke-index-input").val(val);
 
-    for(let i = 0; i<meshObjects.length; i++){
-        if(meshObjects[i].strokeIndex == val){
-            if(meshObjects[i].scene.name == "strokeHolder"){//if it's not the mirrored stroke
-                transformControls.detach();
-                transformControls.attach( meshObjects[i].scn );
-            }
-            //strokeSelectStrokes.push(meshObjects[i]);
-        }
-    }
-
+    // for(let i = 0; i<meshObjects.length; i++){
+    //     if(meshObjects[i].strokeIndex == val){
+    //         if(meshObjects[i].scene.name == "strokeHolder"){//if it's not the mirrored stroke
+    //             transformControls.detach();
+    //             transformControls.attach( meshObjects[i].scn );
+    //         }
+    
+    //     }
+    // }
+    
     currentSelectedStrokeIndex = val;
-    hoverStrokes();
+    actionHelper.select(currentSelectedStrokeIndex, transformControls);
+
+    //hoverStrokes();
+    actionHelper.hover(currentSelectedStrokeIndex);
     hoverTimeout = setTimeout( function(){
-        unHoverStrokes();
+        actionHelper.unHover();
     },300)
     //}
 
-}
-
-
-function hoverStrokes(){
-    // for(let i = 0; i < strokeSelectStrokes.length;i++){
-    //     strokeSelectStrokes[i].hover();
-    // }
-    for(let i = 0;i<meshObjects.length; i++){
-        if(meshObjects[i].strokeIndex==currentSelectedStrokeIndex)
-            meshObjects[i].hover();
-    }
-}
-
-function unHoverStrokes(){
-    for(let i = 0;i<meshObjects.length; i++){
-        //if(meshObjects[i].strokeIndex==currentSelectedStrokeIndex)
-        meshObjects[i].unHover();
-    }
-    // for(let i = 0; i < strokeSelectStrokes.length;i++){
-    //     strokeSelectStrokes[i].unHover();
-    // }
 }
 
 function updateBackgroundParms(){
@@ -891,10 +871,10 @@ function updateModelParams(){
     const param = getMatParam();
     
     if(strokeSelect){
-        for(let i = 0; i<meshObjects.length; i++){
-            if(meshObjects[i].strokeIndex==currentSelectedStrokeIndex)
-                meshObjects[i].updateParam(param);
-        }
+        // for(let i = 0; i<meshObjects.length; i++){
+        //     if(meshObjects[i].strokeIndex==currentSelectedStrokeIndex)
+        //         meshObjects[i].updateParam(param);
+        // }
 
         // for(let i = 0;i <strokeSelectStrokes.length; i++){
         //     strokeSelectStrokes[i].updateParam(param)
@@ -990,9 +970,10 @@ function animate(){
     const selectMult = strokeSelect?0:1;
     const d = clock.getDelta();
     const delta = d*globalAnimationSpeed*selectMult ;
-    for(var i = 0; i<meshObjects.length; i++){
-        meshObjects[i].update({delta:delta});
-    }
+    // for(var i = 0; i<meshObjects.length; i++){
+    //     meshObjects[i].update({delta:delta});
+    // }
+    actionHelper.update({delta:delta})
     matHandler.update({delta:d})
     //composer.render();
     renderer.render(scene,camera);
@@ -1072,15 +1053,8 @@ function handleMeshLoad(scene, customParams, callback){
     if(strokeSelect){
         helper.holder.visible = false;
         const modelInfo = { modelIndex : modelIndex, urlIndex : urlIndex};
-        
-        for(let i = 0 ;i<meshObjects.length; i++){
-            if(meshObjects[i].strokeIndex == currentSelectedStrokeIndex){
-                meshObjects[i].updateModel( { mesh:scene, modelInfo : modelInfo } );
-            }
-        }
-
         if(currentSelectedStrokeIndex != -1){
-            actionHelper.updateModelInfo(currentSelectedStrokeIndex, modelInfo);
+            actionHelper.updateModelInfo(currentSelectedStrokeIndex, {scene:scene, modelInfo:modelInfo});    
         }
     }
 
@@ -1457,33 +1431,40 @@ function strokeSelectHelper(down){
                 currentSelectedStrokeIndex = ind;
                 
                 $("#stroke-index-input").val(currentSelectedStrokeIndex)
+                actionHelper.select(currentSelectedStrokeIndex, transformControls);
 
-                for(let i = 0; i<meshObjects.length; i++){
+                // for(let i = 0; i<meshObjects.length; i++){
                     
-                    if(meshObjects[i].strokeIndex == ind){
-                        if(meshObjects[i].scene.name == "strokeHolder"){//if it's not the mirrored stroke
-                            //console.log(meshObjects[i].scn);
-                            transformControls.detach();
-                            transformControls.attach( meshObjects[i].scn );
-                        }
-                        //strokeSelectStrokes.push( meshObjects[i] );
-                        updateStrokeSelectSlidersFromObject(meshObjects[i])
+                //     if(meshObjects[i].strokeIndex == ind){
+                //         if(meshObjects[i].scene.name == "strokeHolder"){//if it's not the mirrored stroke
+                //             //console.log(meshObjects[i].scn);
+                //             transformControls.detach();
+                //             transformControls.attach( meshObjects[i].scn );
+                //         }
+                //         //strokeSelectStrokes.push( meshObjects[i] );
+                //         updateStrokeSelectSlidersFromObject(meshObjects[i])
 
 
-                    }
+                //     }
 
-                }
+                // }
+
+
             }
 
         }
-        for(let i = 0; i<meshObjects.length; i++){
-            meshObjects[i].unHover();
-        }
-        for(let i = 0; i<meshObjects.length; i++){
-            if(meshObjects[i].strokeIndex == ind && canHover){
-                meshObjects[i].hover();
-            }    
-        }
+        // for(let i = 0; i<meshObjects.length; i++){
+        //     meshObjects[i].unHover();
+        // }
+        actionHelper.unHover();
+
+        // for(let i = 0; i<meshObjects.length; i++){
+        //     if(meshObjects[i].strokeIndex == ind && canHover){
+        //         meshObjects[i].hover();
+        //     }    
+        // }
+        if(canHover)
+            actionHelper.hover(ind)
         
     }else{
         
@@ -1491,9 +1472,10 @@ function strokeSelectHelper(down){
         //     strokeSelectStrokes = [];
         // }
 
-        for(let i = 0; i<meshObjects.length; i++){
-            meshObjects[i].unHover();
-        }
+        // for(let i = 0; i<meshObjects.length; i++){
+        //     meshObjects[i].unHover();
+        // }
+        actionHelper.unHover();
         document.body.style.cursor = "auto";
 
     }
@@ -1673,28 +1655,26 @@ function onMouseMove(e){
         //console.log("moving transform controls  ")  
        // console.log("curr selected index = "+currentSelectedStrokeIndex);
 
-        const t = getSelectedStrokePosition();
+        //const t = getSelectedStrokePosition();
         //console.log(t)
         
-        for(let i = 0; i<meshObjects.length; i++){
+        // for(let i = 0; i<meshObjects.length; i++){
             
-            if(meshObjects[i].strokeIndex == currentSelectedStrokeIndex){
-                if(meshObjects[i].scene.name != "strokeHolder"){
-                    //console.log("stroke index for loop "+meshObjects[i].strokeIndex)
-                    meshObjects[i].scn.position.copy(t.pos);//(param)    
-                    meshObjects[i].scn.rotation.copy(t.rot);
-                    meshObjects[i].scn.scale.copy(t.scl);
-                    //meshObjects[i].hover();
-                }
-            }
+        //     if(meshObjects[i].strokeIndex == currentSelectedStrokeIndex){
+        //         if(meshObjects[i].scene.name != "strokeHolder"){
+        //             //console.log("stroke index for loop "+meshObjects[i].strokeIndex)
+        //             meshObjects[i].scn.position.copy(t.pos);//(param)    
+        //             meshObjects[i].scn.rotation.copy(t.rot);
+        //             meshObjects[i].scn.scale.copy(t.scl);
+        //             //meshObjects[i].hover();
+        //         }
+        //     }
 
-        }
-
-        
-    
-    
-        actionHelper.updateTransform(currentSelectedStrokeIndex, {pos:t.sub, rot:t.rot, scl:t.scl});
-       // }
+        // }
+        //const t = actionHelper.getMovingTransform();
+        actionHelper.updateTransform(currentSelectedStrokeIndex);//, {pos:t.sub, rot:t.rot, scl:t.scl});
+       
+        // }
     }
     
     if ( e.touches != null ) {
@@ -1735,20 +1715,22 @@ function onMouseMove(e){
 }
 
 function getSelectedStrokePosition(){
-    for(let i = 0; i<meshObjects.length; i++){
+    // for(let i = 0; i<meshObjects.length; i++){
             
-        if(meshObjects[i].strokeIndex == currentSelectedStrokeIndex){
-            if(meshObjects[i].scene.name == "strokeHolder"){
-                return {
-                    pos:meshObjects[i].scn.position, 
-                    rot:meshObjects[i].scn.rotation, 
-                    scl:meshObjects[i].scn.scale,
-                    sub:new THREE.Vector3().subVectors(meshObjects[i].scn.position, meshObjects[i].avgPos)
-                };
-            }
-        }
+    //     if(meshObjects[i].strokeIndex == currentSelectedStrokeIndex){
+    //         if(meshObjects[i].scene.name == "strokeHolder"){
+    //             return {
+    //                 pos:meshObjects[i].scn.position, 
+    //                 rot:meshObjects[i].scn.rotation, 
+    //                 scl:meshObjects[i].scn.scale,
+    //                 sub:new THREE.Vector3().subVectors(meshObjects[i].scn.position, meshObjects[i].avgPos)
+    //             };
+    //         }
+    //     }
 
-    }
+    // }
+
+
    
 }
 
@@ -1843,49 +1825,51 @@ function buildGeo(){
             transformOffset:{pos:new THREE.Vector3(), rot:new THREE.Euler(), scl:new THREE.Vector3(1,1,1)}
         }
         
-        meshObjects.push(new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all } ));
-        strokeFinal.push({scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
+        //meshObjects.push(new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all } ));
+        let stroke = new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} );
+        strokeFinal.push({stroke:stroke, index:actionHelper.currStrokeIndex, scene:all.scene});
+        
         if(mirrorX){
             all.scene = reflectObjectX;
-            meshObjects.push(new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
-            strokeFinal.push({scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
+            stroke = new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} );
+            strokeFinal.push({stroke:stroke,  index:actionHelper.currStrokeIndex, scene:all.scene});
         }
 
         if(mirrorY){
             all.scene = reflectObjectY;  
-            meshObjects.push(new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
-            strokeFinal.push({scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
+            stroke = new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} );
+            strokeFinal.push({stroke:stroke, index:actionHelper.currStrokeIndex, scene:all.scene});
             if(mirrorX){
                 all.scene = reflectObjectXY;
-                meshObjects.push(new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
-                strokeFinal.push({scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
+                stroke = new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} );
+                strokeFinal.push({stroke:stroke, index:actionHelper.currStrokeIndex, scene:all.scene});
             }
             
         }
 
         if(mirrorZ){
             all.scene = reflectObjectZ;
-            meshObjects.push(new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
-            strokeFinal.push({scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
+            stroke = new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} );  
+            strokeFinal.push({stroke:stroke, index:actionHelper.currStrokeIndex, scene:all.scene});
             if(mirrorX){
                 all.scene = reflectObjectXZ;
-                meshObjects.push(new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
-                strokeFinal.push({scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
+                stroke = new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} );
+                strokeFinal.push({stroke:stroke, index:actionHelper.currStrokeIndex, scene:all.scene});
             }
             if(mirrorY){
                 all.scene = reflectObjectYZ;
-                meshObjects.push(new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
-                strokeFinal.push({scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
+                stroke = new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} );
+                strokeFinal.push({stroke:stroke, index:actionHelper.currStrokeIndex, scene:all.scene});
             }
         }
 
         if(mirrorX && mirrorY && mirrorZ){
             all.scene = reflectObjectXYZ;
-            meshObjects.push(new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} ));
-            strokeFinal.push({scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
+            stroke = new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} );
+            strokeFinal.push({stroke:stroke, index:actionHelper.currStrokeIndex, scene:all.scene});
         
         }
-
+        //console.log(strokeFinal)
         actionHelper.addStrokesArray({array:strokeFinal});
 
     }
@@ -1907,13 +1891,13 @@ function onBlur(){
 }
 
 function saveGeoInkFile(){
-    const arr = [];
-    for(let i = 0;i< meshObjects.length; i++){
-        if(meshObjects[i].strokeIndex < actionHelper.currStrokeIndex){//make sure you don't export undo  meshes
-            arr.push(meshObjects[i].getExportData());
-        }
-    }
-
+    const arr = actionHelper.getExportData();
+    // for(let i = 0;i< actionHelper.actionsArr.length; i++){
+    //     if(actionHelper.actionsArrp[].strokeIndex < actionHelper.currStrokeIndex){//make sure you don't export undo  meshes
+    //         arr.push(meshObjects[i].getExportData());
+    //     }
+    // }
+    console.log(arr)
     let drawObj = 0;
     if(!usingCustomDrawObject){
         drawObj = currentDrawObjectIndex;
@@ -1946,30 +1930,28 @@ function undoClick(){
     if(actionHelper.currStrokeIndex > 0){
         
         transformControls.detach();
-        //strokeSelectStrokes = [];
         currentSelectedStrokeIndex = -1;
 
-        const arr = [];
-        for(let i = 0; i<meshObjects.length; i++){
-            if(meshObjects[i].strokeIndex == actionHelper.currStrokeIndex - 1){
-                meshObjects[i].killStroke();
-                arr.push(i);
-            }   
-        }
+        //const arr = [];
+        // for(let i = 0; i<meshObjects.length; i++){
+        //     if(meshObjects[i].strokeIndex == actionHelper.currStrokeIndex - 1){
+        //         meshObjects[i].killStroke();
+        //         arr.push(i);
+        //     }   
+        // }
 
-        for(let k = 0; k<arr.length; k++){
-            meshObjects.splice(arr[k], 1);
-        }
+        // for(let k = 0; k<arr.length; k++){
+        //     meshObjects.splice(arr[k], 1);
+        // }
         // for(let k = arr.length-1; k>=0; k--){
         //     meshObjects.splice(arr[k], 1);
         // }
         
-        console.log("undo index")
-        for(let z = 0; z<meshObjects.length; z++){
-            console.log(meshObjects[z].strokeIndex)
-        }
+        // console.log("undo index")
+        // for(let z = 0; z<meshObjects.length; z++){
+        //     console.log(meshObjects[z].strokeIndex)
+        // }
 
-        
         actionHelper.undo();
     }
 }
@@ -1978,38 +1960,37 @@ function redoClick(){
     
     if(actionHelper.currStrokeIndex < actionHelper.actionsArr.length){
         
-        const ind = actionHelper.currStrokeIndex;
-
-        const mi = actionHelper.actionsArr[ind][0].all.modelInfo.modelIndex;
-        const ui = actionHelper.actionsArr[ind][0].all.modelInfo.urlIndex;
-        const model = getModelByIndex(ui, mi);
+        // const ind = actionHelper.currStrokeIndex;
+        // const mi = actionHelper.actionsArr[ind][0].all.modelInfo.modelIndex;
+        // const ui = actionHelper.actionsArr[ind][0].all.modelInfo.urlIndex;
+        // const model = getModelByIndex(ui, mi);
       
-        for(let i = 0; i<actionHelper.actionsArr[ind].length; i++){
+        // for(let i = 0; i<actionHelper.actionsArr[ind].length; i++){
             
-            const pos = actionHelper.actionsArr[ind][i].pos;
-            const rots = actionHelper.actionsArr[ind][i].rots; 
-            const scl = actionHelper.actionsArr[ind][i].scl; 
-            const all = actionHelper.actionsArr[ind][i].all;
+        //     const pos = actionHelper.actionsArr[ind][i].pos;
+        //     const rots = actionHelper.actionsArr[ind][i].rots; 
+        //     const scl = actionHelper.actionsArr[ind][i].scl; 
+        //     const all = actionHelper.actionsArr[ind][i].all;
             
-            all.scene = actionHelper.actionsArr[ind][i].scene;
-            all.index = ind;
-            all.meshClone = model;       
-            //console.log(all.meshClone)     
-            all.meshClone.traverse(function(child){
-                if(child.isMesh){
-                    let copy = child.material.clone();
-                    copy = matHandler.getCustomMaterial(copy, all.param);
-                    child.material = copy;
-                }
-            });
+        //     all.scene = actionHelper.actionsArr[ind][i].scene;
+        //     all.index = ind;
+        //     all.meshClone = model;       
+        //     //console.log(all.meshClone)     
+        //     all.meshClone.traverse(function(child){
+        //         if(child.isMesh){
+        //             let copy = child.material.clone();
+        //             copy = matHandler.getCustomMaterial(copy, all.param);
+        //             child.material = copy;
+        //         }
+        //     });
 
-            meshObjects.push( new Stroke( {scl:scl, pos:pos, rots:rots, all:all} ) );
+        //     meshObjects.push( new Stroke( {scl:scl, pos:pos, rots:rots, all:all} ) );
 
-        }
-        console.log("redo index")
-        for(let z = 0; z<meshObjects.length; z++){
-            console.log(meshObjects[z].strokeIndex)
-        } 
+        // }
+        // console.log("redo index")
+        // for(let z = 0; z<meshObjects.length; z++){
+        //     console.log(meshObjects[z].strokeIndex)
+        // } 
     
         actionHelper.redo();
 
@@ -2038,43 +2019,23 @@ function updateDrawState(){
     
 }
 
-// function killIntroScene(){
-//     document.getElementById("instructions-overlay").style.display = "none";
-// }
 
 function updateRotOffsetX(){
     const rx = $("#stroke-rot-offset-x").val() * Math.PI/(180/2);
-
-    for(let i = 0; i<meshObjects.length; i++){
-        if(meshObjects[i].strokeIndex==currentSelectedStrokeIndex)
-            meshObjects[i].updateRotX( rx );
-    }
+   
     if(currentSelectedStrokeIndex != -1){
         actionHelper.updateRotOffsetX(currentSelectedStrokeIndex, rx)
     }
 }
 function updateRotOffsetY(){
     const ry = $("#stroke-rot-offset-y").val() * Math.PI/(180/2);
-    // for(let i = 0; i<strokeSelectStrokes.length; i++){
-    //     strokeSelectStrokes[i].updateRotY( ry );
-    // }
-    for(let i = 0; i<meshObjects.length; i++){
-        if(meshObjects[i].strokeIndex==currentSelectedStrokeIndex)
-            meshObjects[i].updateRotY( ry );
-    }
+    
     if(currentSelectedStrokeIndex != -1){
         actionHelper.updateRotOffsetY(currentSelectedStrokeIndex, ry)
     }
 }
 function updateRotOffsetZ(){
     const rz = $("#stroke-rot-offset-z").val() * Math.PI/(180/2);
-    // for(let i = 0; i<strokeSelectStrokes.length; i++){
-    //     strokeSelectStrokes[i].updateRotZ( rz );
-    // }
-    for(let i = 0; i<meshObjects.length; i++){
-        if(meshObjects[i].strokeIndex==currentSelectedStrokeIndex)
-            meshObjects[i].updateRotZ( rz );
-    }
     
     if(currentSelectedStrokeIndex != -1){
         actionHelper.updateRotOffsetZ(currentSelectedStrokeIndex, rz)
@@ -2083,23 +2044,15 @@ function updateRotOffsetZ(){
 
 function updateScaleOffset(){
     const s = $("#stroke-scale-offset").val()*.01;
-    // for(let i = 0; i<strokeSelectStrokes.length; i++){
-    //     strokeSelectStrokes[i].updateScale( {scale:s} );
-    // }
-    for(let i = 0; i<meshObjects.length; i++){
-        if(meshObjects[i].strokeIndex==currentSelectedStrokeIndex)
-            meshObjects[i].updateScale( {scale:s} );
-    }
+   
     if(currentSelectedStrokeIndex != -1){
         actionHelper.updateScaleOffset(currentSelectedStrokeIndex, s)
     }
 }
 
 function updateMeshSize(){
-    //handleUiUpdating();
     const s = $("#size-slider").val()*.08;
     meshScale = s;
-   
 }
 
 function rotateBrushX(){
@@ -2215,14 +2168,17 @@ function toggleMirrorZ(){
 
 function exportGLTF(  ) {
     
-    const anis = [];
+    const anis = actionHelper.getAnis();
+    console.log(anis)
     const meshes = [];
     
-    for(let i = 0; i<meshObjects.length; i++){
-        for(let k = 0; k<meshObjects[i].meshes.length; k++){
-            anis.push( meshObjects[i].meshes[k].mesh.animations[0] )
-        }
-    }
+    // for(let i = 0; i<meshObjects.length; i++){
+    //     for(let k = 0; k<meshObjects[i].meshes.length; k++){
+    //         anis.push( meshObjects[i].meshes[k].mesh.animations[0] )
+    //     }
+    // }
+
+    
    
     const gltfExporter = new GLTFExporter();
 
@@ -2321,8 +2277,7 @@ function imgPlaneDrawObject(src){
     //const tex = new THREE.Texture()
     const tex = new THREE.TextureLoader().load( src, function(){
         
-        currentDrawObjectIndex = 100000;
-        
+        //currentDrawObjectIndex = 100000;
         const w = tex.image.width;
         const h = tex.image.height;
         
@@ -2408,6 +2363,13 @@ function onDocumentDrop( event ) {
                     if(loadedObject.geoink.drawObj != currentDrawObjectIndex){
                         replaceDrawObject("./extras/draw/"+loadedObject.geoink.drawObj+".glb");
                     }
+                    const arr = [];
+                    const strokeAmt = (loadedObject.geoink.strokes[loadedObject.geoink.strokes.length-1].all.index )+ 1;
+                    for(let i = 0; i<strokeAmt; i++){
+                        const a = getAllMeshObjectsWithSameIndex(i, loadedObject.geoink.strokes);
+                        arr.push(a);
+                    }
+                    loadedObject.geoink.formattedArray = arr; 
                     loadLoop();
                    
                 });
@@ -2428,16 +2390,25 @@ function onDocumentDrop( event ) {
 }
 
 function loadLoop(){
-    const i = strokesLoopHelper;
-    const strokes = loadedObject.geoink.strokes;
-    const addedStrokeArray = [];
-    
-    //for(let i = 0; i<strokes.length; i++){
 
-    const a = strokes[i].all; 
+    const i = strokesLoopHelper;
+
+    const arr = loadedObject.geoink.formattedArray;
+    console.log(arr[i]);
+    if(arr[i].length==0){
+        strokesLoopHelper++;
+        if(strokesLoopHelper<arr.length)
+            loadHelper();
+        return;
+    }
+
+    const stroke = arr[i][0];
     
+    //if(stroke==null)
+    const a = stroke.all;
     const mi = a.modelInfo.modelIndex;
     const ui = a.modelInfo.urlIndex;
+    
     const p =  a.param;
     const param = {
         twistAmt:p.twistAmt,
@@ -2459,12 +2430,12 @@ function loadLoop(){
     const rots = [];
     const pos = [];
     const scls = [];
-    
-    for(let k = 0; k<strokes[i].rots.length; k++){
+
+    for(let k = 0; k<stroke.rots.length; k++){
         
-        const r = strokes[i].rots[k];
-        const p = strokes[i].pos[k];
-        const s = strokes[i].scales == null ? a.meshScale : strokes[i].scales[k];
+        const r = stroke.rots[k];
+        const p = stroke.pos[k];
+        const s = stroke.scales[k];
         
         rots.push(new THREE.Quaternion(r._x, r._y, r._z, r._w))
         pos.push(new THREE.Vector3(p.x, p.y, p.z));
@@ -2485,13 +2456,13 @@ function loadLoop(){
         scl:new THREE.Vector3( a.transformOffset.scl.x, a.transformOffset.scl.y, a.transformOffset.scl.z)
     };
     
-    const ss = scene.getObjectByName(a.scene);
+   
     
     const all = {
         modelInfo:{modelIndex:mi,urlIndex:ui}, 
         meshClone:null, 
-        index:a.index, 
-        scene:ss, 
+        index:actionHelper.currStrokeIndex, 
+        scene:strokeHolder, //place holder
         globalDensityAmount:a.globalDensityAmount, 
         meshScale:a.meshScale,
         sclMult:sclMult,
@@ -2504,25 +2475,24 @@ function loadLoop(){
     }
 
     
+    //const meshClone = sn;//.clone();
+    
+    
     chooseModel(ui, mi, param, function(sn){
-        
-        //const meshClone = sn;//.clone();
+        //const strokes = loadedObject.geoink.strokes;
         all.meshClone = sn;
-
-        meshObjects.push(new Stroke( { scl:scls, pos:pos, rots:rots, all:all } ));
-        
-        if(meshObjects.length == strokes.length){
-            for(let f = 0; f < meshObjects.length; f++){
-                const ind = meshObjects[f].strokeIndex;
-                if( !hasAddedStrokeIndex(addedStrokeArray, ind) ){
-                    const arr = getAllMeshObjectsWithSameIndex(ind);
-                    actionHelper.addStrokesArray({array:arr});
-                    addedStrokeArray.push(ind);
-                }
-            }
+        const strokeFinal = []
+        for(let i = 0; i<arr[strokesLoopHelper].length; i++){
+            
+            const currStroke = arr[strokesLoopHelper][i];
+            all.scene = scene.getObjectByName(currStroke.all.scene);
+            const strk = new Stroke( {scl:scls, pos:pos, rots:rots, all:all} );
+            strokeFinal.push({stroke:strk, index:actionHelper.currStrokeIndex, scene:all.scene});
         }
+        actionHelper.addStrokesArray({array:strokeFinal});
+        
         strokesLoopHelper++;
-        if(strokesLoopHelper<strokes.length)
+        if(strokesLoopHelper<arr.length)
             loadHelper();
 
     });
@@ -2533,32 +2503,14 @@ function loadHelper(){
 }
 
 
-function getAllMeshObjectsWithSameIndex(index){
+function getAllMeshObjectsWithSameIndex(index, fullArray){
     const arr = [];
-    for(let i = 0; i<meshObjects.length; i++){
-        if(meshObjects[i].strokeIndex == index){
-            //strokeFinal.push({scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, index:actionHelper.currStrokeIndex, all:all, scene:all.scene});
-            const scl = meshObjects[i].scales;
-            const pos = meshObjects[i].arr;
-            const rots = meshObjects[i].rots;
-            const index = meshObjects[i].strokeIndex;
-            const scene = meshObjects[i].scene;
-            const all = meshObjects[i].all;
-
-            const obj = {scl:scl, pos:pos, rots:rots, index:index, all:all, scene:scene}
-            arr.push(obj);
+    for(let i = 0; i<fullArray.length; i++){
+        if(fullArray[i].all.index==index){
+            arr.push(fullArray[i]);
         }
     }
     return arr;
-}
-
-function hasAddedStrokeIndex(arr, index){
-    for(let i = 0; i<arr.length; i++){
-        if(arr[i] == index){
-            return true;
-        }
-    }
-    return false;
 }
 
 
