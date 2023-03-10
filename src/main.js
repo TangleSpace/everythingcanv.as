@@ -550,109 +550,79 @@ function init(){
     document.getElementById("undo").addEventListener("click", undoClick);
     document.getElementById("redo").addEventListener("click", redoClick);
 
-    //document.getElementById("animation-speed-slider").addEventListener("change", updateAniSpeed);
     document.getElementById("animation-speed-slider").addEventListener("input", updateAniSpeed);
     //updateScaleOffset
 
     document.getElementById("download-glb").addEventListener("click", downloadThumbGLB);
     
-    //document.getElementById("stroke-scale-offset").addEventListener("change", updateScaleOffset);
     document.getElementById("stroke-scale-offset").addEventListener("input", updateScaleOffset);
 
-    //document.getElementById("stroke-rot-offset-x").addEventListener("change", updateRotOffsetX);
     document.getElementById("stroke-rot-offset-x").addEventListener("input", updateRotOffsetX);
-    //document.getElementById("stroke-rot-offset-y").addEventListener("change", updateRotOffsetY);
     document.getElementById("stroke-rot-offset-y").addEventListener("input", updateRotOffsetY);
-    //document.getElementById("stroke-rot-offset-z").addEventListener("change", updateRotOffsetZ);
     document.getElementById("stroke-rot-offset-z").addEventListener("input", updateRotOffsetZ);
     
     
-    //document.getElementById("size-slider").addEventListener("change", updateMeshSize);
     document.getElementById("size-slider").addEventListener("input", updateMeshSize);
 
     document.getElementById("should-size-ease-in-out").addEventListener("click", toggleSizeEasing);
-    //document.getElementById("rotate-slider-x").addEventListener("change", rotateBrushX);
     document.getElementById("rotate-slider-x").addEventListener("input", rotateBrushX);
 
-    //document.getElementById("rotate-slider-y").addEventListener("change", rotateBrushY);
     document.getElementById("rotate-slider-y").addEventListener("input", rotateBrushY);
 
-    //document.getElementById("rotate-slider-z").addEventListener("change", rotateBrushZ);
     document.getElementById("rotate-slider-z").addEventListener("input", rotateBrushZ);
 
-    //document.getElementById("additive-rotation-slider").addEventListener("change", updateRotationSpeed);
     document.getElementById("additive-rotation-slider").addEventListener("input", updateRotationSpeed);
 
     document.getElementById("additive-rotation-x").addEventListener("click", toggleAdditiveRotationX);
     document.getElementById("additive-rotation-y").addEventListener("click", toggleAdditiveRotationY);
     document.getElementById("additive-rotation-z").addEventListener("click", toggleAdditiveRotationZ);
 
-   // document.getElementById("smooth-amount").addEventListener("change", updateSmoothAmount);
     document.getElementById("smooth-amount").addEventListener("input", updateSmoothAmount);
 
-    //document.getElementById("normal-offset-amount").addEventListener("change", updateNormalOffsetAmount);
     document.getElementById("normal-offset-amount").addEventListener("input", updateNormalOffsetAmount);
 
-    //document.getElementById("density-amount").addEventListener("change", updateDensity);
     document.getElementById("density-amount").addEventListener("input", updateDensity);
 
     document.getElementById("background-gradient-size").addEventListener("input", updateBackgroundParms);
-   // document.getElementById("background-gradient-size").addEventListener("change", updateBackgroundParms);
 
     document.getElementById("background-gradient-offset").addEventListener("input", updateBackgroundParms);
-   // document.getElementById("background-gradient-offset").addEventListener("change", updateBackgroundParms);
 
     document.getElementById("background-color-top").addEventListener("input", updateBackgroundParms);
-    //document.getElementById("background-color-top").addEventListener("change", updateBackgroundParms);
 
     document.getElementById("background-color-bottom").addEventListener("input", updateBackgroundParms);
-    //document.getElementById("background-color-bottom").addEventListener("change", updateBackgroundParms);
 
     document.getElementById("rainbow-tint-amount").addEventListener("input", updateModelParams);
-   // document.getElementById("rainbow-tint-amount").addEventListener("change", updateModelParams);
 
     document.getElementById("rainbow-size").addEventListener("input", updateModelParams);
-    //document.getElementById("rainbow-size").addEventListener("change", updateModelParams);
 
     document.getElementById("model-gradient-size").addEventListener("input", updateModelParams);
-   // document.getElementById("model-gradient-size").addEventListener("change", updateModelParams);
-
+    
+    document.getElementById("model-gradient-angle").addEventListener("input", updateModelParams);
+    
     document.getElementById("model-gradient-offset").addEventListener("input", updateModelParams);
-    //document.getElementById("model-gradient-offset").addEventListener("change", updateModelParams);
-
+    
     document.getElementById("model-color-top").addEventListener("input", updateModelParams);
-   // document.getElementById("model-color-top").addEventListener("change", updateModelParams);
-
+   
     document.getElementById("model-color-bottom").addEventListener("input", updateModelParams);
-    //document.getElementById("model-color-bottom").addEventListener("change", updateModelParams);
-
+   
     document.getElementById("noise-deform").addEventListener("input", updateModelParams);
-   // document.getElementById("noise-deform").addEventListener("change", updateModelParams);
-
+   
     document.getElementById("noise-size").addEventListener("input", updateModelParams);
-    //document.getElementById("noise-size").addEventListener("change", updateModelParams);
-
+   
     document.getElementById("twist-deform").addEventListener("input", updateModelParams);
-    document.getElementById("twist-deform").addEventListener("change", updateModelParams);
-
+   
     document.getElementById("twist-size").addEventListener("input", updateModelParams);
-   // document.getElementById("twist-size").addEventListener("change", updateModelParams);
-
+   
     document.getElementById("deform-speed").addEventListener("input", updateModelParams);
-  //  document.getElementById("deform-speed").addEventListener("change", updateModelParams);
-
+  
     document.getElementById("color-speed").addEventListener("input", updateModelParams);
-  //  document.getElementById("color-speed").addEventListener("change", updateModelParams);
     
     document.getElementById("view-draw-color").addEventListener("input", updateViewColor);
-    //document.getElementById("view-draw-color").addEventListener("change", updateViewColor);
     
     document.getElementById("draw-object-opacity").addEventListener("input", updateDrawObjectOpacity);
-   // document.getElementById("draw-object-opacity").addEventListener("change", updateDrawObjectOpacity);
-
+  
     document.getElementById("view-draw-distance").addEventListener("input", updateDrawViewDistanceSlider);
-   // document.getElementById("view-draw-distance").addEventListener("change", updateDrawViewDistanceSlider);
-
+  
 
     document.getElementById("stroke-index-input").addEventListener("input", updateSelectedStroke)
     
@@ -661,7 +631,6 @@ function init(){
     document.getElementById("stroke-scale").addEventListener("click", toggleScaleGizmo)
     document.getElementById("fullscreen").addEventListener("click", toggleFullscreen)
     document.getElementById("tools-holder").addEventListener("mousemove", onToolsHover)
-    //document.getElementById("select").addEventListener("mousemove", onToolsHover)
     document.getElementById("select").addEventListener("mousemove", onThumbsHover)
     
     document.getElementById("stroke-delete").addEventListener("click", deleteStroke)
@@ -945,6 +914,7 @@ function updateModelParams(){
                     child.material.userData.shader.uniforms.noiseAmt.value = param.noiseAmt;
                     child.material.userData.shader.uniforms.rainbowAmt.value = param.rainbowAmt;
                     child.material.userData.shader.uniforms.gradientSize.value = param.gradientSize;
+                    child.material.userData.shader.uniforms.gradientAngle.value = param.gradientAngle;
                     child.material.userData.shader.uniforms.rainbowGradientSize.value = param.rainbowGradientSize;
                     child.material.userData.shader.uniforms.gradientOffset.value = param.gradientOffset;
                     child.material.userData.shader.uniforms.topColor.value = param.topColor;
@@ -1040,6 +1010,7 @@ function getMatParam(){
         noiseAmt:$("#noise-deform").val()*.01,
         rainbowAmt:$("#rainbow-tint-amount").val()*.01,
         gradientSize:.1+$("#model-gradient-size").val()*.01,
+        gradientAngle:$("#model-gradient-angle").val()*.01,
         rainbowGradientSize:$("#rainbow-size").val()*.08,
         gradientOffset:+$("#model-gradient-offset").val()*.3,
         topColor:new THREE.Color( $("#model-color-top").val() ),
@@ -1551,6 +1522,7 @@ function updateStrokeSelectSlidersFromObject(obj){
     $("#noise-deform").val(obj.param.noiseAmt/.01);
     $("#rainbow-tint-amount").val(obj.param.rainbowAmt/.01);
     $("#model-gradient-size").val( (obj.param.gradientSize - .1) / .01);
+    $("#model-gradient-angle").val( (obj.param.gradientAngle) / .01);
     $("#rainbow-size").val(obj.param.rainbowGradientSize /.08);
     $("#model-gradient-offset").val(obj.param.gradientOffset/.3);
     $("#model-color-top").val("#"+obj.param.topColor.getHexString());
@@ -2474,6 +2446,7 @@ function loadLoop(){
         noiseAmt:p.noiseAmt,
         rainbowAmt:p.rainbowAmt,
         gradientSize:p.gradientSize,
+        gradientAngle:p.gradientAngle==null?0:p.gradientAngle,
         rainbowGradientSize:p.rainbowGradientSize,
         gradientOffset:p.gradientOffset,
         topColor:new THREE.Color("#"+p.topColor),

@@ -47,6 +47,7 @@ class CustomMaterial {
             shader.uniforms.noiseAmt = { value: param.noiseAmt};
             shader.uniforms.rainbowAmt = { value: param.rainbowAmt};
             shader.uniforms.gradientSize = { value: param.gradientSize};
+            shader.uniforms.gradientAngle = { value: param.gradientAngle};
             shader.uniforms.rainbowGradientSize = { value: param.rainbowGradientSize};
             shader.uniforms.gradientOffset = { value: param.gradientOffset};
             shader.uniforms.topColor = { value: param.topColor};
@@ -122,11 +123,13 @@ class CustomMaterial {
                 'uniform vec3 topColor;\n' +
                 'uniform vec3 bottomColor;\n' +
                 'uniform float gradientSize;\n' +
+                'uniform float gradientAngle;\n'+
                 'uniform float gradientOffset;\n' +
                 'uniform float rainbowGradientSize;\n' +
                 'uniform float colorSpeed;\n' +
                 'uniform float deformSpeed;\n' +
                 'uniform float shouldLoopGradient;\n'+
+                
               
                 shader.fragmentShader;
                 shader.fragmentShader = shader.fragmentShader.replace(
@@ -140,15 +143,16 @@ class CustomMaterial {
                     float fresnelTerm = ( 1.0 - -min(dot(vPositionW, normalize(vNormalW)*2.4 ), 0.0) ); 
 
                     vec3 trip = ogColor.rgb;
-                    trip.x *= (( .5 + sin( (0.0 *1.) +  ((vPos.y*rainbowGradientSize) + (time*colorSpeed) ) )*.5 ) *1.);
-                    trip.y *= (( .5 + sin( (6.28*.33) + ((vPos.y*rainbowGradientSize) + (time*colorSpeed) ) )*.5 ) *1.);
-                    trip.z *= (( .5 + sin( (6.28*.66) + ((vPos.y*rainbowGradientSize) + (time*colorSpeed) ) )*.5 ) *1.);
+                    float mod = (vPos.x*sin(gradientAngle)) + (vPos.y*cos(gradientAngle));
+                    trip.x *= (( .5 + sin( ((0.0 *1. )) +  ((  mod * rainbowGradientSize ) + (time*colorSpeed) ) )*.5 ) *1.);
+                    trip.y *= (( .5 + sin( ((6.28*.33)) +  ((  mod * rainbowGradientSize ) + (time*colorSpeed) ) )*.5 ) *1.);
+                    trip.z *= (( .5 + sin( ((6.28*.66)) +  ((  mod * rainbowGradientSize ) + (time*colorSpeed) ) )*.5 ) *1.);
 
                     float h = normalize( vec3(vPos.x, vPos.y + gradientOffset, vPos.z)  ).y;
                     float gradientMix = max( pow( max( h, 0.0 ), gradientSize ), 0.0 );
                     //float gradientMix = clamp( (h+.5) * gradientSize, 0., 1. ) ;
                     if(shouldLoopGradient>.5){
-                        gradientMix = .5+sin((vPos.y*gradientSize)+(time*colorSpeed))*.5;
+                        gradientMix = .5+sin((mod*gradientSize)+(time*colorSpeed))*.5;
                     }
                     vec3 gradient = ogColor.xyz * mix( vec4(bottomColor.xyz, 1.), vec4(topColor.xyz,1.),  gradientMix ).xyz;
                     

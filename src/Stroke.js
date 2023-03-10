@@ -196,6 +196,7 @@ class Stroke {
                     noiseAmt:this.param.noiseAmt,
                     rainbowAmt:this.param.rainbowAmt,
                     gradientSize:this.param.gradientSize,
+                    gradientAngle:this.param.gradientAngle,
                     rainbowGradientSize:this.param.rainbowGradientSize,
                     gradientOffset:this.param.gradientOffset,
                     topColor:this.param.topColor.getHexString(),
@@ -426,6 +427,7 @@ class PaintMesh {
                     child.material.userData.shader.uniforms.noiseAmt.value = param.noiseAmt;
                     child.material.userData.shader.uniforms.rainbowAmt.value = param.rainbowAmt;
                     child.material.userData.shader.uniforms.gradientSize.value = param.gradientSize;
+                    child.material.userData.shader.uniforms.gradientAngle.value = param.gradientAngle;
                     child.material.userData.shader.uniforms.rainbowGradientSize.value = param.rainbowGradientSize;
                     child.material.userData.shader.uniforms.gradientOffset.value = param.gradientOffset;
                     child.material.userData.shader.uniforms.topColor.value = param.topColor;
