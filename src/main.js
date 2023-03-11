@@ -804,6 +804,7 @@ function updateSelectedStroke(){
     
     currentSelectedStrokeIndex = val;
     actionHelper.select(currentSelectedStrokeIndex, transformControls);
+    updateStrokeSelectSlidersFromObject(actionHelper.actionsArr[currentSelectedStrokeIndex][0].stroke);
 
     //hoverStrokes();
     actionHelper.hover(currentSelectedStrokeIndex);
@@ -1119,8 +1120,7 @@ function onKeyDown(e) {
         const top = $("#title-Human").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
-    //console.log(e.keyCode)
-    //if(e.keyCode==81){//t
+    
     if(e.keyCode==85){//u
         const top = $("#title-Vehicles").position().top;
         $("#select").animate({ scrollTop: top }, 700);
@@ -1139,8 +1139,6 @@ function onKeyDown(e) {
         const top = $("#title-Space").position().top;
         $("#select").animate({ scrollTop: top }, 700);
     }
-
-
 
     if(e.keyCode==67){
         resetCam();
@@ -1368,9 +1366,7 @@ function strokeSelectHelper(down){
                 
                 $("#stroke-index-input").val(currentSelectedStrokeIndex)
                 actionHelper.select(currentSelectedStrokeIndex, transformControls);
-
-
-
+                updateStrokeSelectSlidersFromObject(actionHelper.actionsArr[currentSelectedStrokeIndex][0].stroke);
 
             }
 
@@ -1897,7 +1893,7 @@ function handleUiUpdating(nrml){
         bgMesh:bgMesh, 
         drawObject:drawObject,
         drawState:drawState,
-        globalNormalOffsetAmount: nrml==null ? 3 : nrml
+        globalNormalOffsetAmount: nrml==null ? 0 : nrml
     });
 }
 
