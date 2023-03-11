@@ -42,7 +42,6 @@ let geoArr = [];
 let yOff = 0.1;
 let object;
 let globalAnimationSpeed = 1;
-const meshObjects = [];
 let light;
 let composer;
 let controls;
@@ -598,6 +597,8 @@ function init(){
     document.getElementById("model-gradient-size").addEventListener("input", updateModelParams);
     
     document.getElementById("model-gradient-angle").addEventListener("input", updateModelParams);
+
+    document.getElementById("model-gradient-add").addEventListener("input", updateModelParams);
     
     document.getElementById("model-gradient-offset").addEventListener("input", updateModelParams);
     
@@ -708,39 +709,9 @@ function deleteStroke(){
     if(currentSelectedStrokeIndex != -1){
         
         transformControls.detach();
-        /*
-        let indexes = [];    
-        for(let i = 0; i<meshObjects.length; i++){
-            if(meshObjects[i].strokeIndex == currentSelectedStrokeIndex){
-                meshObjects[i].killStroke();
-                indexes.push(i);
-            }
-        }
-
-        for(let k = indexes.length-1; k>=0; k--){
-            meshObjects.splice(indexes[k], 1);
-        }
         
-        
-        indexes = [];
-        for(let t = 0; t<meshObjects.length; t++){
-            if(meshObjects[t].strokeIndex > currentSelectedStrokeIndex){
-                indexes.push(t);
-            }
-        }
-
-        for(let x = 0; x<indexes.length; x++){
-            meshObjects[ indexes[x] ].updatePaintIndex();
-        }
-
-        console.log("delete index = ");
-        for(let z = 0; z<meshObjects.length; z++){
-            console.log(meshObjects[z].strokeIndex)
-        }
-        */
         actionHelper.deleteStrokeHelper(currentSelectedStrokeIndex);
 
-        //strokeSelectStrokes = [];
         currentSelectedStrokeIndex = -1;
     }
 
@@ -811,9 +782,6 @@ function toggleStrokeSelect(){
         $("#stroke-select-options").slideUp();
     }
     
-    // for(let i = 0; i<meshObjects.length; i++){
-    //     meshObjects[i].unHover();
-    // }
     actionHelper.unHover();
     
 }
@@ -833,16 +801,6 @@ function updateSelectedStroke(){
     if(val > actionHelper.currStrokeIndex-1)val = actionHelper.currStrokeIndex-1;
     //if(val<0)val=0
     $("#stroke-index-input").val(val);
-
-    // for(let i = 0; i<meshObjects.length; i++){
-    //     if(meshObjects[i].strokeIndex == val){
-    //         if(meshObjects[i].scene.name == "strokeHolder"){//if it's not the mirrored stroke
-    //             transformControls.detach();
-    //             transformControls.attach( meshObjects[i].scn );
-    //         }
-    
-    //     }
-    // }
     
     currentSelectedStrokeIndex = val;
     actionHelper.select(currentSelectedStrokeIndex, transformControls);
@@ -871,54 +829,38 @@ function updateModelParams(){
     const param = getMatParam();
     
     if(strokeSelect){
-        // for(let i = 0; i<meshObjects.length; i++){
-        //     if(meshObjects[i].strokeIndex==currentSelectedStrokeIndex)
-        //         meshObjects[i].updateParam(param);
-        // }
-
-        // for(let i = 0;i <strokeSelectStrokes.length; i++){
-        //     strokeSelectStrokes[i].updateParam(param)
-        // }
+      
         if(currentSelectedStrokeIndex != -1){
             actionHelper.updateMatParam(currentSelectedStrokeIndex, param);
         }
 
-    }//else{
+    }
 
-        helper.holder.traverse( function ( child ) {
-            if ( child.isMesh ) {
-                if(child.material.userData.shader!=null){
-                    child.material.userData.shader.uniforms.twistAmt.value = param.twistAmt;
-                    child.material.userData.shader.uniforms.noiseSize.value = param.noiseSize;
-                    child.material.userData.shader.uniforms.twistSize.value = param.twistSize;
-                    child.material.userData.shader.uniforms.noiseAmt.value = param.noiseAmt;
-                    child.material.userData.shader.uniforms.rainbowAmt.value = param.rainbowAmt;
-                    child.material.userData.shader.uniforms.gradientSize.value = param.gradientSize;
-                    child.material.userData.shader.uniforms.gradientAngle.value = param.gradientAngle;
-                    child.material.userData.shader.uniforms.rainbowGradientSize.value = param.rainbowGradientSize;
-                    child.material.userData.shader.uniforms.gradientOffset.value = param.gradientOffset;
-                    child.material.userData.shader.uniforms.topColor.value = param.topColor;
-                    child.material.userData.shader.uniforms.bottomColor.value = param.bottomColor;
-                    child.material.userData.shader.uniforms.deformSpeed.value = param.deformSpeed;
-                    child.material.userData.shader.uniforms.colorSpeed.value = param.colorSpeed;
-                    child.material.userData.shader.uniforms.shouldLoopGradient.value = param.shouldLoopGradient;
-                }
-    
+    helper.holder.traverse( function ( child ) {
+        if ( child.isMesh ) {
+            if(child.material.userData.shader!=null){
+                child.material.userData.shader.uniforms.twistAmt.value = param.twistAmt;
+                child.material.userData.shader.uniforms.noiseSize.value = param.noiseSize;
+                child.material.userData.shader.uniforms.twistSize.value = param.twistSize;
+                child.material.userData.shader.uniforms.noiseAmt.value = param.noiseAmt;
+                child.material.userData.shader.uniforms.rainbowAmt.value = param.rainbowAmt;
+                child.material.userData.shader.uniforms.gradientSize.value = param.gradientSize;
+                child.material.userData.shader.uniforms.gradientAngle.value = param.gradientAngle;
+                child.material.userData.shader.uniforms.gradientAdd.value = param.gradientAdd;
+                child.material.userData.shader.uniforms.rainbowGradientSize.value = param.rainbowGradientSize;
+                child.material.userData.shader.uniforms.gradientOffset.value = param.gradientOffset;
+                child.material.userData.shader.uniforms.topColor.value = param.topColor;
+                child.material.userData.shader.uniforms.bottomColor.value = param.bottomColor;
+                child.material.userData.shader.uniforms.deformSpeed.value = param.deformSpeed;
+                child.material.userData.shader.uniforms.colorSpeed.value = param.colorSpeed;
+                child.material.userData.shader.uniforms.shouldLoopGradient.value = param.shouldLoopGradient;
             }
-    
-        });
 
-        // const ind = actionHelper.currStrokeIndex-1;
-        // for(let i = 0; i<meshObjects.length; i++){
-        //     if(meshObjects[i].strokeIndex == ind){
-        //         meshObjects[i].updateParam( param ) ;            
-        //     }
-        // }
-        // actionHelper.updateMatParam(ind, param);
+        }
 
-    
-    //}
-        
+    });
+
+       
 
 } 
     
@@ -970,9 +912,7 @@ function animate(){
     const selectMult = strokeSelect?0:1;
     const d = clock.getDelta();
     const delta = d*globalAnimationSpeed*selectMult ;
-    // for(var i = 0; i<meshObjects.length; i++){
-    //     meshObjects[i].update({delta:delta});
-    // }
+  
     actionHelper.update({delta:delta})
     matHandler.update({delta:d})
     //composer.render();
@@ -990,8 +930,9 @@ function getMatParam(){
         twistSize:$("#twist-size").val()*.04,
         noiseAmt:$("#noise-deform").val()*.01,
         rainbowAmt:$("#rainbow-tint-amount").val()*.01,
-        gradientSize:.1+$("#model-gradient-size").val()*.01,
+        gradientSize:$("#model-gradient-size").val()*.01,
         gradientAngle:$("#model-gradient-angle").val()*.01,
+        gradientAdd:$("#model-gradient-add").val()*.01,
         rainbowGradientSize:$("#rainbow-size").val()*.08,
         gradientOffset:+$("#model-gradient-offset").val()*.3,
         topColor:new THREE.Color( $("#model-color-top").val() ),
@@ -1296,14 +1237,9 @@ function onKeyUp(e) {
     
     e.preventDefault();
     if(e.keyCode==16){//shift
-        //if(canTogglStrokeSelect){
-            canTogglStrokeSelect = true;
-        //}
-        // strokeSelect = false;
-        // helper.holder.visible = true;
-        // for(let i = 0; i<meshObjects.length; i++){
-        //     meshObjects[i].unHover();
-        // }
+     
+        canTogglStrokeSelect = true;
+       
     }
 
     if(e.keyCode == 18){
@@ -1433,48 +1369,21 @@ function strokeSelectHelper(down){
                 $("#stroke-index-input").val(currentSelectedStrokeIndex)
                 actionHelper.select(currentSelectedStrokeIndex, transformControls);
 
-                // for(let i = 0; i<meshObjects.length; i++){
-                    
-                //     if(meshObjects[i].strokeIndex == ind){
-                //         if(meshObjects[i].scene.name == "strokeHolder"){//if it's not the mirrored stroke
-                //             //console.log(meshObjects[i].scn);
-                //             transformControls.detach();
-                //             transformControls.attach( meshObjects[i].scn );
-                //         }
-                //         //strokeSelectStrokes.push( meshObjects[i] );
-                //         updateStrokeSelectSlidersFromObject(meshObjects[i])
 
-
-                //     }
-
-                // }
 
 
             }
 
         }
-        // for(let i = 0; i<meshObjects.length; i++){
-        //     meshObjects[i].unHover();
-        // }
+       
         actionHelper.unHover();
 
-        // for(let i = 0; i<meshObjects.length; i++){
-        //     if(meshObjects[i].strokeIndex == ind && canHover){
-        //         meshObjects[i].hover();
-        //     }    
-        // }
+      
         if(canHover)
             actionHelper.hover(ind)
         
     }else{
-        
-        // if(down && !){
-        //     strokeSelectStrokes = [];
-        // }
-
-        // for(let i = 0; i<meshObjects.length; i++){
-        //     meshObjects[i].unHover();
-        // }
+      
         actionHelper.unHover();
         document.body.style.cursor = "auto";
 
@@ -1503,8 +1412,9 @@ function updateStrokeSelectSlidersFromObject(obj){
     $("#twist-size").val(obj.param.twistSize/.04);
     $("#noise-deform").val(obj.param.noiseAmt/.01);
     $("#rainbow-tint-amount").val(obj.param.rainbowAmt/.01);
-    $("#model-gradient-size").val( (obj.param.gradientSize - .1) / .01);
+    $("#model-gradient-size").val( (obj.param.gradientSize) / .01);
     $("#model-gradient-angle").val( (obj.param.gradientAngle) / .01);
+    $("#model-gradient-add").val( (obj.param.gradientAdd) / .01);
     $("#rainbow-size").val(obj.param.rainbowGradientSize /.08);
     $("#model-gradient-offset").val(obj.param.gradientOffset/.3);
     $("#model-color-top").val("#"+obj.param.topColor.getHexString());
@@ -1651,30 +1561,10 @@ function onMouseMove(e){
     ///console.log(movingTransformControls)
     //if(strokeSelect && movingTransformControls){//update mirrored local transform when moving control
     if(movingTransformControls && currentSelectedStrokeIndex != -1){
-        //if(){
-        //console.log("moving transform controls  ")  
-       // console.log("curr selected index = "+currentSelectedStrokeIndex);
-
-        //const t = getSelectedStrokePosition();
-        //console.log(t)
-        
-        // for(let i = 0; i<meshObjects.length; i++){
-            
-        //     if(meshObjects[i].strokeIndex == currentSelectedStrokeIndex){
-        //         if(meshObjects[i].scene.name != "strokeHolder"){
-        //             //console.log("stroke index for loop "+meshObjects[i].strokeIndex)
-        //             meshObjects[i].scn.position.copy(t.pos);//(param)    
-        //             meshObjects[i].scn.rotation.copy(t.rot);
-        //             meshObjects[i].scn.scale.copy(t.scl);
-        //             //meshObjects[i].hover();
-        //         }
-        //     }
-
-        // }
-        //const t = actionHelper.getMovingTransform();
+       
         actionHelper.updateTransform(currentSelectedStrokeIndex);//, {pos:t.sub, rot:t.rot, scl:t.scl});
        
-        // }
+        
     }
     
     if ( e.touches != null ) {
@@ -1701,56 +1591,8 @@ function onMouseMove(e){
     mouse.previousNormal.x =    ( mouse.position.x / window.innerWidth ) * 2 - 1;
     mouse.previousNormal.y =  - ( mouse.position.y / window.innerHeight ) * 2 + 1;
 
-    // if(btns.space){
-
-    //     var meshData = getHitPointFromMesh(sceneMesh, mouse.normal);
-        
-    //     if(meshData){
-    //         console.log(meshData.point)
-    //         bgMesh.position.copy(meshData.point);
-    //         bgMesh.lookAt(meshData.normal);    
-    //     }
-        
-    // }
 }
 
-function getSelectedStrokePosition(){
-    // for(let i = 0; i<meshObjects.length; i++){
-            
-    //     if(meshObjects[i].strokeIndex == currentSelectedStrokeIndex){
-    //         if(meshObjects[i].scene.name == "strokeHolder"){
-    //             return {
-    //                 pos:meshObjects[i].scn.position, 
-    //                 rot:meshObjects[i].scn.rotation, 
-    //                 scl:meshObjects[i].scn.scale,
-    //                 sub:new THREE.Vector3().subVectors(meshObjects[i].scn.position, meshObjects[i].avgPos)
-    //             };
-    //         }
-    //     }
-
-    // }
-
-
-   
-}
-
-
-
-// function getSelectedStrokePosition(){
-    
-//     for(let i = 0;i <strokeSelectStrokes.length; i++){
-//         console.log(strokeSelectStrokes[i].scene.name);
-//         if(strokeSelectStrokes[i].scene.name == "strokeHolder"){
-//             return {
-//                 pos:strokeSelectStrokes[i].scn.position, 
-//                 rot:strokeSelectStrokes[i].scn.rotation, 
-//                 scl:strokeSelectStrokes[i].scn.scale,
-//                 sub:new THREE.Vector3().subVectors(strokeSelectStrokes[i].scn.position, strokeSelectStrokes[i].avgPos)
-//             };
-//         }
-//     }
-
-// }
 
 
 function toggleInstructions(){
@@ -1799,9 +1641,9 @@ function handleDrawGeo(){
 
 function buildGeo(){
 
-    //meshObjects.push(new MeshObject());
+    
     const strokeFinal = [];
-    //console.log(mouse.smoothAvgs.length)
+    
     if(mouse.smoothAvgs.length>0 ){
 
         actionHelper.startNewPath();//if you undo remove items in the undo array after the currStrokeIndex
@@ -1825,7 +1667,6 @@ function buildGeo(){
             transformOffset:{pos:new THREE.Vector3(), rot:new THREE.Euler(), scl:new THREE.Vector3(1,1,1)}
         }
         
-        //meshObjects.push(new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all } ));
         let stroke = new Stroke( {scl:mouse.scales, pos:mouse.smoothAvgs, rots:mouse.rots, all:all} );
         strokeFinal.push({stroke:stroke, index:actionHelper.currStrokeIndex, scene:all.scene});
         
@@ -1869,7 +1710,6 @@ function buildGeo(){
             strokeFinal.push({stroke:stroke, index:actionHelper.currStrokeIndex, scene:all.scene});
         
         }
-        //console.log(strokeFinal)
         actionHelper.addStrokesArray({array:strokeFinal});
 
     }
@@ -1892,12 +1732,7 @@ function onBlur(){
 
 function saveGeoInkFile(){
     const arr = actionHelper.getExportData();
-    // for(let i = 0;i< actionHelper.actionsArr.length; i++){
-    //     if(actionHelper.actionsArrp[].strokeIndex < actionHelper.currStrokeIndex){//make sure you don't export undo  meshes
-    //         arr.push(meshObjects[i].getExportData());
-    //     }
-    // }
-    console.log(arr)
+   
     let drawObj = 0;
     if(!usingCustomDrawObject){
         drawObj = currentDrawObjectIndex;
@@ -1932,26 +1767,6 @@ function undoClick(){
         transformControls.detach();
         currentSelectedStrokeIndex = -1;
 
-        //const arr = [];
-        // for(let i = 0; i<meshObjects.length; i++){
-        //     if(meshObjects[i].strokeIndex == actionHelper.currStrokeIndex - 1){
-        //         meshObjects[i].killStroke();
-        //         arr.push(i);
-        //     }   
-        // }
-
-        // for(let k = 0; k<arr.length; k++){
-        //     meshObjects.splice(arr[k], 1);
-        // }
-        // for(let k = arr.length-1; k>=0; k--){
-        //     meshObjects.splice(arr[k], 1);
-        // }
-        
-        // console.log("undo index")
-        // for(let z = 0; z<meshObjects.length; z++){
-        //     console.log(meshObjects[z].strokeIndex)
-        // }
-
         actionHelper.undo();
     }
 }
@@ -1959,38 +1774,6 @@ function undoClick(){
 function redoClick(){
     
     if(actionHelper.currStrokeIndex < actionHelper.actionsArr.length){
-        
-        // const ind = actionHelper.currStrokeIndex;
-        // const mi = actionHelper.actionsArr[ind][0].all.modelInfo.modelIndex;
-        // const ui = actionHelper.actionsArr[ind][0].all.modelInfo.urlIndex;
-        // const model = getModelByIndex(ui, mi);
-      
-        // for(let i = 0; i<actionHelper.actionsArr[ind].length; i++){
-            
-        //     const pos = actionHelper.actionsArr[ind][i].pos;
-        //     const rots = actionHelper.actionsArr[ind][i].rots; 
-        //     const scl = actionHelper.actionsArr[ind][i].scl; 
-        //     const all = actionHelper.actionsArr[ind][i].all;
-            
-        //     all.scene = actionHelper.actionsArr[ind][i].scene;
-        //     all.index = ind;
-        //     all.meshClone = model;       
-        //     //console.log(all.meshClone)     
-        //     all.meshClone.traverse(function(child){
-        //         if(child.isMesh){
-        //             let copy = child.material.clone();
-        //             copy = matHandler.getCustomMaterial(copy, all.param);
-        //             child.material = copy;
-        //         }
-        //     });
-
-        //     meshObjects.push( new Stroke( {scl:scl, pos:pos, rots:rots, all:all} ) );
-
-        // }
-        // console.log("redo index")
-        // for(let z = 0; z<meshObjects.length; z++){
-        //     console.log(meshObjects[z].strokeIndex)
-        // } 
     
         actionHelper.redo();
 
@@ -2169,17 +1952,9 @@ function toggleMirrorZ(){
 function exportGLTF(  ) {
     
     const anis = actionHelper.getAnis();
-    console.log(anis)
+
     const meshes = [];
     
-    // for(let i = 0; i<meshObjects.length; i++){
-    //     for(let k = 0; k<meshObjects[i].meshes.length; k++){
-    //         anis.push( meshObjects[i].meshes[k].mesh.animations[0] )
-    //     }
-    // }
-
-    
-   
     const gltfExporter = new GLTFExporter();
 
     const options = {
@@ -2418,6 +2193,7 @@ function loadLoop(){
         rainbowAmt:p.rainbowAmt,
         gradientSize:p.gradientSize,
         gradientAngle:p.gradientAngle==null?0:p.gradientAngle,
+        gradientAdd:p.gradientAdd==null?0:p.gradientAdd,
         rainbowGradientSize:p.rainbowGradientSize,
         gradientOffset:p.gradientOffset,
         topColor:new THREE.Color("#"+p.topColor),

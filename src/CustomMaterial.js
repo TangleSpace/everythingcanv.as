@@ -48,6 +48,7 @@ class CustomMaterial {
             shader.uniforms.rainbowAmt = { value: param.rainbowAmt};
             shader.uniforms.gradientSize = { value: param.gradientSize};
             shader.uniforms.gradientAngle = { value: param.gradientAngle};
+            shader.uniforms.gradientAdd = { value: param.gradientAdd};
             shader.uniforms.rainbowGradientSize = { value: param.rainbowGradientSize};
             shader.uniforms.gradientOffset = { value: param.gradientOffset};
             shader.uniforms.topColor = { value: param.topColor};
@@ -128,6 +129,7 @@ class CustomMaterial {
                 'uniform float rainbowGradientSize;\n' +
                 'uniform float colorSpeed;\n' +
                 'uniform float deformSpeed;\n' +
+                'uniform float gradientAdd;\n' +
                 'uniform float shouldLoopGradient;\n'+
                 
               
@@ -154,10 +156,17 @@ class CustomMaterial {
                     if(shouldLoopGradient>.5){
                         gradientMix = .5+sin((mod * (gradientSize*20.) )+(time*colorSpeed))*.5;
                     }
-                    vec3 gradient = ogColor.xyz * mix( vec4(bottomColor.xyz, 1.), vec4(topColor.xyz,1.),  gradientMix ).xyz;
                     
-                    vec3 fnl = mix(vec4(gradient.xyz,1.), vec4(trip.xyz,1.), rainbowAmt).xyz;
-                
+                    vec3 grad = mix( vec4(bottomColor.xyz, 1.), vec4(topColor.xyz,1.),  gradientMix ).xyz;
+
+                    //vec3 gradient = ogColor.xyz * tint;
+                    
+                    vec3 tint = mix(vec4(grad,1.), vec4(trip.xyz,1.), rainbowAmt).xyz;
+                    
+                    vec3 fnl = ogColor.xyz * tint;
+
+                    fnl += tint * gradientAdd;
+                    
                     vec4 diffuseColor = vec4( fnl.xyz, opacity );
                 `);
             mat.userData.shader = shader;
