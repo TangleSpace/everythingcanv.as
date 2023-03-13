@@ -192,7 +192,11 @@
 						<input id="stroke-rot-offset-z" class="control-slider" type="range" min="0" max="360" value="0" >
 					</div>
 					<div class="slider-holder">
-						<button class="btn inline-btns" id="stroke-delete"> delete stroke </button>
+						<div class="tooltip inline-tooltip">
+							<span class="tooltiptext">[del] [backspace]</span>
+							<button class="btn inline-btns" id="stroke-delete" style="margin-top:20px"> delete stroke </button>
+						</div>
+						
 					</div>
 				</div>
 				<div class="drop-down-holder">
@@ -220,8 +224,8 @@
 								<input id="view-draw-color" class="color-select" type="color" value="#2d69a9" >
 							</div>
 							<div class="slider-holder">
-									<div class="tooltip inline-tooltip" style="width:160px">
-										<span class="tooltiptext" style="margin-top:-15px; margin-left: 120px; ">{ }</span>
+									<div class="tooltip inline-tooltip" style="width:180px">
+										<span class="tooltiptext" style="margin-top:-15px; margin-left: 100px; ">[ { ]  [ } ]</span>
 										<span class="slider-info">view draw distance</span>
 									</div>
 								<input id="view-draw-distance" class="control-slider" type="range" min="5" max="80" value="20" >
@@ -267,11 +271,18 @@
 							</div>
 
 							<div class="slider-holder">
-								<span class="slider-info">normal offset</span>
+								
+								<div class="tooltip inline-tooltip" style="width:70px">
+									<span class="tooltiptext" style="margin-top:-15px; margin-left: 30px; width:90px;">[ ; ] [ ' ] reset - L </span>
+									<span class="slider-info">normal offset</span>
+								</div>
 								<input id="normal-offset-amount" class="control-slider" type="range" min="-100" max="100" value="5" >
 							</div>
 							<div class="slider-holder">
-								<span class="slider-info">stroke density</span>
+								<div class="tooltip inline-tooltip" style="width:70px">
+									<span class="tooltiptext" style="margin-top:-15px; margin-left: 30px; width:50px;">[ &lt ] [ &gt ] </span>
+									<span class="slider-info">normal offset</span>
+								</div>
 								<input id="density-amount" class="control-slider" type="range" min="0" max="100" value="20" >
 							
 							</div>
@@ -330,7 +341,7 @@
 							</div>
 							<div class="slider-holder">
 								<span class="slider-info">additive rotation speed</span>
-								<input id="additive-rotation-slider" class="control-slider" type="range" min="0" max="100" value="0" >
+								<input id="additive-rotation-slider" class="control-slider" type="range" min="0" max="50" value="0" >
 							
 							</div>
 							<div class="slider-holder">
@@ -406,7 +417,7 @@
 
 						<div class="slider-holder">
 							<span class="slider-info">gradient add</span>
-							<input id="model-gradient-add" class="control-slider" type="range" min="0" max="600" value="0" >
+							<input id="model-gradient-add" class="control-slider" type="range" min="0" max="1200" value="0" >
 						</div>
 
 						<div class="slider-holder">
@@ -458,10 +469,10 @@
 				</div>
 				<div class="drop-down-holder" style="padding-bottom: 200px;">
 					<div class="drop-down-title" id="export-title">
-						Export
+						Save / Export
 					</div>
 					<div class="drop-down-content" id="export-content">
-						<button class="btn inline-btns" id="export-gltf"> save gltf </button> <br/>
+						<button class="btn inline-btns" id="export-gltf"> export .glb </button> <br/>
 						<button class="btn inline-btns" id="save-geo-ink-file"> save everything canvas </button> <br/>
 					</div>
 				</div>

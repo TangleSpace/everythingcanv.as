@@ -150,9 +150,11 @@ class CustomMaterial {
                     trip.y *= (( .5 + sin( ((6.28*.33)) +  ((  mod * rainbowGradientSize ) + (time*colorSpeed) ) )*.5 ) *1.);
                     trip.z *= (( .5 + sin( ((6.28*.66)) +  ((  mod * rainbowGradientSize ) + (time*colorSpeed) ) )*.5 ) *1.);
 
-                    float h = normalize( vec3(vPos.x, vPos.y + gradientOffset, vPos.z)  ).y;
-                    float gradientMix = max( pow( max( h, 0.0 ), gradientSize ), 0.0 );
+                    float h = normalize( vec3(vPos.x, mod + gradientOffset, vPos.z)  ).y;
+                    float gradientMix = max( pow( max( h, 0.0 ), (.5+gradientSize*20.) ), 0.0 );
+                    
                     //float gradientMix = clamp( (h+.5) * gradientSize, 0., 1. ) ;
+                    
                     if(shouldLoopGradient>.5){
                         gradientMix = .5+sin((mod * (gradientSize*20.) )+(time*colorSpeed))*.5;
                     }

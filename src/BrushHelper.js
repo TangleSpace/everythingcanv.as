@@ -55,6 +55,10 @@ class BrushHelper {
         }
     }
 
+    resetAdditiveRot(){
+        this.rotAdditive.set(0,0,0)
+    }
+
     doMouseInteraction (OBJ) {
         //console.log(OBJ.mouse.normal)
         this.raycaster.setFromCamera( OBJ.mouse.normal, OBJ.camera );

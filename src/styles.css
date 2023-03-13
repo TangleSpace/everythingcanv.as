@@ -224,7 +224,7 @@ body{
   max-width: 700px;
   margin: 0px;
   padding: 0px;
-
+  text-align: center;
   user-drag: none;
   -webkit-user-drag: none;
   user-select: none;

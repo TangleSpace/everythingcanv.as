@@ -53,25 +53,26 @@ let shouldRotateAdditiveY = true;
 let shouldRotateAdditiveZ = true;
 let globalAdditiveRotationSpeed = 0;
 let mouseOverSelect = false;
-
 let globalShouldAnimateSize = true;
+
+let canLoadMesh = true;
+
 const loadobjs = [
     //{name:"draw objects", url:"./extras/draw/",           amount:2},
-    {loaded:false, name:"Simple Shapes", url:"./extras/models/simple-shapes/", amount:7},
-    {loaded:false, name:"Animals", url:"./extras/models/everything-animals/", amount:231},
-    {loaded:false, name:"Consumables", url:"./extras/models/everything-consumables/", amount:107},
-    {loaded:false, name:"Furnishings", url:"./extras/models/everything-furnishings/", amount:231},
-    
-    {loaded:false, name:"Microscopic", url:"./extras/models/everything-microscopic/", amount:226},
-    {loaded:false, name:"Plants", url:"./extras/models/everything-plants/", amount:496},
-    {loaded:false, name:"Underwater", url:"./extras/models/everything-underwater/", amount:107},
-    {loaded:false, name:"Trees", url:"./extras/models/everything-trees/", amount:273},
-    {loaded:false, name:"Rocks", url:"./extras/models/everything-rocks/", amount:465},
-    {loaded:false, name:"Human", url:"./extras/models/everything-human/", amount:332},
-    {loaded:false, name:"Vehicles", url:"./extras/models/everything-vehicles/", amount:83},
-    {loaded:false, name:"Buildings", url:"./extras/models/everything-buildings/", amount:213},
-    {loaded:false, name:"Zeometry", url:"./extras/models/everything-geo/", amount:297},
-    {loaded:false, name:"Space", url:"./extras/models/everything-space/", amount:265},
+    {loaded:false, key:"1", name:"Simple Shapes", url:"./extras/models/simple-shapes/", amount:7},
+    {loaded:false, key:"2", name:"Animals", url:"./extras/models/everything-animals/", amount:231},
+    {loaded:false, key:"3", name:"Consumables", url:"./extras/models/everything-consumables/", amount:107},
+    {loaded:false, key:"4", name:"Furnishings", url:"./extras/models/everything-furnishings/", amount:231},
+    {loaded:false, key:"5", name:"Microscopic", url:"./extras/models/everything-microscopic/", amount:226},
+    {loaded:false, key:"6", name:"Plants", url:"./extras/models/everything-plants/", amount:496},
+    {loaded:false, key:"7", name:"Underwater", url:"./extras/models/everything-underwater/", amount:107},
+    {loaded:false, key:"8", name:"Trees", url:"./extras/models/everything-trees/", amount:273},
+    {loaded:false, key:"9", name:"Rocks", url:"./extras/models/everything-rocks/", amount:465},
+    {loaded:false, key:"0", name:"Human", url:"./extras/models/everything-human/", amount:332},
+    {loaded:false, key:"u", name:"Vehicles", url:"./extras/models/everything-vehicles/", amount:83},
+    {loaded:false, key:"i", name:"Buildings", url:"./extras/models/everything-buildings/", amount:213},
+    {loaded:false, key:"o", name:"Zeometry", url:"./extras/models/everything-geo/", amount:297},
+    {loaded:false, key:"p", name:"Space", url:"./extras/models/everything-space/", amount:265},
     
 ]
 //let colorAniSpeed = 
@@ -88,7 +89,7 @@ let currentDrawHitPoint;
 let globalOffsetRotation = new THREE.Euler( 0, 0, 0, 'XYZ' );
 let globalLerpAmount = 1;
 
-let globalDensityAmount = .1;
+let globalDensityAmount = .062;
 let globalSmoothAmount = .1;
 let globalNormalOffsetAmount = .05;
 let previewMesh;
@@ -168,7 +169,7 @@ function init(){
         //if(dHolder.id)
         dTitle.className="drop-down-title";
         dImgs.className="drop-down-content";
-        dTitle.innerHTML = loadobjs[i].name;
+        dTitle.innerHTML = loadobjs[i].name + " [" +loadobjs[i].key+ "]";
         dHolder.append(dTitle);
         dHolder.append(dImgs);
 
@@ -190,10 +191,12 @@ function init(){
                         
                         img.src = (url+k)+".png";
                         div.onclick = function(){
-                            selectedThumbDiv.classList.remove("selected-thumb")
-                            div.classList.add("selected-thumb");
-                            selectedThumbDiv = div;
-                            chooseModel(i,k)
+                            if(canLoadMesh){
+                                selectedThumbDiv.classList.remove("selected-thumb")
+                                div.classList.add("selected-thumb");
+                                selectedThumbDiv = div;
+                                chooseModel(i,k)
+                            }
                         };
                         
                         div.onmousedown = function(e){ currDragImgSrc = e.srcElement.currentSrc; };
@@ -240,10 +243,13 @@ function init(){
                 
                 img.src = (url+k)+".png";
                 div.onclick = function(){
-                    selectedThumbDiv.classList.remove("selected-thumb");
-                    div.classList.add("selected-thumb");
-                    selectedThumbDiv = div;
-                    chooseModel(i,k)
+                    if(canLoadMesh){
+                        selectedThumbDiv.classList.remove("selected-thumb");
+                        div.classList.add("selected-thumb");
+                        selectedThumbDiv = div;
+
+                        chooseModel(i,k)
+                    }
                 };
                 div.onmousedown = function(e){ currDragImgSrc = e.srcElement.currentSrc; };
                 img.oncontextmenu = function(e){
@@ -403,7 +409,7 @@ function init(){
     
     controls.enableDamping = false; // an animation loop is required when either damping or auto-rotation are enabled
     controls.dampingFactor = 0.05;
-    controls.zoomSpeed = .2
+    controls.zoomSpeed = .4
     controls.rotateSpeed = .6;
     controls.panSpeed = .6;
     
@@ -589,6 +595,8 @@ function init(){
     document.getElementById("background-color-top").addEventListener("input", updateBackgroundParms);
 
     document.getElementById("background-color-bottom").addEventListener("input", updateBackgroundParms);
+    
+
 
     document.getElementById("rainbow-tint-amount").addEventListener("input", updateModelParams);
 
@@ -624,9 +632,12 @@ function init(){
   
     document.getElementById("view-draw-distance").addEventListener("input", updateDrawViewDistanceSlider);
   
-
     document.getElementById("stroke-index-input").addEventListener("input", updateSelectedStroke)
     
+    $(window).bind('beforeunload', function(){
+        return 'make sure to save an everything canvas file or glb before leaving.';
+    });
+
     document.getElementById("stroke-move").addEventListener("click", toggleMoveGizmo)
     document.getElementById("stroke-rotate").addEventListener("click", toggleRotateGizmo)
     document.getElementById("stroke-scale").addEventListener("click", toggleScaleGizmo)
@@ -644,7 +655,8 @@ function init(){
     //document.getElementById("instructions-overlay").addEventListener( 'dragleave', onDocumentLeave, false );
     //document.getElementById("instructions-overlay").addEventListener( 'drop', onDocumentDrop, false );
 
-    $("#splash-mobile, #splash").attr("src","./extras/splash-"+Math.floor(Math.random()*3)+".png")
+    //$("#splash-mobile, #splash").attr("src","./extras/splash-"+Math.floor(Math.random()*3)+".png")
+    $("#splash-mobile, #splash").attr("src","./extras/pepe-gif.gif")
 
     helper = new BrushHelper({scene:scene, raycaster:raycaster});
     background = new Background({scene:scene});
@@ -950,9 +962,11 @@ function chooseModel(i,k, customParams, callback){
         
     urlIndex = i;
     modelIndex = k;
+
+    const ui = urlIndex;
+    const mi = modelIndex;
     
-   const ui = urlIndex;
-   const mi = modelIndex;
+    canLoadMesh = false;
     if(!hasLoadedMeshAlready()){
         const loader = new GLTFLoader().setPath( loadobjs[i].url );
         loader.load( k+'.glb', function ( gltf ) {
@@ -962,7 +976,8 @@ function chooseModel(i,k, customParams, callback){
     }else{
         const scene = getMeshFromIndex(urlIndex, modelIndex);
         handleMeshLoad(scene, customParams, callback)
-    }
+    }   
+   
 
 }
 
@@ -982,6 +997,7 @@ function hasLoadedMeshAlready(){
 }
 
 function handleMeshLoad(scene, customParams, callback){
+    canLoadMesh = true;
     const param = customParams == null ? getMatParam() : customParams;
 
     scene.traverse( function ( child ) {
@@ -1077,8 +1093,58 @@ function toggleFullscreen(){
 
 function onKeyDown(e) {
     
-    
-    //console.log(e.keyCode)
+    if(e.keyCode==8||e.keyCode==46){
+        deleteStroke();
+    }
+
+    if(e.keyCode==188){//negative
+        globalDensityAmount -= .02;
+        if(globalDensityAmount<0)globalDensityAmount = 0;
+        $("#density-amount").val(globalDensityAmount/.0031)
+    }
+
+    if(e.keyCode==190){//positive
+        globalDensityAmount += .02;
+        if(globalDensityAmount>.31)globalDensityAmount = .31;
+        $("#density-amount").val(globalDensityAmount/.0031)
+    }
+
+    if(e.keyCode==222){
+        if(globalNormalOffsetAmount>2.)
+            globalNormalOffsetAmount += .25;
+        else if(globalNormalOffsetAmount > .8)
+            globalNormalOffsetAmount += .15;
+        else
+            globalNormalOffsetAmount += .05;
+        if(globalNormalOffsetAmount>5)globalNormalOffsetAmount=5;
+        
+        $("#normal-offset-amount").val(globalNormalOffsetAmount/.025)
+        if(!mouse.down)
+            handleUiUpdating(globalNormalOffsetAmount);
+    }
+
+    if(e.keyCode==186){
+        if(globalNormalOffsetAmount<-2.)
+            globalNormalOffsetAmount -= .25;
+        else if(globalNormalOffsetAmount < -.8)
+            globalNormalOffsetAmount -= .15;
+        else
+            globalNormalOffsetAmount -= .05;
+        if(globalNormalOffsetAmount<-5)globalNormalOffsetAmount=-5;
+        
+        $("#normal-offset-amount").val(globalNormalOffsetAmount/.025)
+        if(!mouse.down)
+            handleUiUpdating(globalNormalOffsetAmount);
+
+    }
+
+    if(e.keyCode==76){
+        globalNormalOffsetAmount = 0;
+        $("#normal-offset-amount").val(globalNormalOffsetAmount/.025)
+        if(!mouse.down)
+            handleUiUpdating(globalNormalOffsetAmount);
+    } 
+
     if(e.keyCode==49){//1
         //console.log($("#title-simple-shapes").top);
         const top = $("#title-Simple-Shapes").position().top;
@@ -1836,15 +1902,18 @@ function updateMeshSize(){
 
 function rotateBrushX(){
     globalOffsetRotation.x = $("#rotate-slider-x").val()*0.01745329251;
-    helper.holder.rotation.set(globalOffsetRotation.x,globalOffsetRotation.y,globalOffsetRotation.z);
+    helper.resetAdditiveRot(); 
+    //helper.holder.rotation.set(globalOffsetRotation.x,globalOffsetRotation.y,globalOffsetRotation.z);
 }
 function rotateBrushY(){
     globalOffsetRotation.y = $("#rotate-slider-y").val()*0.01745329251;
-    helper.holder.rotation.set(globalOffsetRotation.x,globalOffsetRotation.y,globalOffsetRotation.z);
+    helper.resetAdditiveRot();
+    //helper.holder.rotation.set(globalOffsetRotation.x,globalOffsetRotation.y,globalOffsetRotation.z);
 }
 function rotateBrushZ(){
     globalOffsetRotation.z = $("#rotate-slider-z").val()*0.01745329251;
-    helper.holder.rotation.set(globalOffsetRotation.x,globalOffsetRotation.y,globalOffsetRotation.z);
+    helper.resetAdditiveRot();
+    //helper.holder.rotation.set(globalOffsetRotation.x,globalOffsetRotation.y,globalOffsetRotation.z);
 }
 function updateSmoothAmount(){
     globalSmoothAmount = 1-($("#smooth-amount").val()*.01);
@@ -1852,7 +1921,7 @@ function updateSmoothAmount(){
 function updateNormalOffsetAmount(){
    
     globalNormalOffsetAmount = $("#normal-offset-amount").val()*.025;
-  
+    //console.log(globalNormalOffsetAmount)
     handleUiUpdating(globalNormalOffsetAmount);
 
 }
@@ -1886,7 +1955,18 @@ function handleUiUpdating(nrml){
     
     mouse.normal.x = 0;
     mouse.normal.y = 0;
+    handleMouseInteraction(nrml);
+    // helper.doMouseInteraction({
+    //     mouse:mouse, 
+    //     camera:camera, 
+    //     bgMesh:bgMesh, 
+    //     drawObject:drawObject,
+    //     drawState:drawState,
+    //     globalNormalOffsetAmount: nrml==null ? 0 : nrml
+    // });
+}
 
+function handleMouseInteraction(nrml){
     helper.doMouseInteraction({
         mouse:mouse, 
         camera:camera, 
@@ -1899,6 +1979,8 @@ function handleUiUpdating(nrml){
 
 function updateDensity(){
     globalDensityAmount = $("#density-amount").val()*.0031;
+    //console.log(globalDensityAmount)
+    
 }
 
 function toggleRotationFollowingNormal(){
@@ -1906,7 +1988,7 @@ function toggleRotationFollowingNormal(){
 }
 
 function updateRotationSpeed(){
-    globalAdditiveRotationSpeed = $("#additive-rotation-slider").val()*.0015;
+    globalAdditiveRotationSpeed = $("#additive-rotation-slider").val()*.001;
 }
 function toggleAdditiveRotationX(){
     shouldRotateAdditiveX = !shouldRotateAdditiveX;
@@ -2165,7 +2247,6 @@ function loadLoop(){
     const i = strokesLoopHelper;
 
     const arr = loadedObject.geoink.formattedArray;
-    console.log(arr[i]);
     if(arr[i].length==0){
         strokesLoopHelper++;
         if(strokesLoopHelper<arr.length)
@@ -2246,13 +2327,18 @@ function loadLoop(){
         param:param
     }
 
-    
-    //const meshClone = sn;//.clone();
-    
-    
     chooseModel(ui, mi, param, function(sn){
         //const strokes = loadedObject.geoink.strokes;
-        all.meshClone = sn;
+        all.meshClone = sn.clone();
+        all.meshClone.traverse( function ( child ) {
+            if ( child.isMesh ) {
+                if(child.material!=null){
+                    let copy = child.material.clone();
+                    copy = matHandler.getCustomMaterial(copy, all.param);
+                    child.material = copy;
+                }
+            }
+        });
         const strokeFinal = []
         for(let i = 0; i<arr[strokesLoopHelper].length; i++){
             
