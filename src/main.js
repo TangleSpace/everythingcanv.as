@@ -439,7 +439,7 @@ function init(){
 
 
 
-    for(let i = 0; i<10; i++){
+    for(let i = 0; i<11; i++){
         
         document.getElementById("draw-object-"+i).addEventListener("click", function(){
             
@@ -790,6 +790,7 @@ function toggleStrokeSelect(){
     }else{
         currentSelectedStrokeIndex = -1;
         transformControls.detach();
+        helper.copyMaterial({  param:getMatParam(), matHandler:matHandler });
         $("#draw-mode-options").slideDown();
         $("#stroke-select-options").slideUp();
     }
