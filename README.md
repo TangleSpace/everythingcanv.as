@@ -1,6 +1,6 @@
 ## Everything Canvas
 
-Paint with the Everything 3d mesh library. 
+Paint with the Everything Library. 
 
 [Docs](https://docs.google.com/document/d/1R6eotYhfrLgmEFiWftUPHgll2mr_mccCGWWGxtHagOo/edit?usp=sharing)
 

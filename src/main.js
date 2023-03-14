@@ -64,11 +64,11 @@ const loadobjs = [
     {loaded:false, key:"3", name:"Consumables", url:"./extras/models/everything-consumables/", amount:107},
     {loaded:false, key:"4", name:"Furnishings", url:"./extras/models/everything-furnishings/", amount:231},
     {loaded:false, key:"5", name:"Microscopic", url:"./extras/models/everything-microscopic/", amount:226},
-    {loaded:false, key:"6", name:"Plants", url:"./extras/models/everything-plants/", amount:496},
+    {loaded:false, key:"6", name:"Plants", url:"./extras/models/everything-plants/", amount:486},
     {loaded:false, key:"7", name:"Underwater", url:"./extras/models/everything-underwater/", amount:107},
     {loaded:false, key:"8", name:"Trees", url:"./extras/models/everything-trees/", amount:273},
     {loaded:false, key:"9", name:"Rocks", url:"./extras/models/everything-rocks/", amount:465},
-    {loaded:false, key:"0", name:"Human", url:"./extras/models/everything-human/", amount:332},
+    {loaded:false, key:"0", name:"Human", url:"./extras/models/everything-human/", amount:330},
     {loaded:false, key:"u", name:"Vehicles", url:"./extras/models/everything-vehicles/", amount:83},
     {loaded:false, key:"i", name:"Buildings", url:"./extras/models/everything-buildings/", amount:213},
     {loaded:false, key:"o", name:"Zeometry", url:"./extras/models/everything-geo/", amount:297},
@@ -788,6 +788,7 @@ function toggleStrokeSelect(){
         $("#stroke-select-options").slideDown();
         $("#draw-mode-options").slideUp();
     }else{
+        actionHelper.unHover();
         currentSelectedStrokeIndex = -1;
         transformControls.detach();
         helper.copyMaterial({  param:getMatParam(), matHandler:matHandler });
@@ -1120,8 +1121,8 @@ function onKeyDown(e) {
         if(globalNormalOffsetAmount>5)globalNormalOffsetAmount=5;
         
         $("#normal-offset-amount").val(globalNormalOffsetAmount/.025)
-        if(!mouse.down)
-            handleUiUpdating(globalNormalOffsetAmount);
+        // if(!mouse.down)
+        //     handleUiUpdating(globalNormalOffsetAmount);
     }
 
     if(e.keyCode==186){
@@ -1134,16 +1135,16 @@ function onKeyDown(e) {
         if(globalNormalOffsetAmount<-5)globalNormalOffsetAmount=-5;
         
         $("#normal-offset-amount").val(globalNormalOffsetAmount/.025)
-        if(!mouse.down)
-            handleUiUpdating(globalNormalOffsetAmount);
+        // if(!mouse.down)
+        //     handleUiUpdating(globalNormalOffsetAmount);
 
     }
 
     if(e.keyCode==76){
         globalNormalOffsetAmount = 0;
         $("#normal-offset-amount").val(globalNormalOffsetAmount/.025)
-        if(!mouse.down)
-            handleUiUpdating(globalNormalOffsetAmount);
+        // if(!mouse.down)
+        //     handleUiUpdating(globalNormalOffsetAmount);
     } 
 
     if(e.keyCode==49){//1
@@ -1215,38 +1216,63 @@ function onKeyDown(e) {
     }
     if(e.keyCode == 86){//v
         updateDrawState();
-    }   
+    }
+    
+    /*
+
+    function updateScaleOffset(){
+    const s = $("#stroke-scale-offset").val()*.01;
+   
+    if(currentSelectedStrokeIndex != -1){
+        actionHelper.updateScaleOffset(currentSelectedStrokeIndex, s)
+    }
+}
+
+
+    */
 
     if(e.keyCode == 187){//+    
-        
-        if(meshScale>2.)
-            meshScale += .25;
-        else if(meshScale>1.)
-            meshScale += .15;
-        else
-            meshScale += .05;
-        if(meshScale<0)meshScale=0;
-        if(meshScale>8)meshScale=8;
-
+        if(!strokeSelect){
+            if(meshScale>2.)
+                meshScale += .25;
+            else if(meshScale>1.)
+                meshScale += .15;
+            else
+                meshScale += .05;
+            if(meshScale<0)meshScale=0;
+            if(meshScale>14)meshScale=14;
+            $("#size-slider").val(meshScale/.08)
+        }else{
+            const s  = actionHelper.offsetScaleKeyPress(currentSelectedStrokeIndex, .1);
+            $("#stroke-scale-offset").val(s/.01);
+        }
     }
     
     
     if(e.keyCode == 189){//-
-        if(meshScale>2.)
-            meshScale -= .25;
-        else if(meshScale>1.)
-            meshScale -= .15;
-        else
-            meshScale -= .05;
+        if(!strokeSelect){
+            if(meshScale>2.)
+                meshScale -= .25;
+            else if(meshScale>1.)
+                meshScale -= .15;
+            else
+                meshScale -= .05;
 
-        if(meshScale<0)meshScale=0;
-        if(meshScale>8)meshScale=8;
+            if(meshScale<0)meshScale=0;
+            if(meshScale>14)meshScale=14;
+            $("#size-slider").val(meshScale/.08)
+        }else{
+            const s = actionHelper.offsetScaleKeyPress(currentSelectedStrokeIndex, -.1);
+            $("#stroke-scale-offset").val(s/.01);
+        }
     }
 
     if(e.keyCode == 219){//+    
-       updateDrawViewDistance(bgMesh.position.z - .1);
+        $("#view-draw-distance").val((bgMesh.position.z-.1)*-1);
+        updateDrawViewDistance(bgMesh.position.z - .1);
     }
-    if(e.keyCode == 221){//+    
+    if(e.keyCode == 221){//+   
+        $("#view-draw-distance").val((bgMesh.position.z+.1)*-1);
         updateDrawViewDistance(bgMesh.position.z + .1);
      }
 

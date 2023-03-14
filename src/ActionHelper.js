@@ -140,6 +140,16 @@ class ActionHelper {
             this.actionsArr[index][i].stroke.updateScale({scale:val});
         }
     }
+
+    offsetScaleKeyPress(index, val){
+        let s = 0;
+        for(let i = 0; i < this.actionsArr[index].length; i++){
+            s = this.actionsArr[index][i].stroke.sclMult + val;
+            if(s<0)s=0;
+            this.actionsArr[index][i].stroke.updateScale({scale:s});
+        }
+        return s;
+    }
     
     updateRotOffsetX(index, val){
         for(let i = 0; i < this.actionsArr[index].length; i++){
