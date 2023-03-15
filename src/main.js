@@ -789,6 +789,13 @@ function toggleStrokeSelect(){
         $("#draw-mode-options").slideUp();
     }else{
         actionHelper.unHover();
+        for(let i = 0; i<paintMeshes.length; i++){
+            paintMeshes[i].model.traverse( function ( child ) {
+                if ( child.isMesh ) {
+                    child.material.emissive = new THREE.Color(0x000000);
+                }
+            });
+        }
         currentSelectedStrokeIndex = -1;
         transformControls.detach();
         helper.copyMaterial({  param:getMatParam(), matHandler:matHandler });
@@ -1121,6 +1128,7 @@ function onKeyDown(e) {
         if(globalNormalOffsetAmount>5)globalNormalOffsetAmount=5;
         
         $("#normal-offset-amount").val(globalNormalOffsetAmount/.025)
+        handleMouseInteraction(globalNormalOffsetAmount);
         // if(!mouse.down)
         //     handleUiUpdating(globalNormalOffsetAmount);
     }
@@ -1135,6 +1143,7 @@ function onKeyDown(e) {
         if(globalNormalOffsetAmount<-5)globalNormalOffsetAmount=-5;
         
         $("#normal-offset-amount").val(globalNormalOffsetAmount/.025)
+        handleMouseInteraction(globalNormalOffsetAmount);
         // if(!mouse.down)
         //     handleUiUpdating(globalNormalOffsetAmount);
 
@@ -1143,6 +1152,7 @@ function onKeyDown(e) {
     if(e.keyCode==76){
         globalNormalOffsetAmount = 0;
         $("#normal-offset-amount").val(globalNormalOffsetAmount/.025)
+        handleMouseInteraction(globalNormalOffsetAmount);
         // if(!mouse.down)
         //     handleUiUpdating(globalNormalOffsetAmount);
     } 
@@ -1243,8 +1253,10 @@ function onKeyDown(e) {
             if(meshScale>14)meshScale=14;
             $("#size-slider").val(meshScale/.08)
         }else{
-            const s  = actionHelper.offsetScaleKeyPress(currentSelectedStrokeIndex, .1);
-            $("#stroke-scale-offset").val(s/.01);
+            if(currentSelectedStrokeIndex != -1){
+                const s  = actionHelper.offsetScaleKeyPress(currentSelectedStrokeIndex, .1);
+                $("#stroke-scale-offset").val(s/.01);
+            }
         }
     }
     
@@ -1262,8 +1274,10 @@ function onKeyDown(e) {
             if(meshScale>14)meshScale=14;
             $("#size-slider").val(meshScale/.08)
         }else{
-            const s = actionHelper.offsetScaleKeyPress(currentSelectedStrokeIndex, -.1);
-            $("#stroke-scale-offset").val(s/.01);
+            if(currentSelectedStrokeIndex != -1){
+                const s = actionHelper.offsetScaleKeyPress(currentSelectedStrokeIndex, -.1);
+                $("#stroke-scale-offset").val(s/.01);
+            }
         }
     }
 

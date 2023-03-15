@@ -362,7 +362,7 @@ class PaintMesh {
                 child.rotation.y = self.rotOffsetY;
                 child.rotation.z = self.rotOffsetZ;
                 child.paintIndex = self.strokeIndex;
-                self.ogEmissives.push(child.material.emissive);
+                self.ogEmissives.push(new Color(0x000000));
             }
         });
 
