@@ -280,7 +280,7 @@ class PaintMesh {
         this.scalef;
         this.rotationkf;
         this.lookObj = new Object3D();
-        this.ogEmissives = [];
+       // this.ogEmissives = [];
         
         this.sclMult = OBJ.sclMult;
         this.rotOffsetX = OBJ.rotOffsetX;
@@ -294,7 +294,7 @@ class PaintMesh {
                 child.rotation.y = self.rotOffsetY;
                 child.rotation.z = self.rotOffsetZ;
                 child.paintIndex = self.strokeIndex;
-                self.ogEmissives.push(child.material.emissive);
+               // self.ogEmissives.push(child.material.emissive);
             }
         });
         
@@ -337,7 +337,7 @@ class PaintMesh {
         const self = this;
         this.mesh.traverse( function ( child ) {
             if ( child.isMesh ) {
-                child.material.emissive = self.ogEmissives[i];
+                child.material.emissive = new Color(0x000000);//self.ogEmissives[i];
                 i++;
             }
         });
@@ -354,7 +354,7 @@ class PaintMesh {
         this.mesh.name = ""+this.mesh.uuid.slice(0, 12);
         
         this.scene.add(this.mesh);
-        this.ogEmissives = [];
+        //this.ogEmissives = [];
         this.mesh.traverse( function ( child ) {
             if ( child.isMesh ) {
                 child.scale.set(self.sclMult, self.sclMult, self.sclMult);
@@ -362,7 +362,7 @@ class PaintMesh {
                 child.rotation.y = self.rotOffsetY;
                 child.rotation.z = self.rotOffsetZ;
                 child.paintIndex = self.strokeIndex;
-                self.ogEmissives.push(new Color(0x000000));
+                //self.ogEmissives.push(new Color(0x000000));
             }
         });
 
