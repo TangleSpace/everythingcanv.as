@@ -55,6 +55,9 @@ let globalAdditiveRotationSpeed = 0;
 let mouseOverSelect = false;
 let globalShouldAnimateSize = true;
 
+const renderCanv = document.createElement("canvas");
+const renderCtx = renderCanv.getContext("2d");
+        
 let canLoadMesh = true;
 
 const loadobjs = [
@@ -401,7 +404,8 @@ function init(){
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	document.body.appendChild( renderer.domElement );
     renderer.domElement.className = "customThree";
-    
+    renderer.domElement.id = "three-dom";
+
     const pmremGenerator = new THREE.PMREMGenerator( renderer );
     scene.environment = pmremGenerator.fromScene( new RoomEnvironment(), 0.14 ).texture;
 
@@ -633,6 +637,8 @@ function init(){
     document.getElementById("view-draw-distance").addEventListener("input", updateDrawViewDistanceSlider);
   
     document.getElementById("stroke-index-input").addEventListener("input", updateSelectedStroke)
+
+    document.getElementById("render-download").addEventListener("click", handleRenderImg)
     
     $(window).bind('beforeunload', function(){
         return 'make sure to save an everything canvas file or glb before leaving.';
@@ -663,6 +669,65 @@ function init(){
     matHandler = new CustomMaterial();
 	animate();
 }
+
+
+function handleRenderImg(){
+    helper.holder.visible = false;
+    
+    currentSelectedStrokeIndex = -1;
+    transformControls.detach();
+    
+    const wasBgMeshVisible = bgMesh.visible; 
+    bgMesh.visible = false;
+    
+    mirrorMeshX.visible = false; 
+    mirrorMeshY.visible = false; 
+    mirrorMeshZ.visible = false; 
+
+    actionHelper.unHover();
+
+    renderer.render(scene,camera);
+    renderer.preserverDrawingBuffer = true;
+
+    const durl =  document.getElementById("three-dom").toDataURL();// renderer.domElement.toDataURL();
+    const image = new Image();
+    image.onload = function(){
+
+        renderCanv.width = window.innerWidth;
+        renderCanv.height = window.innerHeight;
+        
+        renderCtx.drawImage(image, 0,0, renderCanv.width, renderCanv.height);
+        renderCtx.font = "15px Arial";
+        renderCtx.fillStyle = "white";
+        renderCtx.textAlign = "right";
+        renderCtx.fillText("everythingcanv.as", renderCanv.width-20, renderCanv.height-20);
+        
+        
+        const link = document.createElement('a');
+        link.download = 'everything-canvas.png';
+        link.href = renderCanv.toDataURL()
+        link.click();
+
+        if(!strokeSelect)
+            helper.holder.visible = true;
+
+        if(mirrorX){
+            mirrorMeshX.visible = true; 
+        }
+        if(mirrorY){
+            mirrorMeshY.visible = true; 
+        }
+        if(mirrorZ){
+            mirrorMeshZ.visible = true; 
+        }
+        
+        bgMesh.visible = wasBgMeshVisible;
+        renderer.preserverDrawingBuffer = false;
+
+    }
+    image.src = durl;
+}
+
 
 function killContext(){
     if(showingContext){
@@ -719,12 +784,12 @@ function updateViewColor(){
 
 function deleteStroke(){
     if(currentSelectedStrokeIndex != -1){
-        
-        transformControls.detach();
-        
+         
         actionHelper.deleteStrokeHelper(currentSelectedStrokeIndex);
 
         currentSelectedStrokeIndex = -1;
+        transformControls.detach();
+        
     }
 
 }
@@ -798,6 +863,7 @@ function toggleStrokeSelect(){
         }
         currentSelectedStrokeIndex = -1;
         transformControls.detach();
+
         helper.copyMaterial({  param:getMatParam(), matHandler:matHandler });
         $("#draw-mode-options").slideDown();
         $("#stroke-select-options").slideUp();
@@ -815,12 +881,11 @@ function updateSelectedStroke(){
 
     //strokeSelectStrokes = [];
     currentSelectedStrokeIndex = -1;
+    transformControls.detach();
 
     if(val=="" || val==null)val=0;
     
-    //if(val!="" && val!=null){
     if(val > actionHelper.currStrokeIndex-1)val = actionHelper.currStrokeIndex-1;
-    //if(val<0)val=0
     $("#stroke-index-input").val(val);
     
     currentSelectedStrokeIndex = val;
@@ -1565,6 +1630,7 @@ function onMouseDown(e){
 
     //strokeSelectStrokes = [];
     currentSelectedStrokeIndex = -1;
+    transformControls.detach();
 
     if(controls){
 
@@ -1867,8 +1933,8 @@ function createBlobFromData (data) {
 function undoClick(){
     if(actionHelper.currStrokeIndex > 0){
         
-        transformControls.detach();
         currentSelectedStrokeIndex = -1;
+        transformControls.detach();
 
         actionHelper.undo();
     }
