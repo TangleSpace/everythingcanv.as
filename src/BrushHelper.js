@@ -28,9 +28,15 @@ class BrushHelper {
         this.visual.position.lerp(this.mesh.position, OBJ.globalSmoothAmount);// , globalSmoothAmount);
         //this.visual.rotation.copy(this.mesh.rotation);
         //this.visual.quaternion.copy(this.mesh.rotation);
-        this.visual.quaternion.slerp( this.mesh.quaternion, 0.1 );        
-        if(this.holder){
+        this.visual.quaternion.slerp( this.mesh.quaternion, 0.1 );
 
+        if(this.holder){
+            
+            this.holder.traverse(function(child){
+                if(child.isMesh){
+                    child.rotation.set(OBJ.globalOffsetRotation.x, OBJ.globalOffsetRotation.y, OBJ.globalOffsetRotation.z);
+                }
+            })
             this.visual.visible = false;
             if(OBJ.drawing){
                 this.holder.scale.set(OBJ.meshScale*OBJ.penSense, OBJ.meshScale*OBJ.penSense, OBJ.meshScale*OBJ.penSense);
@@ -45,9 +51,10 @@ class BrushHelper {
             this.rotAdditive.z += OBJ.shouldRotateAdditiveZ ? OBJ.globalAdditiveRotationSpeed : 0;
             
             if(OBJ.rotationFollowsNormal){
-                const x = this.visual.rotation.x + OBJ.globalOffsetRotation.x + this.rotAdditive.x;
-                const y = this.visual.rotation.y + OBJ.globalOffsetRotation.y + this.rotAdditive.y;
-                const z = this.visual.rotation.z + OBJ.globalOffsetRotation.z + this.rotAdditive.z;
+                
+                const x = this.visual.rotation.x  + this.rotAdditive.x;
+                const y = this.visual.rotation.y  + this.rotAdditive.y;
+                const z = this.visual.rotation.z  + this.rotAdditive.z;
                 this.holder.rotation.set(x, y, z);
             }else{
                 this.holder.rotation.set( OBJ.globalOffsetRotation.x + this.rotAdditive.x, OBJ.globalOffsetRotation.y + this.rotAdditive.y, OBJ.globalOffsetRotation.z + this.rotAdditive.z)
@@ -93,6 +100,7 @@ class BrushHelper {
         this.holder = OBJ.mesh.clone();
         this.scene.add(this.holder);
     }
+    
     copyMaterial(OBJ){
         const self = this;
         this.holder.traverse( function ( child ) {

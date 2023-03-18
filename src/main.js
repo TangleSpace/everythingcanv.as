@@ -84,7 +84,7 @@ let drawObject;
 let drawState = "both" 
 let showingSideBar = true;
 let movingCamera = false;
-
+let scatterMode = false;
 let meshScale = 1;
 let penSense = 1;
 let shouldDoPenPressure = true;
@@ -702,7 +702,6 @@ function handleRenderImg(){
         renderCtx.textAlign = "right";
         renderCtx.fillText("everythingcanv.as", renderCanv.width-20, renderCanv.height-20);
         
-        
         const link = document.createElement('a');
         link.download = 'everything-canvas.png';
         link.href = renderCanv.toDataURL()
@@ -951,7 +950,7 @@ function updateModelParams(){
 
 } 
     
-
+let scatterDistPosHolder = new THREE.Vector3();
 
 function animate(){
 
@@ -964,9 +963,11 @@ function animate(){
         
         if(currentDrawHitPoint){
             
+            
             if(mouse.smoothInc==0){
                 mouse.smoothLerp.set(currentDrawHitPoint.x, currentDrawHitPoint.y, currentDrawHitPoint.z);
             }
+
             mouse.smoothLerp.lerp(currentDrawHitPoint,globalSmoothAmount);
             mouse.smoothAvgs.push(new THREE.Vector3(mouse.smoothLerp.x,mouse.smoothLerp.y,mouse.smoothLerp.z) )
             const targ = new THREE.Quaternion();
@@ -974,7 +975,33 @@ function animate(){
             mouse.rots.push( targ );
             mouse.scales.push( meshScale*penSense );
             mouse.smoothInc ++;
+            
+            if(scatterMode){
+                if(mouse.smoothAvgs.length > Math.floor( (.31 - globalDensityAmount) * 80) ){
+                    
+                    //const total = Math.ceil( mouse.smoothAvgs.length * globalDensityAmount);
+
+                    for(let i = 0; i<mouse.smoothAvgs.length; i++){
+                        mouse.rots[i] = mouse.rots[0];
+                        mouse.scales[i] = mouse.scales[0];
+                        mouse.smoothAvgs[i] = mouse.smoothAvgs[0];
+                    }
+                    
+                    buildGeo();
+                    helper.copyMaterial({  param:getMatParam(), matHandler:matHandler });
+                    
+                    mouse.rots = [];
+                    mouse.scales = [];
+                    mouse.smoothAvgs = [];
+                    currentDrawHitPoint = null;
+                    mouse.smoothInc = 0;
+                    geoArr = [];
+                }
+            }
+            
+
         }
+
     }
 
     if(helper){
@@ -1165,15 +1192,23 @@ function toggleFullscreen(){
         closeFullscreen();
 }
 
+
+
 function onKeyDown(e) {
+    //console.log(e.keyCode)
     
+    if(e.keyCode==90 && !strokeSelect){
+        scatterMode = true;
+        canTogglStrokeSelect = false;
+    }
+
     if(e.keyCode==8||e.keyCode==46){
         deleteStroke();
     }
 
     if(e.keyCode==188){//negative
         globalDensityAmount -= .02;
-        if(globalDensityAmount<0)globalDensityAmount = 0;
+        if(globalDensityAmount<0.0031)globalDensityAmount = 0.0031;
         $("#density-amount").val(globalDensityAmount/.0031)
     }
 
@@ -1406,6 +1441,12 @@ function onKeyDown(e) {
 function onKeyUp(e) {
     
     e.preventDefault();
+
+    if(e.keyCode==90){
+        scatterMode = false;
+        canTogglStrokeSelect = true;
+    }
+
     if(e.keyCode==16){//shift
      
         canTogglStrokeSelect = true;
@@ -1484,10 +1525,9 @@ function onMouseUp(e){
         mouse.previous = new THREE.Vector2();
         ot = false;
         
-        if(!movingCamera){
+        if(!movingCamera && !scatterMode){
             buildGeo();
             helper.copyMaterial({  param:getMatParam(), matHandler:matHandler });
-          
         }
 
         movingCamera = false;
@@ -1496,7 +1536,6 @@ function onMouseUp(e){
         
         mouse.rots = [];
         mouse.scales = [];
-        mouse.avgs = [];
         mouse.smoothAvgs = [];
         currentDrawHitPoint = null;
         mouse.smoothInc = 0;
@@ -1749,7 +1788,12 @@ function onMouseMove(e){
             }else{
                 penSense = 1;
             }
+
+            //if(!scatterMode){
             handleDrawGeo(false);
+            //}else{
+                
+            //}
         }
         
     }
@@ -1810,11 +1854,10 @@ function handleDrawGeo(){
 
 function buildGeo(){
 
-    
     const strokeFinal = [];
-    
-    if(mouse.smoothAvgs.length>0 ){
+    const total = Math.ceil( mouse.smoothAvgs.length * globalDensityAmount);
 
+    if(total>0){
         actionHelper.startNewPath();//if you undo remove items in the undo array after the currStrokeIndex
         
         //const meshClone = helper.holder.clone();
@@ -1827,12 +1870,12 @@ function buildGeo(){
             scene:strokeHolder, 
             globalDensityAmount:globalDensityAmount, 
             meshScale:meshScale,
-            globalShouldAnimateSize:globalShouldAnimateSize,
+            globalShouldAnimateSize:(scatterMode==true) ? false:globalShouldAnimateSize,
             param:getMatParam(),
             sclMult:1,
-            rotOffsetX:0,
-            rotOffsetY:0,
-            rotOffsetZ:0,
+            rotOffsetX:globalOffsetRotation.x,
+            rotOffsetY:globalOffsetRotation.y,
+            rotOffsetZ:globalOffsetRotation.z,
             transformOffset:{pos:new THREE.Vector3(), rot:new THREE.Euler(), scl:new THREE.Vector3(1,1,1)}
         }
         
