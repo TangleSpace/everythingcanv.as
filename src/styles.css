@@ -185,6 +185,12 @@ body{
 .bold{
   font-weight: bold;
 }
+.tooltip-helper{
+    display:inline-block; width:180px;
+}
+.tooltip-helper-slider{
+    display:inline-block; width:180px; text-align: left; margin-left: -15px;
+}
 
 #instructions-overlay{
   position: fixed;

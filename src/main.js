@@ -150,6 +150,9 @@ let selectedThumbDiv;
 let downloadModelIndex = 0;
 let downloadUrlIndex = 0;
 let showingContext = false;
+let scatterArray = [];
+let scatterSelectPressed = false;
+let scatterSelectActive = false;
 
 function mobileCheck() {
     //console.log(navigator.userAgent.match())
@@ -209,16 +212,30 @@ function init(){
                         img.src = (url+k)+".png";
                         div.onclick = function(){
                             if(canLoadMesh){
-                                selectedThumbDiv.classList.remove("selected-thumb")
-                                div.classList.add("selected-thumb");
-                                selectedThumbDiv = div;
-                                chooseModel(i,k);
+                                handleIconClick(div,i,k);
+                            
+                                // if(!scatterSelectPressed){
+                                    
+                                //     scatterArray=[];
+                                //     updateScatterDom();
+                                //     scatterArray.push({modelIndex:k, urlIndex:i});
+                                //     chooseModel(i,k);
+                                //     selectedThumbDiv.classList.remove("selected-thumb")
+                                //     div.classList.add("selected-thumb");
+                                //     selectedThumbDiv = div;
+
+                                // }else {
+                                //     const 
+                                //     scatterArray.push({modelIndex:k, urlIndex:i})
+                                //     updateScatterDom();
+                                // }
 
                             }
                         };
                         
                         div.onmousedown = function(e){ currDragImgSrc = e.srcElement.currentSrc; };
                         img.oncontextmenu = function(e){
+
                             e.preventDefault();
                             downloadUrlIndex = i;
                             downloadModelIndex = k;
@@ -262,11 +279,7 @@ function init(){
                 img.src = (url+k)+".png";
                 div.onclick = function(){
                     if(canLoadMesh){
-                        selectedThumbDiv.classList.remove("selected-thumb");
-                        div.classList.add("selected-thumb");
-                        selectedThumbDiv = div;
-
-                        chooseModel(i,k)
+                        handleIconClick(div,i,k);
                     }
                 };
                 div.onmousedown = function(e){ currDragImgSrc = e.srcElement.currentSrc; };
@@ -288,6 +301,7 @@ function init(){
     
    
     chooseModel(0,0);
+    scatterArray.push({modelIndex:0, urlIndex:0});
 
     const loader = new GLTFLoader().setPath("./extras/draw/" );
     currentDrawObjectIndex=Math.floor(Math.random()*10);
@@ -590,8 +604,11 @@ function init(){
     document.getElementById("size-slider").addEventListener("input", updateMeshSize);
     
     document.getElementById("scatter-check").addEventListener("click", toggleScatter);
-    document.getElementById("brush-before-input").addEventListener("input", updateScatterBefore);
-    document.getElementById("brush-after-input").addEventListener("input", updateScatterAfter);
+    // document.getElementById("brush-before-input").addEventListener("input", updateScatterBefore);
+    // document.getElementById("brush-after-input").addEventListener("input", updateScatterAfter);
+    
+    document.getElementById("scatter-select").addEventListener("click", toggleScatterSelect);
+    
     document.getElementById("rnd-scale").addEventListener("input", updateRndScale);
     document.getElementById("rnd-position").addEventListener("input", updateRndPosition);
     
@@ -695,26 +712,80 @@ function init(){
 }
 
 
+function handleIconClick(div,i,k){
+    if(!scatterSelectPressed && !scatterSelectActive){
 
-function updateScatterBefore(){
-    let val = $("#brush-before-input").val();
-    if ( !val || val == "" || val == " "){
-        val = 0;
+        scatterArray=[];
+        updateScatterDom();
+        scatterArray.push({modelIndex:k, urlIndex:i});
+
+        selectedThumbDiv.classList.remove("selected-thumb");
+        div.classList.add("selected-thumb");
+        selectedThumbDiv = div;
+        chooseModel(i,k);
+
+    }else{
+        const scatterArrayCheck = isModelInScatterArray({modelIndex:k, urlIndex:i});
+        if(!scatterArrayCheck){
+            scatterArray.push({modelIndex:k, urlIndex:i})    
+        }else{
+            scatterArray.splice(scatterArrayCheck, 1);
+        }
+        
+        updateScatterDom();
     }
-    scatterIndexBefore = Math.abs( parseFloat(val) );//$("#rnd-scale").value();
-    updateScatterDom(); 
 }
 
-function updateScatterAfter (){
-    let val = $("#brush-after-input").val();
-    if ( !val || val == "" || val == " "){
-        val = 0;
-    }
 
-    scatterIndexAfter = Math.abs( parseFloat(val) );
+function isModelInScatterArray(OBJ){
     
-    updateScatterDom();
+    for(let i = 0; i<scatterArray.length; i++){
+        if(scatterArray[i].urlIndex == OBJ.urlIndex && scatterArray[i].modelIndex==OBJ.modelIndex)
+            return i;
+    }
+
+    return null;
 }
+
+
+// function updateScatterBefore(){
+//     let val = $("#brush-before-input").val();
+//     if ( !val || val == "" || val == " "){
+//         val = 0;
+//     }
+//     scatterIndexBefore = Math.abs( parseFloat(val) );//$("#rnd-scale").value();
+//     updateScatterDom(); 
+// }
+
+// function updateScatterAfter (){
+//     let val = $("#brush-after-input").val();
+//     if ( !val || val == "" || val == " "){
+//         val = 0;
+//     }
+
+//     scatterIndexAfter = Math.abs( parseFloat(val) );
+    
+//     updateScatterDom();
+// }
+
+
+function updateScatterDom(){
+    
+    killAllSctterDom();
+    initScatterDom();
+    
+
+}
+
+function initScatterDom(){
+    for(let i = 0; i<scatterArray.length; i++){
+        const id = "content-"+loadobjs[scatterArray[i].urlIndex].name.replace(/\s/g, '-');
+        const div = document.getElementById(id);
+        div.children[scatterArray[i].modelIndex].classList.add("scatter");
+        
+    }
+}
+/*
 
 function updateScatterDom(){
     
@@ -735,7 +806,7 @@ function updateScatterDom(){
     }
 
 }
-
+*/
 function killAllSctterDom(){
     for(let i = 0; i<loadobjs.length; i++){
         const id = "content-"+loadobjs[i].name.replace(/\s/g, '-');
@@ -1083,8 +1154,9 @@ function animate(){
             if(mi<0)mi=0;
             if(mi>loadobjs[urlIndex].amount-1)mi=loadobjs[urlIndex].amount-1;
             const ui = urlIndex;
-
-            mouse.scatterInfo.push({modelIndex:mi, urlIndex:ui})
+            const rnd = Math.floor( Math.random() * scatterArray.length );
+            //mouse.scatterInfo.push({modelIndex:mi, urlIndex:ui})
+            mouse.scatterInfo.push({modelIndex:scatterArray[rnd].modelIndex, urlIndex:scatterArray[rnd].urlIndex});
             
             mouse.smoothInc ++;
             
@@ -1331,8 +1403,10 @@ function toggleFullscreen(){
 
 
 function onKeyDown(e) {
-    //console.log(e.keyCode)
-    
+    console.log(e.keyCode);;
+    if(e.keyCode ==83){
+        scatterSelectPressed = true;   
+    }
     if(e.keyCode==90 && !strokeSelect){
         scatterPressed = true;
         canTogglStrokeSelect = false;
@@ -1581,6 +1655,10 @@ function onKeyDown(e) {
 function onKeyUp(e) {
     
     e.preventDefault();
+
+    if(e.keyCode ==83){
+        scatterSelectPressed = false;   
+    }
 
     if(e.keyCode==90){
         scatterPressed = false;
@@ -2247,6 +2325,9 @@ function UpdateDrawObjectOpacity(o){
 
 function toggleScatter(){
     scatterChecked = !scatterChecked;
+}
+function toggleScatterSelect(){
+    scatterSelectActive = !scatterSelectActive;
 }
 
 function toggleSizeEasing(){

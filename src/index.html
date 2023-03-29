@@ -272,14 +272,14 @@
 								
 								<div class="tooltip inline-tooltip" style="width:70px">
 									<span class="tooltiptext" style="margin-top:-15px; margin-left: 30px; width:90px;">[ ; ] [ ' ] reset - L </span>
-									<span class="slider-info">normal offset</span>
+									<span class="slider-info tooltip-helper-slider">normal offset</span>
 								</div>
 								<input id="normal-offset-amount" class="control-slider" type="range" min="-100" max="100" value="5" >
 							</div>
 							<div class="slider-holder">
 								<div class="tooltip inline-tooltip" style="width:70px">
 									<span class="tooltiptext" style="margin-top:-15px; margin-left: 30px; width:50px;">[ &lt ] [ &gt ] </span>
-									<span class="slider-info">stroke denisty</span>
+									<span class="slider-info tooltip-helper-slider">stroke denisty</span>
 								</div>
 								<input id="density-amount" class="control-slider" type="range" min="1" max="100" value="20" >
 							
@@ -294,8 +294,20 @@
 							Scatter <a class="docs-q" href="https://docs.google.com/document/d/1R6eotYhfrLgmEFiWftUPHgll2mr_mccCGWWGxtHagOo/edit#bookmark=id.max3rfnoghdl" target="_blank">?</a>
 						</div>
 						<div class="drop-down-content" id="scatter-content">
+							<!--
 							<div id="brush-before" style="margin-top: 20px; margin-bottom: 0px; font-size: 12px;">amount before<input id="brush-before-input" style="width:30px; margin-left: 5px;" value="0" type="text" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" /> </div>
 							<div id="brush-after" style="margin-top: 20px; margin-bottom: 0px; font-size: 12px;">amount after<input id="brush-after-input" style="width:30px; margin-left: 5px;" value="0" type="text" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" /> </div>
+							-->
+
+							<div class="check-holder">
+								<div class="tooltip inline-tooltip" style="width:70px">
+									<span class="tooltiptext" style="margin-top:-15px; margin-left: 30px; width:50px;">[ hold s ]</span>
+									<span class="slider-info tooltip-helper">scatter select</span>
+								</div> 
+								
+								<input style="margin-left: 50px;" class="control control-checkbox tooltip-checkbox" type="checkbox" id="scatter-select" >
+							</div>
+
 						
 							<div class="check-holder">
 								<div class="tooltip inline-tooltip" style="width:70px">
