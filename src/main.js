@@ -2328,6 +2328,10 @@ function toggleScatter(){
 }
 function toggleScatterSelect(){
     scatterSelectActive = !scatterSelectActive;
+    if(!scatterSelectActive){
+        scatterArray = [];
+        updateScatterDom();
+    }
 }
 
 function toggleSizeEasing(){

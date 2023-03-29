@@ -260,8 +260,15 @@
 							
 
 							<div class="check-holder">
+								<label class="control control-checkbox">
+										animate size
+										<input type="checkbox" id="should-size-ease-in-out" checked />
+									<div class="control_indicator"></div>
+								</label>
+								<!--
 								<span class="slider-info">animate size in and out</span>
 								<input class="control control-checkbox" type="checkbox" id="should-size-ease-in-out" checked>
+								-->
 							</div>
 							<div class="slider-holder">
 								<span class="slider-info">smooth amount</span>
@@ -300,22 +307,41 @@
 							-->
 
 							<div class="check-holder">
+								<!--
 								<div class="tooltip inline-tooltip" style="width:70px">
 									<span class="tooltiptext" style="margin-top:-15px; margin-left: 30px; width:50px;">[ hold s ]</span>
 									<span class="slider-info tooltip-helper">scatter select</span>
 								</div> 
-								
 								<input style="margin-left: 50px;" class="control control-checkbox tooltip-checkbox" type="checkbox" id="scatter-select" >
+								-->
+								<label class="control control-checkbox">
+									<div class="tooltip inline-tooltip" style="width:70px">
+										<span class="tooltiptext" style="margin-top:-15px; margin-left: 30px; width:50px;">[ hold s ]</span>
+										<span class="slider-info tooltip-helper">scatter select</span>
+									</div> 
+									<input type="checkbox" id="scatter-select" />
+									<div class="control_indicator"></div>
+								</label>
 							</div>
 
 						
 							<div class="check-holder">
+								<!--
 								<div class="tooltip inline-tooltip" style="width:70px">
 									<span class="tooltiptext" style="margin-top:-15px; margin-left: 30px; width:50px;">[ hold z ]</span>
 									<span class="slider-info">scatter</span>
 								</div>
 								
 								<input class="control control-checkbox" type="checkbox" id="scatter-check">
+								-->
+								<label class="control control-checkbox">
+									<div class="tooltip inline-tooltip" style="width:70px">
+										<span class="tooltiptext" style="margin-top:-15px; margin-left: 30px; width:50px;">[ hold z ]</span>
+										<span class="slider-info tooltip-helper">scatter brush</span>
+									</div> 
+									<input type="checkbox" id="scatter-check" />
+									<div class="control_indicator"></div>
+								</label>
 							</div>
 
 							<div class="slider-holder">
@@ -334,6 +360,22 @@
 							Mirror <a class="docs-q" href="https://docs.google.com/document/d/1R6eotYhfrLgmEFiWftUPHgll2mr_mccCGWWGxtHagOo/edit#bookmark=id.nm4ffc90w4po" target="_blank">?</a>
 						</div>
 						<div class="drop-down-content" id="mirror-content">
+							<label class="control control-checkbox">
+								mirror x
+								<input type="checkbox" id="mirror-x" checked />
+								<div class="control_indicator"></div>
+							</label>
+							<label class="control control-checkbox">
+								mirror y
+								<input type="checkbox" id="mirror-y" />
+								<div class="control_indicator"></div>
+							</label>
+							<label class="control control-checkbox">
+								mirror z
+								<input type="checkbox" id="mirror-z" />
+								<div class="control_indicator"></div>
+							</label>
+							<!--
 							<div class="check-holder">
 								<span class="slider-info">mirror x</span>
 								<input class="control control-checkbox" type="checkbox" id="mirror-x" checked>
@@ -347,7 +389,8 @@
 							<div class="check-holder">
 								<span class="slider-info">mirror z</span>
 								<input class="control control-checkbox" type="checkbox" id="mirror-z">
-							</div>	
+							</div>
+							-->	
 						</div>
 					</div>
 					
@@ -362,10 +405,18 @@
 								<span class="slider-info">additive rotation speed</span>
 								<input id="additive-rotation-slider" class="control-slider" type="range" min="0" max="50" value="0" >
 							</div>
+
+							<!--
 							<div class="check-holder">
 								<span class="slider-info">rotation by normals</span>
 								<input class="control control-checkbox" type="checkbox" id="rotation-follows-normal" checked>
 							</div>	
+							-->
+							<label class="control control-checkbox">
+								rotation by normals
+								<input type="checkbox" id="rotation-follows-normal" checked/>
+								<div class="control_indicator"></div>
+							</label>
 							<div class="slider-holder">
 								<span class="slider-info">rotate x</span>
 								<input id="rotate-slider-x" class="control-slider" type="range" min="0" max="628" value="0" >
@@ -381,7 +432,22 @@
 								<input id="rotate-slider-z" class="control-slider" type="range" min="0" max="360" value="0" >
 							
 							</div>
-							
+							<label class="control control-checkbox">
+								additive rotation x
+								<input type="checkbox" id="additive-rotation-x" checked/>
+								<div class="control_indicator"></div>
+							</label>
+							<label class="control control-checkbox">
+								additive rotation y
+								<input type="checkbox" id="additive-rotation-y" checked/>
+								<div class="control_indicator"></div>
+							</label>
+							<label class="control control-checkbox">
+								additive rotation z
+								<input type="checkbox" id="additive-rotation-z" checked/>
+								<div class="control_indicator"></div>
+							</label>
+							<!--
 							<div class="slider-holder">
 								<span class="slider-info">additive rotation x</span>
 								<input class="control control-checkbox" type="checkbox" id="additive-rotation-x" checked>
@@ -394,6 +460,7 @@
 								<span class="slider-info">additive rotation z</span>
 								<input class="control control-checkbox" type="checkbox" id="additive-rotation-z" checked>
 							</div>
+							-->
 
 						</div>
 					</div>
@@ -462,11 +529,17 @@
 							<span class="slider-info">gradient offset</span>
 							<input id="model-gradient-offset" class="control-slider" type="range" min="-200" max="200" value="0" >
 						</div>
-
+						<!--
 						<div class="check-holder">
 							<span class="slider-info">loop gradient</span>
 							<input class="control control-checkbox" type="checkbox" id="loop-gradient" checked>
 						</div>
+						-->
+						<label class="control control-checkbox">
+							loop gradient
+							<input type="checkbox" id="loop-gradient" checked/>
+							<div class="control_indicator"></div>
+						</label>
 
 						<div class="slider-holder">
 							<span class="slider-info">tint gradient top</span>
@@ -515,7 +588,7 @@
 					<div class="drop-down-content" id="export-content">
 						<button class="btn inline-btns" id="export-gltf"> export .glb </button> <br/>
 						<button class="btn inline-btns" id="render-download"> render image </button> <br/>
-						<button class="btn inline-btns" id="save-geo-ink-file"> save everything canvas </button> <br/>
+						<button class="btn inline-btns" id="save-geo-ink-file"> save canvas </button> <br/>
 					</div>
 				</div>
 				
