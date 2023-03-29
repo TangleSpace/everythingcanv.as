@@ -56,6 +56,7 @@ class BrushHelper {
                 const y = this.visual.rotation.y  + this.rotAdditive.y;
                 const z = this.visual.rotation.z  + this.rotAdditive.z;
                 this.holder.rotation.set(x, y, z);
+                
             }else{
                 this.holder.rotation.set( OBJ.globalOffsetRotation.x + this.rotAdditive.x, OBJ.globalOffsetRotation.y + this.rotAdditive.y, OBJ.globalOffsetRotation.z + this.rotAdditive.z)
             }

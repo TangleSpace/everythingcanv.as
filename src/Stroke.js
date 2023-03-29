@@ -13,9 +13,16 @@ import {
     MeshBasicMaterial,
     BoxGeometry
 } from './build/three.module.js';
+import { GLTFLoader } from './scripts/jsm/loaders/GLTFLoader.js';
+
 class Stroke {
     constructor(OBJ){
         const self = this;
+
+        this.loadObj = OBJ.all.loadObj;//not dynamic
+        this.matHandler = OBJ.all.matHandler; //not dynamic
+        this.version = OBJ.all.version;
+
         this.pos = OBJ.pos;
         this.arr = [];//OBJ.pos;
         const aHolder = []
@@ -53,6 +60,7 @@ class Stroke {
         this.modelInfo = this.all.modelInfo;
 
         this.total = Math.ceil( this.arr.length * this.all.globalDensityAmount);
+        
         this.speed = 200;
         this.meshes = [];
 
@@ -65,43 +73,128 @@ class Stroke {
         this.rotOffsetX = OBJ.all.rotOffsetX;
         this.rotOffsetY = OBJ.all.rotOffsetY;
         this.rotOffsetZ = OBJ.all.rotOffsetZ;
-
-        this.tubeGeometry = new TubeGeometry( this.curve, 10, .01, 10, false );
-     
-        for(var i = 0; i<this.total; i++){
-            const start = (i / this.total);
-            const endInc = (i == this.total-1) ? i : (i + 1); 
-            const end = (endInc / this.total);
-
-            const rotFnl = {from:this.rots[Math.floor(start*this.rots.length)], to:this.rots[Math.floor(end*this.rots.length)]};
-            const sclFnl = {from:this.scales[Math.floor(start*this.scales.length)], to:this.scales[Math.floor(end*this.scales.length)]};
-            
-            const pmesh = new PaintMesh({
-                parent:this, 
-                geo:this.tubeGeometry, 
-                start:start, 
-                scene:this.scn, 
-                scale:this.all.meshScale, 
-                total:this.total, 
-                index:i, 
-                rotation:rotFnl,
-                scaleToFrom:sclFnl,
-                meshClone:this.all.meshClone,
-                strokeIndex:this.strokeIndex,
-                helper:this.all.helper,
-                globalShouldAnimateSize:this.all.globalShouldAnimateSize,
-                sclMult:this.sclMult,
-                rotOffsetX:this.rotOffsetX,
-                rotOffsetY:this.rotOffsetY,
-                rotOffsetZ:this.rotOffsetZ,
-            });
-            pmesh.initAnimation();
-            this.meshes.push(pmesh);
-        }
+        this.scatter = OBJ.all.scatter;
+        this.scatterInfo = OBJ.all.scatterInfo;
        
-        self.updateParam(OBJ.all.param)
+        this.tubeGeometry = new TubeGeometry( this.curve, 10, .01, 10, false );
+
+        this.meshCounter = 0;
+        self.loop(OBJ);
     
     }
+
+    loop(OBJ){
+
+        const self = this;
+        const i = this.meshCounter;
+        const start = (i / this.total);
+        const endInc = (i == this.total-1) ? i : (i + 1); 
+        const end = (endInc / this.total);
+
+        const rotFnl = {from:this.rots[Math.floor(start*this.rots.length)], to:this.rots[Math.floor(end*this.rots.length)]};
+        const sclFnl = {from:this.scales[Math.floor(start*this.scales.length)], to:this.scales[Math.floor(end*this.scales.length)]};
+        
+
+        if(this.scatter){
+
+            const model = this.scatterInfo[ Math.floor(start*this.scatterInfo.length) ];
+            
+            if(!self.hasLoadedMeshAlready(OBJ.all.paintMeshes, model.urlIndex, model.modelIndex)){
+                const mi = model.modelIndex;
+                const ui = model.urlIndex;    
+                const loader = new GLTFLoader();
+                loader.load( this.loadObj[model.urlIndex].url + "/" + model.modelIndex + ".glb", function ( gltf ) {
+
+                    gltf.scene.traverse( function ( child ) {
+                        if ( child.isMesh ) {
+                            const mat = self.matHandler.getCustomMaterial(child.material, self.param);
+                            child.material = mat;    
+                        }
+                    });
+
+                    if(self.version > 0 ){
+                        window.parseModel(gltf.scene);
+                    }
+                    
+                    self.initMeshes( i, start, rotFnl, sclFnl, gltf.scene);
+                    OBJ.all.paintMeshes.push({urlIndex:ui, modelIndex:mi, model:gltf.scene});
+                    self.loopHelper(OBJ);
+                });
+
+            }else{
+                const mesh = this.getMeshFromIndex(OBJ.all.paintMeshes, model.urlIndex, model.modelIndex);
+                mesh.traverse( function ( child ) {
+                    if ( child.isMesh ) {
+                        //const mat = self.matHandler.getCustomMaterial(child.material, self.param);
+                        //child.material = mat; 
+                        let copy = child.material.clone();
+                    
+                        copy = self.matHandler.getCustomMaterial(copy, self.param);
+                        child.material = copy;   
+                    }
+                });
+                this.initMeshes(i, start, rotFnl, sclFnl, mesh);
+                this.loopHelper(OBJ);
+            }
+
+        }else{
+
+            this.initMeshes(i, start, rotFnl, sclFnl, this.all.meshClone);
+            this.loopHelper(OBJ);
+
+        }
+    }
+
+    loopHelper(OBJ){
+        this.meshCounter++;
+        if(this.meshCounter<this.total)
+            this.loop(OBJ);
+    }
+
+
+
+    getMeshFromIndex(paintMeshes, ui, mi){
+        for(let i = 0; i<paintMeshes.length; i++){
+            if(ui == paintMeshes[i].urlIndex && mi == paintMeshes[i].modelIndex)
+                return paintMeshes[i].model;
+        }
+    }
+
+    hasLoadedMeshAlready(paintMeshes, ui, mi){
+        for(let i = 0; i<paintMeshes.length; i++){
+            if(ui == paintMeshes[i].urlIndex && mi == paintMeshes[i].modelIndex)
+                return true;
+        }
+        return false;
+    }
+
+    initMeshes(i, start, rotFnl, sclFnl, mesh){
+
+        const pmesh = new PaintMesh({
+            parent:this, 
+            geo:this.tubeGeometry, 
+            start:start, 
+            scene:this.scn, 
+            scale:this.all.meshScale, 
+            total:this.total, 
+            index:i, 
+            rotation:rotFnl,
+            scaleToFrom:sclFnl,
+            meshClone:mesh,
+            strokeIndex:this.strokeIndex,
+            helper:this.all.helper,
+            globalShouldAnimateSize:this.all.globalShouldAnimateSize,
+            sclMult:this.sclMult,
+            rotOffsetX:this.rotOffsetX,
+            rotOffsetY:this.rotOffsetY,
+            rotOffsetZ:this.rotOffsetZ,
+            scatter:this.scatter
+        });
+        pmesh.initAnimation();
+        this.meshes.push(pmesh);
+        this.updateParam(this.param)
+    }
+
 
     undo(){
         for(var i = 0; i<this.meshes.length; i++){
@@ -128,6 +221,7 @@ class Stroke {
     }
 
     updateModel (OBJ) {
+        this.scatter = false;
         this.all.modelInfo.modelIndex = OBJ.modelInfo.modelIndex;
         this.all.modelInfo.urlIndex = OBJ.modelInfo.urlIndex;
         for(var i = 0; i<this.meshes.length; i++){
@@ -184,9 +278,11 @@ class Stroke {
     }
 
     update = function(OBJ){
-        for(var i = 0; i<this.meshes.length; i++){
-            this.meshes[i].update(OBJ);
-        }  
+       // if(!this.scatter){
+            for(var i = 0; i<this.meshes.length; i++){
+                this.meshes[i].update(OBJ);
+            }  
+       // }
     }
 
     killStroke(){
@@ -218,12 +314,15 @@ class Stroke {
                     colorSpeed:this.param.colorSpeed,
                     shouldLoopGradient:this.param.shouldLoopGradient,  
                 },
+                version:this.version,
                 transformOffset:{pos: new Vector3().subVectors(this.scn.position, this.avgPos), rot:this.scn.rotation, scl:this.scn.scale},
                 sclMult:this.sclMult,
                 rotOffsetX:this.rotOffsetX,
                 rotOffsetY:this.rotOffsetY,
                 rotOffsetZ:this.rotOffsetZ,
                 modelInfo:this.all.modelInfo,
+                scatter:this.scatter,
+                scatterInfo:this.scatter ? this.scatterInfo : [],
                 index:this.all.index,
                 scene:this.scene.name,
                 globalDensityAmount:this.all.globalDensityAmount, 
@@ -241,14 +340,24 @@ class PaintMesh {
         //this.mesh = new THREE.Mesh(geometry.clone(), material.clone());
         //console.log(ROTATION)\
         const self = this;
+
+        this.scatter = OBJ.scatter;
         
         this.strokeIndex = OBJ.strokeIndex;
+        this.sclMult = OBJ.sclMult;
+        this.rotOffsetX = OBJ.rotOffsetX;
+        this.rotOffsetY = OBJ.rotOffsetY;
+        this.rotOffsetZ = OBJ.rotOffsetZ;
+
         this.parent = OBJ.parent;
         this.rots = OBJ.rotation;
         this.scaleToFrom = {to:OBJ.scaleToFrom.to, from:OBJ.scaleToFrom.from};
         this.scaleToFromOG = {to:OBJ.scaleToFrom.to, from:OBJ.scaleToFrom.from};
 
+      
+
         this.mesh = OBJ.meshClone.clone();
+        
         
         this.scene = OBJ.scene;
         
@@ -261,11 +370,12 @@ class PaintMesh {
         this.globalShouldAnimateSize = OBJ.globalShouldAnimateSize;
         this.mesh.scale.set(this.meshScale, this.meshScale, this.meshScale);
         //this.mesh.rotation.copy(helper.holder.rotation);
-        
-        this.scene.add(this.mesh);
 
+        this.scene.add(this.mesh);
+    
         this.geo = OBJ.geo;
         this.start = OBJ.start;
+        
         this.position = new Vector3();
         this.binormal = new Vector3();
         this.normal = new Vector3();
@@ -273,7 +383,7 @@ class PaintMesh {
         this.direction = new Vector3();
         this.inc = 0
         this.speed = .0031;
-        this.keyframelength = 30*3;
+        this.keyframelength = this.scatter?1:30*3;
         this.mixer = new AnimationMixer(this.mesh); 
         this.clip;
         this.positionkf;
@@ -281,20 +391,15 @@ class PaintMesh {
         this.rotationkf;
         this.lookObj = new Object3D();
        // this.ogEmissives = [];
-        
-        this.sclMult = OBJ.sclMult;
-        this.rotOffsetX = OBJ.rotOffsetX;
-        this.rotOffsetY = OBJ.rotOffsetY;
-        this.rotOffsetZ = OBJ.rotOffsetZ;
-        
-        this.mesh.traverse( function ( child ) {
+
+       this.mesh.traverse( function ( child ) {
             if ( child.isMesh ) {
                 child.scale.set(self.sclMult, self.sclMult, self.sclMult);
                 child.rotation.x = self.rotOffsetX;
                 child.rotation.y = self.rotOffsetY;
                 child.rotation.z = self.rotOffsetZ;
                 child.paintIndex = self.strokeIndex;
-               // self.ogEmissives.push(child.material.emissive);
+            // self.ogEmissives.push(child.material.emissive);
             }
         });
         
@@ -531,8 +636,11 @@ class PaintMesh {
 
     update = function(OBJ){
 
-        if(this.mixer)
+        if(this.mixer){
+            //const d = this.scatter ? 0 : OBJ.delta;
             this.mixer.update( OBJ.delta );
+        }
+            //this.mixer.update( OBJ.delta );
     }
     
     getTransforms (key) {

@@ -12,6 +12,8 @@ import { CustomMaterial } from './CustomMaterial.js';
 import { TransformControls } from './scripts/jsm/controls/TransformControls.js';
 //import { TWEEN } from './scripts/jsm/libs/tween.module.min.js';
 
+const appVer=1;
+
 let camera, mesh, scene, renderer;
 let mouse = {
     position: new THREE.Vector2(), 
@@ -24,8 +26,10 @@ let mouse = {
     smoothInc:0,
     smoothLerp:new THREE.Vector3(),
     rots:[],
-    scales:[]
+    scales:[],
+    scatterInfo:[]
 };
+
 let loadedObject, strokesLoopHelper=0;
 let canTogglStrokeSelect = true;
 let hoverTimeout;
@@ -53,6 +57,8 @@ let shouldRotateAdditiveY = true;
 let shouldRotateAdditiveZ = true;
 let globalAdditiveRotationSpeed = 0;
 let mouseOverSelect = false;
+let mouseOverTools = false;
+
 let globalShouldAnimateSize = true;
 
 const renderCanv = document.createElement("canvas");
@@ -84,7 +90,14 @@ let drawObject;
 let drawState = "both" 
 let showingSideBar = true;
 let movingCamera = false;
+let scatterPressed = false;
+let scatterChecked = false;
 let scatterMode = false;
+let rndScale = 0;
+let rndPosition = 0;
+let scatterIndexBefore = 0;
+let scatterIndexAfter = 0;
+
 let meshScale = 1;
 let penSense = 1;
 let shouldDoPenPressure = true;
@@ -123,7 +136,7 @@ let reflectObjectYZ = new THREE.Object3D();
 let reflectObjectXYZ = new THREE.Object3D();
 
 let background;
-let matHandler;
+const matHandler = new CustomMaterial();;
 let urlIndex = 0;
 let modelIndex = 0;
 const paintMeshes = [];
@@ -172,6 +185,7 @@ function init(){
         //if(dHolder.id)
         dTitle.className="drop-down-title";
         dImgs.className="drop-down-content";
+        dImgs.id = "content-" + loadobjs[i].name.replace(/\s/g, '-');
         dTitle.innerHTML = loadobjs[i].name + " [" +loadobjs[i].key+ "]";
         dHolder.append(dTitle);
         dHolder.append(dImgs);
@@ -187,7 +201,7 @@ function init(){
                         const div = document.createElement("div");
                         const img = document.createElement("img");
                         img.className="brush-thumb";
-                        div.className="thumb-holder"
+                        div.className="thumb-holder";
                         
                         if(isMobile)
                             img.classList.add("mobile-brush-thumb");
@@ -198,7 +212,8 @@ function init(){
                                 selectedThumbDiv.classList.remove("selected-thumb")
                                 div.classList.add("selected-thumb");
                                 selectedThumbDiv = div;
-                                chooseModel(i,k)
+                                chooseModel(i,k);
+
                             }
                         };
                         
@@ -213,7 +228,7 @@ function init(){
                             $("#contextMenu").css("top", e.clientY+"px")
                             $("#contextMenu").css("left", e.clientX+"px")
                         }
-
+                        
                         //img.onmousedown = function(e){currDragImgSrc = e.srcElement.currentSrc;};
                         div.append(img);
                         dImgs.append(div);
@@ -462,6 +477,7 @@ function init(){
         "export",
         "draw-object",
         "essentials",
+        "scatter",
         "mirror",
         "rotation",
         "background",
@@ -470,7 +486,7 @@ function init(){
 
     for(let i = 0; i<dds.length; i++){
         const t = document.getElementById(dds[i]+"-title");
-
+        
         t.addEventListener( "click", function(){
 
             const el = "#"+dds[i]+"-content";
@@ -572,8 +588,15 @@ function init(){
     
     
     document.getElementById("size-slider").addEventListener("input", updateMeshSize);
-
+    
+    document.getElementById("scatter-check").addEventListener("click", toggleScatter);
+    document.getElementById("brush-before-input").addEventListener("input", updateScatterBefore);
+    document.getElementById("brush-after-input").addEventListener("input", updateScatterAfter);
+    document.getElementById("rnd-scale").addEventListener("input", updateRndScale);
+    document.getElementById("rnd-position").addEventListener("input", updateRndPosition);
+    
     document.getElementById("should-size-ease-in-out").addEventListener("click", toggleSizeEasing);
+    
     document.getElementById("rotate-slider-x").addEventListener("input", rotateBrushX);
 
     document.getElementById("rotate-slider-y").addEventListener("input", rotateBrushY);
@@ -666,9 +689,71 @@ function init(){
 
     helper = new BrushHelper({scene:scene, raycaster:raycaster});
     background = new Background({scene:scene});
-    matHandler = new CustomMaterial();
+    
+
 	animate();
 }
+
+
+
+function updateScatterBefore(){
+    let val = $("#brush-before-input").val();
+    if ( !val || val == "" || val == " "){
+        val = 0;
+    }
+    scatterIndexBefore = Math.abs( parseFloat(val) );//$("#rnd-scale").value();
+    updateScatterDom(); 
+}
+
+function updateScatterAfter (){
+    let val = $("#brush-after-input").val();
+    if ( !val || val == "" || val == " "){
+        val = 0;
+    }
+
+    scatterIndexAfter = Math.abs( parseFloat(val) );
+    
+    updateScatterDom();
+}
+
+function updateScatterDom(){
+    
+    killAllSctterDom();
+    const id = "content-"+loadobjs[urlIndex].name.replace(/\s/g, '-');
+    const div = document.getElementById(id);
+    for(let i = 0; i < div.children.length; i++ ){
+        const d = div.children[i];
+        d.classList.remove("scatter");
+        
+        if(i != modelIndex){
+           
+            if(i >= modelIndex - scatterIndexBefore && i <= modelIndex + scatterIndexAfter){
+               
+                d.classList.add("scatter");
+            }
+        }
+    }
+
+}
+
+function killAllSctterDom(){
+    for(let i = 0; i<loadobjs.length; i++){
+        const id = "content-"+loadobjs[i].name.replace(/\s/g, '-');
+        const div = document.getElementById(id);
+        for(let k = 0; k < div.children.length; k++ ){
+            const d = div.children[k];
+            d.classList.remove("scatter");
+        }
+    }
+}
+
+function updateRndScale(){
+    rndScale = $("#rnd-scale").val() *.02;
+};
+
+function updateRndPosition (){
+    rndPosition = $("#rnd-position").val() * .05;    
+};
 
 
 function handleRenderImg(){
@@ -747,10 +832,19 @@ function downloadThumbGLB(){
 }
 function onThumbsHover(e){   
     mouseOverSelect = true;
-    onToolsHover(e);
+    mouseOverTools = false;
+
+    if(drawObject!=null && e.target.id!="normal-offset-amount"){
+        handleUiUpdating();
+    }
+
+    //onToolsHover(e);
 }
 function onToolsHover(e){
     
+    mouseOverTools = true;
+    mouseOverSelect = false;
+
     killContext();
     if(drawObject!=null && e.target.id!="normal-offset-amount"){
         handleUiUpdating();
@@ -758,7 +852,7 @@ function onToolsHover(e){
 }
 
 function updateDrawViewDistanceSlider(){
-    //console.log($("#view-draw-distance").val())
+   
     updateDrawViewDistance( $("#view-draw-distance").val() );
 }
 
@@ -950,14 +1044,14 @@ function updateModelParams(){
 
 } 
     
-let scatterDistPosHolder = new THREE.Vector3();
 
 function animate(){
-
-	requestAnimationFrame( animate );
+    requestAnimationFrame( animate );
     //TWEEN.update();
     if(controls)
         controls.update();
+
+    scatterMode = scatterChecked || scatterPressed; 
 
     if(mouse.down){
         
@@ -969,35 +1063,53 @@ function animate(){
             }
 
             mouse.smoothLerp.lerp(currentDrawHitPoint,globalSmoothAmount);
-            mouse.smoothAvgs.push(new THREE.Vector3(mouse.smoothLerp.x,mouse.smoothLerp.y,mouse.smoothLerp.z) )
+            
+            const rx = (-rndPosition*.5)+(Math.random()*rndPosition);
+            const ry = (-rndPosition*.5)+(Math.random()*rndPosition);
+            const rz = (-rndPosition*.5)+(Math.random()*rndPosition);
+
+            mouse.smoothAvgs.push(new THREE.Vector3(mouse.smoothLerp.x+rx,mouse.smoothLerp.y+ry,mouse.smoothLerp.z+rz) )
+            
             const targ = new THREE.Quaternion();
             helper.holder.getWorldQuaternion(targ);
             mouse.rots.push( targ );
-            mouse.scales.push( meshScale*penSense );
+
+            let s = (meshScale*penSense) + ( - ( rndScale * .5) + Math.random() * rndScale);
+            if(s<0)s=0;
+            mouse.scales.push( s );
+            const scatterRnd = ( -Math.floor( Math.random() * (scatterIndexBefore + 1) ) ) + ( Math.floor( Math.random() * (scatterIndexAfter + 1) ) )  
+            let mi = modelIndex + scatterRnd;
+            
+            if(mi<0)mi=0;
+            if(mi>loadobjs[urlIndex].amount-1)mi=loadobjs[urlIndex].amount-1;
+            const ui = urlIndex;
+
+            mouse.scatterInfo.push({modelIndex:mi, urlIndex:ui})
+            
             mouse.smoothInc ++;
             
-            if(scatterMode){
-                if(mouse.smoothAvgs.length > Math.floor( (.31 - globalDensityAmount) * 80) ){
+            // if(scatterMode){
+            //     if(mouse.smoothAvgs.length > Math.floor( (.31 - globalDensityAmount) * 80) ){
                     
-                    //const total = Math.ceil( mouse.smoothAvgs.length * globalDensityAmount);
+            //         //const total = Math.ceil( mouse.smoothAvgs.length * globalDensityAmount);
 
-                    for(let i = 0; i<mouse.smoothAvgs.length; i++){
-                        mouse.rots[i] = mouse.rots[0];
-                        mouse.scales[i] = mouse.scales[0];
-                        mouse.smoothAvgs[i] = mouse.smoothAvgs[0];
-                    }
+            //         for(let i = 0; i<mouse.smoothAvgs.length; i++){
+            //             mouse.rots[i] = mouse.rots[0];
+            //             mouse.scales[i] = mouse.scales[0];
+            //             mouse.smoothAvgs[i] = mouse.smoothAvgs[0];
+            //         }
                     
-                    buildGeo();
-                    helper.copyMaterial({  param:getMatParam(), matHandler:matHandler });
+            //         buildGeo();
+            //         helper.copyMaterial({  param:getMatParam(), matHandler:matHandler });
                     
-                    mouse.rots = [];
-                    mouse.scales = [];
-                    mouse.smoothAvgs = [];
-                    currentDrawHitPoint = null;
-                    mouse.smoothInc = 0;
-                    geoArr = [];
-                }
-            }
+            //         mouse.rots = [];
+            //         mouse.scales = [];
+            //         mouse.smoothAvgs = [];
+            //         currentDrawHitPoint = null;
+            //         mouse.smoothInc = 0;
+            //         geoArr = [];
+            //     }
+            // }
             
 
         }
@@ -1057,12 +1169,14 @@ function getMatParam(){
     }
 }
 
-function chooseModel(i,k, customParams, callback){
+function chooseModel(i,k, customParams, callback, version){
     
     killContext();
         
     urlIndex = i;
     modelIndex = k;
+
+    updateScatterDom();       
 
     const ui = urlIndex;
     const mi = modelIndex;
@@ -1071,6 +1185,9 @@ function chooseModel(i,k, customParams, callback){
     if(!hasLoadedMeshAlready()){
         const loader = new GLTFLoader().setPath( loadobjs[i].url );
         loader.load( k+'.glb', function ( gltf ) {
+            if(version == null || version > 0)//version == null is just brush select and version > 0 is checking if loading a file 
+                window.parseModel(gltf.scene);
+            
             paintMeshes.push({urlIndex:ui, modelIndex:mi, model:gltf.scene});
             handleMeshLoad(gltf.scene, customParams, callback)
         });
@@ -1080,6 +1197,24 @@ function chooseModel(i,k, customParams, callback){
     }   
    
 
+}
+
+window.parseModel = function(scene){
+    //console.log("parse model");
+    scene.traverse( function ( child ) {
+        if ( child.isMesh ) {
+            child.geometry.rotateX(Math.PI/2);
+            child.geometry.computeBoundingBox();
+        }
+    });
+
+    //scene.computeBoundingBox();
+    var bbox = new THREE.Box3().setFromObject(scene);
+    scene.traverse( function ( child ) {
+        if ( child.isMesh ) {
+            child.position.z -= bbox.min.z;
+        }
+    });
 }
 
 function getMeshFromIndex(ui, mi){
@@ -1120,6 +1255,7 @@ function handleMeshLoad(scene, customParams, callback){
     if(callback !=null ){
         callback(scene);
     }
+
 }
 
 
@@ -1198,7 +1334,7 @@ function onKeyDown(e) {
     //console.log(e.keyCode)
     
     if(e.keyCode==90 && !strokeSelect){
-        scatterMode = true;
+        scatterPressed = true;
         canTogglStrokeSelect = false;
     }
 
@@ -1257,65 +1393,67 @@ function onKeyDown(e) {
         //     handleUiUpdating(globalNormalOffsetAmount);
     } 
 
-    if(e.keyCode==49){//1
-        //console.log($("#title-simple-shapes").top);
-        const top = $("#title-Simple-Shapes").position().top;
-        $("#select").animate({ scrollTop: top }, 700);
-    }
-    if(e.keyCode==50){//2
-        const top = $("#title-Animals").position().top;
-        $("#select").animate({ scrollTop: top }, 700);
-    }
-    if(e.keyCode==51){//3
-        const top = $("#title-Consumables").position().top;
-        $("#select").animate({ scrollTop: top }, 700);
-    }
-    if(e.keyCode==52){//4
-        const top = $("#title-Furnishings").position().top;
-        $("#select").animate({ scrollTop: top }, 700);
-    }
-    if(e.keyCode==53){//5
-        const top = $("#title-Microscopic").position().top;
-        $("#select").animate({ scrollTop: top }, 700);
-    }
-    if(e.keyCode==54){//6
-        const top = $("#title-Plants").position().top;
-        $("#select").animate({ scrollTop: top }, 700);
-    }
-    if(e.keyCode==55){//7
-        const top = $("#title-Underwater").position().top;
-        $("#select").animate({ scrollTop: top }, 700);
-    }
-    if(e.keyCode==56){//8
-        const top = $("#title-Trees").position().top;
-        $("#select").animate({ scrollTop: top }, 700);
-    }
-    if(e.keyCode==57){//9
-        const top = $("#title-Rocks").position().top;
-        $("#select").animate({ scrollTop: top }, 700);
-    }
-    if(e.keyCode==48){//0
-        const top = $("#title-Human").position().top;
-        $("#select").animate({ scrollTop: top }, 700);
-    }
-    
-    if(e.keyCode==85){//u
-        const top = $("#title-Vehicles").position().top;
-        $("#select").animate({ scrollTop: top }, 700);
-    }
-    //if(e.keyCode==87){//y
-    if(e.keyCode==73){//i
-        const top = $("#title-Buildings").position().top;
-        $("#select").animate({ scrollTop: top }, 700);
-    }
-    //if(e.keyCode==69){//u
-    if(e.keyCode==79){//o
-        const top = $("#title-Zeometry").position().top;
-        $("#select").animate({ scrollTop: top }, 700);
-    }
-    if(e.keyCode==80){//p
-        const top = $("#title-Space").position().top;
-        $("#select").animate({ scrollTop: top }, 700);
+    if(!mouseOverTools){
+        if(e.keyCode==49){//1
+            //console.log($("#title-simple-shapes").top);
+            const top = $("#title-Simple-Shapes").position().top;
+            $("#select").animate({ scrollTop: top }, 700);
+        }
+        if(e.keyCode==50){//2
+            const top = $("#title-Animals").position().top;
+            $("#select").animate({ scrollTop: top }, 700);
+        }
+        if(e.keyCode==51){//3
+            const top = $("#title-Consumables").position().top;
+            $("#select").animate({ scrollTop: top }, 700);
+        }
+        if(e.keyCode==52){//4
+            const top = $("#title-Furnishings").position().top;
+            $("#select").animate({ scrollTop: top }, 700);
+        }
+        if(e.keyCode==53){//5
+            const top = $("#title-Microscopic").position().top;
+            $("#select").animate({ scrollTop: top }, 700);
+        }
+        if(e.keyCode==54){//6
+            const top = $("#title-Plants").position().top;
+            $("#select").animate({ scrollTop: top }, 700);
+        }
+        if(e.keyCode==55){//7
+            const top = $("#title-Underwater").position().top;
+            $("#select").animate({ scrollTop: top }, 700);
+        }
+        if(e.keyCode==56){//8
+            const top = $("#title-Trees").position().top;
+            $("#select").animate({ scrollTop: top }, 700);
+        }
+        if(e.keyCode==57){//9
+            const top = $("#title-Rocks").position().top;
+            $("#select").animate({ scrollTop: top }, 700);
+        }
+        if(e.keyCode==48){//0
+            const top = $("#title-Human").position().top;
+            $("#select").animate({ scrollTop: top }, 700);
+        }
+        
+        if(e.keyCode==85){//u
+            const top = $("#title-Vehicles").position().top;
+            $("#select").animate({ scrollTop: top }, 700);
+        }
+        //if(e.keyCode==87){//y
+        if(e.keyCode==73){//i
+            const top = $("#title-Buildings").position().top;
+            $("#select").animate({ scrollTop: top }, 700);
+        }
+        //if(e.keyCode==69){//u
+        if(e.keyCode==79){//o
+            const top = $("#title-Zeometry").position().top;
+            $("#select").animate({ scrollTop: top }, 700);
+        }
+        if(e.keyCode==80){//p
+            const top = $("#title-Space").position().top;
+            $("#select").animate({ scrollTop: top }, 700);
+        }
     }
 
     if(e.keyCode==67){
@@ -1410,14 +1548,16 @@ function onKeyDown(e) {
         }
     }
 
-
-    if(e.keyCode == 90){
+    
+    if(e.keyCode == 90){//undo
         if(controls.enablePan){
+            e.preventDefault();
             undoClick();
         }
     }
-    if(e.keyCode==89){
+    if(e.keyCode==89){//redo
         if(controls.enablePan){
+            e.preventDefault();
             redoClick();
         }
     }
@@ -1443,7 +1583,7 @@ function onKeyUp(e) {
     e.preventDefault();
 
     if(e.keyCode==90){
-        scatterMode = false;
+        scatterPressed = false;
         canTogglStrokeSelect = true;
     }
 
@@ -1497,7 +1637,7 @@ function toggleUI(){
         mirrorMeshY.visible = btns.space; 
     }
     if(mirrorZ){
-        mirrorMeshZ.visible = btns.space; 
+        mirrorMeshZ.visible = btns.space; z
     }
 }
 
@@ -1525,17 +1665,21 @@ function onMouseUp(e){
         mouse.previous = new THREE.Vector2();
         ot = false;
         
-        if(!movingCamera && !scatterMode){
+        if(!movingCamera){
+            
             buildGeo();
             helper.copyMaterial({  param:getMatParam(), matHandler:matHandler });
+            
         }
-
+        
+        //scatterMode = false;
         movingCamera = false;
         
         ctx.clearRect(0,0,canvas.width,canvas.height);
         
         mouse.rots = [];
         mouse.scales = [];
+        mouse.scatterInfo = [];
         mouse.smoothAvgs = [];
         currentDrawHitPoint = null;
         mouse.smoothInc = 0;
@@ -1645,6 +1789,7 @@ function getFirstObjectWithPaintIndex(arr){
 
 
 function onMouseDown(e){
+    //console.log("paint meshes length = "+paintMeshes.length);
     if(showingContext){
         killContext();
         return;
@@ -1730,8 +1875,11 @@ function onMouseMove(e){
     
     if(e.target.id == "draw-canvas"){
         mouseOverSelect = false;
+        mouseOverTools = false;
         killContext();
     }
+    
+    
 
     let x = 0;
     let y = 0;
@@ -1769,10 +1917,7 @@ function onMouseMove(e){
     ///console.log(movingTransformControls)
     //if(strokeSelect && movingTransformControls){//update mirrored local transform when moving control
     if(movingTransformControls && currentSelectedStrokeIndex != -1){
-       
         actionHelper.updateTransform(currentSelectedStrokeIndex);//, {pos:t.sub, rot:t.rot, scl:t.scl});
-       
-        
     }
     
     if ( e.touches != null ) {
@@ -1789,11 +1934,8 @@ function onMouseMove(e){
                 penSense = 1;
             }
 
-            //if(!scatterMode){
             handleDrawGeo(false);
-            //}else{
-                
-            //}
+
         }
         
     }
@@ -1853,7 +1995,7 @@ function handleDrawGeo(){
 
 
 function buildGeo(){
-
+    
     const strokeFinal = [];
     const total = Math.ceil( mouse.smoothAvgs.length * globalDensityAmount);
 
@@ -1864,6 +2006,10 @@ function buildGeo(){
         const meshClone = helper.holder;//.clone();
 
         const all = {
+            loadObj:loadobjs, //non dinamic
+            matHandler:matHandler, // non dinamic
+            paintMeshes:paintMeshes, //non dinamic
+            version:appVer,//
             modelInfo:{modelIndex:modelIndex,urlIndex:urlIndex}, 
             meshClone:meshClone, 
             index:actionHelper.currStrokeIndex, 
@@ -1876,6 +2022,8 @@ function buildGeo(){
             rotOffsetX:globalOffsetRotation.x,
             rotOffsetY:globalOffsetRotation.y,
             rotOffsetZ:globalOffsetRotation.z,
+            scatter:scatterMode,
+            scatterInfo:mouse.scatterInfo,
             transformOffset:{pos:new THREE.Vector3(), rot:new THREE.Euler(), scl:new THREE.Vector3(1,1,1)}
         }
         
@@ -2097,6 +2245,10 @@ function UpdateDrawObjectOpacity(o){
     }
 }
 
+function toggleScatter(){
+    scatterChecked = !scatterChecked;
+}
+
 function toggleSizeEasing(){
     globalShouldAnimateSize = !globalShouldAnimateSize;
 }
@@ -2253,7 +2405,7 @@ function onDocumentLeave( event ) {
 
 
 function replaceDrawObject(src,scl){
-    
+    const vis = drawObject == null ? true : drawObject.visible;//if draw object is null, vis = true, if not null set to current visibility 
     let s = scl!=null ? scl : 1;
     
     const loader = new GLTFLoader();
@@ -2271,7 +2423,9 @@ function replaceDrawObject(src,scl){
         });
         gltf.scene.scale.set(s,s,s);
         scene.add(gltf.scene)
+
         drawObject = gltf.scene;
+        drawObject.visible = vis;
     });
 }
 
@@ -2450,6 +2604,12 @@ function loadLoop(){
     const rotOffsetX = a.rotOffsetX == null ? 0. : a.rotOffsetX;
     const rotOffsetY = a.rotOffsetY == null ? 0. : a.rotOffsetY;
     const rotOffsetZ = a.rotOffsetZ == null ? 0. : a.rotOffsetZ;
+    const scatter = a.scatter == null ? false : a.scatter;
+    const scatterInfo = a.scatterInfo == null ? [] : a.scatterInfo;
+    //console.log(a);
+    const version = a.version == null ? 0 : a.version;
+    
+    console.log("version = "+version);
     //console.log(a.transformOffset)
     const transformOffset = a.transformOffset == null 
     ? {pos:new THREE.Vector3(), rot:new THREE.Euler(), scl:new THREE.Vector3(1,1,1)} 
@@ -2459,9 +2619,11 @@ function loadLoop(){
         scl:new THREE.Vector3( a.transformOffset.scl.x, a.transformOffset.scl.y, a.transformOffset.scl.z)
     };
     
-   
-    
     const all = {
+        loadObj:loadobjs, //non dinamic
+        matHandler:matHandler, // non dinamic
+        paintMeshes:paintMeshes, //non dinamic
+
         modelInfo:{modelIndex:mi,urlIndex:ui}, 
         meshClone:null, 
         index:actionHelper.currStrokeIndex, 
@@ -2473,10 +2635,13 @@ function loadLoop(){
         rotOffsetY:rotOffsetY,
         rotOffsetZ:rotOffsetZ,
         transformOffset:transformOffset,
+        scatter:scatter,
+        scatterInfo:scatterInfo,
+        version:version,
         globalShouldAnimateSize:a.globalShouldAnimateSize,
         param:param
     }
-
+    //console.log(i);
     chooseModel(ui, mi, param, function(sn){
         //const strokes = loadedObject.geoink.strokes;
         all.meshClone = sn.clone();
@@ -2489,22 +2654,21 @@ function loadLoop(){
                 }
             }
         });
-        const strokeFinal = []
+        const strokeFinal = [];
         for(let i = 0; i<arr[strokesLoopHelper].length; i++){
-            
             const currStroke = arr[strokesLoopHelper][i];
             all.scene = scene.getObjectByName(currStroke.all.scene);
             const strk = new Stroke( {scl:scls, pos:pos, rots:rots, all:all} );
             strokeFinal.push({stroke:strk, index:actionHelper.currStrokeIndex, scene:all.scene});
         }
+
         actionHelper.addStrokesArray({array:strokeFinal});
         
         strokesLoopHelper++;
         if(strokesLoopHelper<arr.length)
             loadHelper();
 
-    });
-    //}
+    }, version);
 }
 function loadHelper(){
     loadLoop();

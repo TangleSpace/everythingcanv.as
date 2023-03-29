@@ -115,7 +115,7 @@
 			<div class="sub-holders">
 				<div id="main-btns-holder">
 					<div class="geo-ink-title">
-						Everything Canvas
+						Everything Canvas 
 					</div>
 					<div class="tooltip">
 						<button class="btn inline-btns" id="show-instructions">splash screen</button> 
@@ -201,7 +201,7 @@
 				</div>
 				<div class="drop-down-holder">
 					<div class="drop-down-title" id="draw-object-title" >
-						Draw Object
+						Draw Object <a class="docs-q" href="https://docs.google.com/document/d/1R6eotYhfrLgmEFiWftUPHgll2mr_mccCGWWGxtHagOo/edit#bookmark=id.yztahs320qjp" target="_blank">?</a>
 					</div>
 					<div class="drop-down-content" id="draw-object-content">
 						<div id="c-size" class="draw-objects-holder" >
@@ -236,12 +236,9 @@
 				</div>
 				<div id="draw-mode-options">
 					
-
-					
-
 					<div class="drop-down-holder">
 						<div class="drop-down-title" id="essentials-title">
-							Essentials
+							Essentials <a class="docs-q" href="https://docs.google.com/document/d/1R6eotYhfrLgmEFiWftUPHgll2mr_mccCGWWGxtHagOo/edit#bookmark=id.3dbveyaizqtm" target="_blank">?</a>
 						</div>
 						<div class="drop-down-content" id="essentials-content">
 							
@@ -293,8 +290,36 @@
 					</div>
 
 					<div class="drop-down-holder">
+						<div class="drop-down-title" id="scatter-title" >
+							Scatter <a class="docs-q" href="https://docs.google.com/document/d/1R6eotYhfrLgmEFiWftUPHgll2mr_mccCGWWGxtHagOo/edit#bookmark=id.max3rfnoghdl" target="_blank">?</a>
+						</div>
+						<div class="drop-down-content" id="scatter-content">
+							<div id="brush-before" style="margin-top: 20px; margin-bottom: 0px; font-size: 12px;">amount before<input id="brush-before-input" style="width:30px; margin-left: 5px;" value="0" type="text" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" /> </div>
+							<div id="brush-after" style="margin-top: 20px; margin-bottom: 0px; font-size: 12px;">amount after<input id="brush-after-input" style="width:30px; margin-left: 5px;" value="0" type="text" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" /> </div>
+						
+							<div class="check-holder">
+								<div class="tooltip inline-tooltip" style="width:70px">
+									<span class="tooltiptext" style="margin-top:-15px; margin-left: 30px; width:50px;">[ hold z ]</span>
+									<span class="slider-info">scatter</span>
+								</div>
+								
+								<input class="control control-checkbox" type="checkbox" id="scatter-check">
+							</div>
+
+							<div class="slider-holder">
+								<span class="slider-info">scale random</span>
+								<input id="rnd-scale" class="control-slider" type="range" min="0" max="100" value="0" >
+							</div>
+							<div class="slider-holder">
+								<span class="slider-info">position random</span>
+								<input id="rnd-position" class="control-slider" type="range" min="0" max="100" value="0" >
+							</div>
+						</div>
+					</div>
+
+					<div class="drop-down-holder">
 						<div class="drop-down-title" id="mirror-title">
-							Mirror
+							Mirror <a class="docs-q" href="https://docs.google.com/document/d/1R6eotYhfrLgmEFiWftUPHgll2mr_mccCGWWGxtHagOo/edit#bookmark=id.nm4ffc90w4po" target="_blank">?</a>
 						</div>
 						<div class="drop-down-content" id="mirror-content">
 							<div class="check-holder">
@@ -317,10 +342,14 @@
 					
 					<div class="drop-down-holder">
 						<div class="drop-down-title" id="rotation-title" >
-							Rotation
+							Rotation <a class="docs-q" href="https://docs.google.com/document/d/1R6eotYhfrLgmEFiWftUPHgll2mr_mccCGWWGxtHagOo/edit#bookmark=id.wsup7jno0ydi" target="_blank">?</a>
 						</div>
 						
 						<div class="drop-down-content" id="rotation-content">
+							<div class="slider-holder">
+								<span class="slider-info">additive rotation speed</span>
+								<input id="additive-rotation-slider" class="control-slider" type="range" min="0" max="50" value="0" >
+							</div>
 							<div class="check-holder">
 								<span class="slider-info">rotation by normals</span>
 								<input class="control control-checkbox" type="checkbox" id="rotation-follows-normal" checked>
@@ -340,11 +369,7 @@
 								<input id="rotate-slider-z" class="control-slider" type="range" min="0" max="360" value="0" >
 							
 							</div>
-							<div class="slider-holder">
-								<span class="slider-info">additive rotation speed</span>
-								<input id="additive-rotation-slider" class="control-slider" type="range" min="0" max="50" value="0" >
 							
-							</div>
 							<div class="slider-holder">
 								<span class="slider-info">additive rotation x</span>
 								<input class="control control-checkbox" type="checkbox" id="additive-rotation-x" checked>
@@ -367,7 +392,7 @@
 				</div>
 				<div class="drop-down-holder">
 					<div class="drop-down-title" id="background-title">
-						Background
+						Background <a class="docs-q" href="https://docs.google.com/document/d/1R6eotYhfrLgmEFiWftUPHgll2mr_mccCGWWGxtHagOo/edit#bookmark=id.ijxrf2k9gkie" target="_blank">?</a>
 					</div>
 					<div class="drop-down-content" id="background-content">
 						<div class="slider-holder">
@@ -395,7 +420,7 @@
 				</div>
 				<div class="drop-down-holder" >
 					<div class="drop-down-title" id="shader-effects-title" >
-						Shader Effects
+						Shader Effects <a class="docs-q" href="https://docs.google.com/document/d/1R6eotYhfrLgmEFiWftUPHgll2mr_mccCGWWGxtHagOo/edit#bookmark=id.ocbgg5n1h0i2" target="_blank">?</a>
 					</div>
 					<div class="drop-down-content" id="shader-effects-content">
 
@@ -470,7 +495,7 @@
 				</div>
 				<div class="drop-down-holder" style="padding-bottom: 200px;">
 					<div class="drop-down-title" id="export-title">
-						Save / Export
+						Save / Export <a class="docs-q" href="https://docs.google.com/document/d/1R6eotYhfrLgmEFiWftUPHgll2mr_mccCGWWGxtHagOo/edit#bookmark=id.crny3oci7ul4" target="_blank">?</a>
 					</div>
 					
 				
