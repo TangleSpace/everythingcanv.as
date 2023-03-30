@@ -725,7 +725,19 @@ function handleIconClick(div,i,k){
         chooseModel(i,k);
 
     }else{
+        if(scatterSelectActive){
+            
+            if(scatterArray.length == 1){
+                scatterArray[0]={modelIndex:k, urlIndex:i};
+                selectedThumbDiv.classList.remove("selected-thumb");
+                div.classList.add("selected-thumb");
+                selectedThumbDiv = div;
+                chooseModel(i,k);
+            }
+        }
+
         const scatterArrayCheck = isModelInScatterArray({modelIndex:k, urlIndex:i});
+        
         if(!scatterArrayCheck){
             scatterArray.push({modelIndex:k, urlIndex:i})    
         }else{
@@ -1403,7 +1415,6 @@ function toggleFullscreen(){
 
 
 function onKeyDown(e) {
-    console.log(e.keyCode);;
     if(e.keyCode ==83){
         scatterSelectPressed = true;   
     }
@@ -2331,6 +2342,7 @@ function toggleScatterSelect(){
     if(!scatterSelectActive){
         scatterArray = [];
         updateScatterDom();
+        scatterArray.push({modelIndex:modelIndex, urlIndex:urlIndex});
     }
 }
 
